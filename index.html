@@ -268,29 +268,28 @@ async function analyze(){
 
   try{
     pl.textContent='OCR ENGINE LOADING · IMAGE PREP';
-    var text=await readScheduleText(curImg,function(msg){pl.textContent=msg;});
-    var flights=parseFlightsFromText(text,apt);
+    var ocr=await readScheduleData(curImg,function(msg){pl.textContent=msg;},apt);
+    var flights=parseFlightsFromOcr(ocr,apt);
     pg.style.display='none'; btn.disabled=false; btn.style.display='block';
-    renderFlights(flights,text);
+    renderFlights(flights,ocr.text);
   }catch(e){
     pg.style.display='none'; btn.disabled=false; btn.style.display='block';
     toast('OCR 인식 실패. 이미지를 더 선명하게 올려주세요.','er');
   }
 }
 
-async function readScheduleText(file,onProgress){
+async function readScheduleData(file,onProgress,depApt){
   if(window.Tesseract){
-    var result=await Tesseract.recognize(file,'eng',{
-      workerPath:'vendor/tesseract/worker.min.js',
-      corePath:'vendor/tesseract/tesseract-core.wasm.js',
-      langPath:'vendor/tesseract',
-      logger:function(m){
-        if(!m||!m.status)return;
-        var pct=typeof m.progress==='number'?(' '+Math.round(m.progress*100)+'%'):'';
-        onProgress('OCR '+m.status.toUpperCase()+pct);
-      }
-    });
-    return (result.data&&result.data.text)||'';
+    onProgress('IMAGE PREPROCESSING');
+    var image=await preprocessImage(file);
+    var result=await runTesseract(image,onProgress);
+    var data=toOcrData(result);
+    if(!hasScheduleSignals(data,depApt)){
+      onProgress('OCR RETRY · ORIGINAL IMAGE');
+      result=await runTesseract(file,onProgress);
+      data=mergeOcrData(data,toOcrData(result));
+    }
+    return data;
   }
 
   if('TextDetector' in window){
@@ -298,10 +297,189 @@ async function readScheduleText(file,onProgress){
     var detector=new window.TextDetector();
     var bitmap=await createImageBitmap(file);
     var blocks=await detector.detect(bitmap);
-    return blocks.map(function(b){return b.rawValue||'';}).join(' ');
+    return {
+      text:blocks.map(function(b){return b.rawValue||'';}).join(' '),
+      words:blocks.map(function(b){
+        var box=b.boundingBox||{x:0,y:0,width:0,height:0};
+        return {text:(b.rawValue||'').toUpperCase(),x:box.x,y:box.y,w:box.width,h:box.height};
+      })
+    };
   }
 
-  return file.name||'';
+  return {text:file.name||'',words:[]};
+}
+
+function runTesseract(image,onProgress){
+  return Tesseract.recognize(image,'eng',{
+      workerPath:'vendor/tesseract/worker.min.js',
+      corePath:'vendor/tesseract/tesseract-core.wasm.js',
+      langPath:'vendor/tesseract',
+      tessedit_char_whitelist:'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789:.- ',
+      preserve_interword_spaces:'1',
+      logger:function(m){
+        if(!m||!m.status)return;
+        var pct=typeof m.progress==='number'?(' '+Math.round(m.progress*100)+'%'):'';
+        onProgress('OCR '+m.status.toUpperCase()+pct);
+      }
+    });
+}
+
+function toOcrData(result){
+  return {
+    text:(result.data&&result.data.text)||'',
+    words:normalizeOcrWords((result.data&&result.data.words)||[])
+  };
+}
+
+function hasScheduleSignals(data,depApt){
+  var text=((data&&data.text)||'').toUpperCase();
+  var hasApt=text.indexOf(depApt)>=0||(data.words||[]).some(function(w){return fixAirportToken(w.text)===depApt;});
+  var hasTime=/\b([0-2]?\d[:.]?[0-5]\d|\d{3,4})\b/.test(text)||(data.words||[]).some(function(w){return !!normTime(fixTimeToken(w.text));});
+  return hasApt&&hasTime;
+}
+
+function mergeOcrData(a,b){
+  return {
+    text:((a&&a.text)||'')+'\n'+((b&&b.text)||''),
+    words:[].concat((a&&a.words)||[],(b&&b.words)||[])
+  };
+}
+
+function preprocessImage(file){
+  return new Promise(function(resolve,reject){
+    var url=URL.createObjectURL(file);
+    var img=new Image();
+    img.onload=function(){
+      var scale=Math.max(2,Math.min(4,1800/Math.max(img.width,img.height)));
+      var canvas=document.createElement('canvas');
+      canvas.width=Math.round(img.width*scale);
+      canvas.height=Math.round(img.height*scale);
+      var ctx=canvas.getContext('2d',{willReadFrequently:true});
+      ctx.fillStyle='#fff';
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+      ctx.imageSmoothingEnabled=false;
+      ctx.drawImage(img,0,0,canvas.width,canvas.height);
+      var data=ctx.getImageData(0,0,canvas.width,canvas.height);
+      var total=0,count=0;
+      for(var j=0;j<data.data.length;j+=16){
+        total+=0.299*data.data[j]+0.587*data.data[j+1]+0.114*data.data[j+2];
+        count++;
+      }
+      var invert=(total/Math.max(count,1))<120;
+      for(var i=0;i<data.data.length;i+=4){
+        var r=data.data[i],g=data.data[i+1],b=data.data[i+2];
+        var gray=0.299*r+0.587*g+0.114*b;
+        var high=invert?(gray>145?0:255):(gray>168?255:0);
+        data.data[i]=high;
+        data.data[i+1]=high;
+        data.data[i+2]=high;
+      }
+      ctx.putImageData(data,0,0);
+      URL.revokeObjectURL(url);
+      resolve(canvas.toDataURL('image/png'));
+    };
+    img.onerror=function(){URL.revokeObjectURL(url);reject(new Error('image load failed'));};
+    img.src=url;
+  });
+}
+
+function normalizeOcrWords(words){
+  return words.map(function(w){
+    var text=String(w.text||'').toUpperCase().replace(/[^A-Z0-9:.]/g,'');
+    var box=w.bbox||{};
+    return {
+      text:text,
+      x:Number(box.x0||0),
+      y:Number(box.y0||0),
+      w:Number((box.x1||0)-(box.x0||0)),
+      h:Number((box.y1||0)-(box.y0||0))
+    };
+  }).filter(function(w){return w.text;});
+}
+
+function parseFlightsFromOcr(ocr,depApt){
+  var flights=parseFlightsFromWords(ocr.words||[],depApt);
+  if(!flights.length)flights=parseFlightsFromText(ocr.text||'',depApt);
+  if(!flights.length){
+    var fromFile=parseFlightFromFilename(curImg&&curImg.name,depApt);
+    if(fromFile)flights.push(fromFile);
+  }
+  return dedupeFlights(flights);
+}
+
+function parseFlightsFromWords(words,depApt){
+  var clean=words.map(function(w){
+    return Object.assign({},w,{text:fixOcrToken(w.text)});
+  }).filter(function(w){return w.text;});
+  var airports=clean.filter(function(w){return w.text===depApt||fixAirportToken(w.text)===depApt;});
+  var times=clean.filter(function(w){return normTime(fixTimeToken(w.text));});
+  var flights=[];
+
+  airports.forEach(function(ap){
+    var rowTol=Math.max(18,ap.h*1.3);
+    var sameRowTimes=times.filter(function(t){
+      return centerY(t)>centerY(ap)-rowTol&&centerY(t)<centerY(ap)+rowTol&&t.x>ap.x+ap.w*0.35;
+    }).sort(function(a,b){return a.x-b.x;});
+    if(!sameRowTimes.length)return;
+    var timeWord=sameRowTimes[0];
+    flights.push({
+      flight:findFlightWord(clean,ap)||'FLIGHT',
+      depTime:normTime(fixTimeToken(timeWord.text)),
+      dest:findDestWord(clean,ap,timeWord,depApt)||'---'
+    });
+  });
+
+  return flights;
+}
+
+function fixOcrToken(value){
+  return String(value||'').toUpperCase()
+    .replace(/[|]/g,'I')
+    .replace(/０/g,'0').replace(/１/g,'1').replace(/２/g,'2').replace(/３/g,'3').replace(/４/g,'4')
+    .replace(/５/g,'5').replace(/６/g,'6').replace(/７/g,'7').replace(/８/g,'8').replace(/９/g,'9')
+    .replace(/[^A-Z0-9:.]/g,'');
+}
+
+function fixAirportToken(value){
+  return fixOcrToken(value)
+    .replace(/^1CN$/,'ICN')
+    .replace(/^ICM$/,'ICN')
+    .replace(/^GMP$/,'GMP');
+}
+
+function fixTimeToken(value){
+  var token=fixOcrToken(value)
+    .replace(/[OQD]/g,'0')
+    .replace(/[IL]/g,'1')
+    .replace(/S/g,'5')
+    .replace(/B/g,'8');
+  return token;
+}
+
+function centerY(word){
+  return word.y+word.h/2;
+}
+
+function findFlightWord(words,airportWord){
+  var rowTol=Math.max(18,airportWord.h*1.4);
+  var candidates=words.filter(function(w){
+    return centerY(w)>centerY(airportWord)-rowTol&&centerY(w)<centerY(airportWord)+rowTol&&w.x<airportWord.x;
+  }).sort(function(a,b){return b.x-a.x;});
+  for(var i=0;i<candidates.length;i++){
+    var text=fixOcrToken(candidates[i].text);
+    if(/^[A-Z]{2}\d{2,4}$/.test(text))return text;
+  }
+  return '';
+}
+
+function findDestWord(words,airportWord,timeWord,depApt){
+  var rowTol=Math.max(18,airportWord.h*1.4);
+  var candidates=words.filter(function(w){
+    var code=fixAirportToken(w.text);
+    return /^[A-Z]{3}$/.test(code)&&code!==depApt&&
+      centerY(w)>centerY(airportWord)-rowTol&&centerY(w)<centerY(airportWord)+rowTol&&w.x>timeWord.x;
+  }).sort(function(a,b){return a.x-b.x;});
+  return candidates.length?fixAirportToken(candidates[0].text):'';
 }
 
 function parseFlightsFromText(text,depApt){
