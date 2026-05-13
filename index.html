@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>CrewClock</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Share+Tech+Mono&family=Barlow:wght@300;400;500;600&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#0a0c10;--surf:#111520;--surf2:#181e2e;
@@ -14,125 +15,191 @@
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{background:var(--bg);color:var(--tx);font-family:'Barlow',sans-serif;min-height:100vh;padding-bottom:90px}
 body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 60% 40% at 50% 0%,rgba(0,80,140,.15) 0%,transparent 70%),repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(0,212,255,.03) 39px,rgba(0,212,255,.03) 40px),repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(0,212,255,.03) 39px,rgba(0,212,255,.03) 40px);pointer-events:none;z-index:0}
-.app{position:relative;z-index:1;max-width:480px;margin:0 auto;padding:0}
+.app{position:relative;z-index:1;max-width:480px;margin:0 auto}
 
-header{display:flex;align-items:center;justify-content:space-between;padding:20px 20px 0}
-.logo{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:4px;color:var(--acc)}
-.logo small{display:block;font-size:11px;font-family:'Barlow Condensed',sans-serif;font-weight:600;letter-spacing:2px;color:var(--tx2);margin-top:-4px}
-.clock .t{font-family:'Share Tech Mono',monospace;font-size:22px;color:var(--acc);letter-spacing:2px;text-align:right}
+/* HEADER */
+header{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 0}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:4px;color:var(--acc)}
+.logo small{display:block;font-size:10px;font-family:'Barlow Condensed',sans-serif;font-weight:600;letter-spacing:2px;color:var(--tx2);margin-top:-4px}
+.clock .t{font-family:'Share Tech Mono',monospace;font-size:20px;color:var(--acc);letter-spacing:2px;text-align:right}
 .clock .d{font-size:10px;color:var(--tx2);letter-spacing:1px;text-align:right;text-transform:uppercase}
 
-.apt-row{display:flex;gap:8px;padding:16px 20px 0}
-.apt-btn{flex:1;padding:10px;border:1px solid var(--bdr2);border-radius:8px;background:var(--surf);color:var(--tx2);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:600;letter-spacing:2px;cursor:pointer;text-align:center;transition:all .2s}
-.apt-btn .iata{font-family:'Bebas Neue',sans-serif;font-size:20px;display:block}
-.apt-btn .nm{font-size:9px;letter-spacing:1px;margin-top:-2px}
-.apt-btn.active{background:rgba(0,212,255,.08);border-color:var(--acc);color:var(--acc)}
-.apt-btn.active .iata{color:var(--acc)}
+/* TABS */
+.tabs{display:flex;padding:14px 20px 0;gap:0}
+.tab{flex:1;padding:9px 4px;border:1px solid var(--bdr2);background:var(--surf);color:var(--tx2);font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:1px;cursor:pointer;text-align:center;transition:all .2s;text-transform:uppercase}
+.tab:first-child{border-radius:8px 0 0 8px}
+.tab:last-child{border-radius:0 8px 8px 0}
+.tab+.tab{border-left:none}
+.tab.active{background:rgba(0,212,255,.08);border-color:var(--acc);color:var(--acc)}
 
-.card{margin:14px 20px 0;background:var(--surf);border:1px solid var(--bdr);border-radius:12px;overflow:hidden}
-.ch{display:flex;align-items:center;gap:8px;padding:11px 16px;border-bottom:1px solid var(--bdr);background:rgba(0,0,0,.2)}
-.ch .ico{width:26px;height:26px;border-radius:6px;background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.2);display:flex;align-items:center;justify-content:center;font-size:13px}
-.ch .lbl{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;letter-spacing:2px;color:var(--tx2);text-transform:uppercase;flex:1}
+.panel{display:none}
+.panel.show{display:block}
+
+/* CARD */
+.card{margin:12px 20px 0;background:var(--surf);border:1px solid var(--bdr);border-radius:12px;overflow:hidden}
+.ch{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--bdr);background:rgba(0,0,0,.2)}
+.ch .ico{width:24px;height:24px;border-radius:6px;background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.2);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
+.ch .lbl{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:2px;color:var(--tx2);text-transform:uppercase;flex:1}
 .ch .cnt{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--acc)}
 
-.upz{padding:22px 16px;text-align:center;cursor:pointer;transition:background .2s;position:relative}
+/* SETTINGS */
+.sset{padding:12px 14px 14px}
+.srow{margin-bottom:10px}
+.srow:last-child{margin-bottom:0}
+.srow label{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--tx3);display:block;margin-bottom:5px;font-family:'Barlow Condensed',sans-serif;font-weight:600}
+.sinp{width:100%;padding:9px 12px;background:var(--surf2);border:1px solid var(--bdr2);border-radius:8px;color:var(--tx);font-family:'Share Tech Mono',monospace;font-size:15px;letter-spacing:2px;text-transform:uppercase;outline:none}
+.sinp:focus{border-color:var(--acc)}
+.sinp::placeholder{color:var(--tx3);text-transform:none;letter-spacing:0}
+
+/* PRESET GROUPS */
+.pgroup{padding:10px 14px 12px;border-bottom:1px solid var(--bdr)}
+.pgroup:last-child{border-bottom:none}
+.pgroup-title{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.pgroup-title.base{color:var(--acc)}
+.pgroup-title.intl{color:var(--amb)}
+.ptag{display:inline-block;padding:1px 6px;border-radius:4px;font-size:9px;font-weight:700;letter-spacing:1px}
+.ptag.base{background:rgba(0,212,255,.12);color:var(--acc);border:1px solid rgba(0,212,255,.3)}
+.ptag.intl{background:rgba(255,184,0,.12);color:var(--amb);border:1px solid rgba(255,184,0,.3)}
+
+/* OFFSET ROWS */
+.orow{display:flex;align-items:center;gap:7px;padding:7px 8px;border-radius:7px;border:1px solid var(--bdr);background:var(--surf2);margin-bottom:6px}
+.orow:last-child{margin-bottom:0}
+.tog{width:32px;height:18px;border-radius:9px;background:var(--bdr2);border:none;cursor:pointer;position:relative;transition:all .2s;flex-shrink:0;outline:none}
+.tog::after{content:'';position:absolute;left:3px;top:3px;width:12px;height:12px;border-radius:50%;background:var(--tx3);transition:all .2s}
+.tog.on{background:rgba(0,212,255,.2);border:1px solid var(--acc)}
+.tog.on::after{left:16px;background:var(--acc)}
+.tog.on-amb{background:rgba(255,184,0,.2);border:1px solid var(--amb)}
+.tog.on-amb::after{left:16px;background:var(--amb)}
+.olbl{flex:1;min-width:0}
+.lbl-inp{background:transparent;border:none;outline:none;color:var(--tx);font-size:12px;font-weight:500;font-family:'Barlow',sans-serif;width:100%;cursor:text}
+.lbl-inp:focus{color:var(--acc)}
+.olbl-s{font-size:9px;color:var(--tx3);margin-top:1px}
+.oedit{display:flex;gap:3px;align-items:center;flex-shrink:0}
+.ni{width:38px;padding:4px 3px;background:var(--bg);border:1px solid var(--bdr2);border-radius:5px;color:var(--tx);font-family:'Share Tech Mono',monospace;font-size:12px;text-align:center;outline:none;-webkit-appearance:none;-moz-appearance:textfield}
+.ni::-webkit-inner-spin-button{-webkit-appearance:none}
+.ni:focus{border-color:var(--acc)}
+.ul{font-size:9px;color:var(--tx3)}
+.db{width:22px;height:22px;border-radius:5px;background:rgba(255,59,92,.1);border:1px solid rgba(255,59,92,.25);color:var(--red);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:11px;transition:background .2s;flex-shrink:0}
+.db:hover{background:rgba(255,59,92,.2)}
+.add-btn{width:100%;padding:7px;background:transparent;border:1px dashed var(--bdr2);border-radius:7px;color:var(--tx3);font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:1.5px;cursor:pointer;transition:all .2s;margin-top:6px}
+.add-btn:hover{border-color:var(--acc);color:var(--acc)}
+.add-btn.amb:hover{border-color:var(--amb);color:var(--amb)}
+
+/* UPLOAD */
+.upz{padding:20px 16px;text-align:center;cursor:pointer;transition:background .2s;position:relative}
 .upz:hover{background:rgba(0,212,255,.03)}
 .upz input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
-.up-ico{width:52px;height:52px;border:2px dashed var(--bdr2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;margin:0 auto 10px;color:var(--tx3);transition:all .2s}
+.up-ico{width:48px;height:48px;border:2px dashed var(--bdr2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;margin:0 auto 8px;color:var(--tx3);transition:all .2s}
 .upz:hover .up-ico{border-color:var(--acc);color:var(--acc)}
-.up-t{font-size:14px;font-weight:500;color:var(--tx2)}
-.up-s{font-size:11px;color:var(--tx3);margin-top:4px}
-#prevImg{width:100%;max-height:190px;object-fit:contain;border-radius:8px;margin-bottom:10px;display:none}
-.btn-az{display:none;width:calc(100% - 32px);margin:0 16px 16px;padding:13px;background:linear-gradient(135deg,#0066aa,#00aad4);border:none;border-radius:10px;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;letter-spacing:3px;cursor:pointer;transition:all .2s}
-.btn-az:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,170,212,.4)}
+.up-t{font-size:13px;font-weight:500;color:var(--tx2)}
+.up-s{font-size:10px;color:var(--tx3);margin-top:3px}
+#prevImg{width:100%;max-height:160px;object-fit:contain;border-radius:8px;margin-bottom:8px;display:none}
+.btn-az{display:none;width:calc(100% - 28px);margin:0 14px 14px;padding:11px;background:linear-gradient(135deg,#0066aa,#00aad4);border:none;border-radius:9px;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:2.5px;cursor:pointer;transition:all .2s}
+.btn-az:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(0,170,212,.4)}
 .btn-az:disabled{opacity:.6;pointer-events:none}
-.prog{display:none;padding:6px 16px 14px}
+.prog{display:none;padding:4px 14px 12px}
 .prog-t{height:3px;background:var(--bdr);border-radius:2px;overflow:hidden}
 .prog-f{height:100%;background:linear-gradient(90deg,var(--acc),#0066aa);border-radius:2px;animation:sc 1.4s ease-in-out infinite}
 @keyframes sc{0%{width:0;margin-left:0}50%{width:55%}100%{width:0;margin-left:100%}}
-.prog-l{font-size:10px;color:var(--tx3);text-align:center;margin-top:5px;letter-spacing:1px;font-family:'Share Tech Mono',monospace}
-.flist{display:none;padding:6px 12px 10px}
-.fi{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;border:1px solid var(--bdr);background:var(--surf2);margin-bottom:6px;cursor:pointer;transition:all .2s}
-.fi:hover,.fi.sel{border-color:var(--acc);background:rgba(0,212,255,.05)}
-.fdot{width:7px;height:7px;border-radius:50%;background:var(--bdr2);flex-shrink:0;transition:all .2s}
-.fi.sel .fdot{background:var(--acc)}
-.finfo{flex:1}
-.fnum{font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--acc)}
-.froute{font-size:11px;color:var(--tx2);margin-top:1px}
-.ftime{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;color:var(--tx)}
+.prog-l{font-size:9px;color:var(--tx3);text-align:center;margin-top:4px;letter-spacing:1px;font-family:'Share Tech Mono',monospace}
 
-.man{padding:10px 16px 14px}
-.irow{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.ig label{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--tx3);display:block;margin-bottom:4px;font-family:'Barlow Condensed',sans-serif;font-weight:600}
-input[type=date],input[type=time]{width:100%;padding:10px 10px;background:var(--surf2);border:1px solid var(--bdr2);border-radius:8px;color:var(--tx);font-family:'Share Tech Mono',monospace;font-size:16px;outline:none;-webkit-appearance:none;color-scheme:dark}
+/* FLIGHT ALARM LIST */
+.fal-list{padding:6px 12px 10px}
+.fal-item{border-radius:10px;border:1px solid var(--bdr);background:var(--surf2);margin-bottom:8px;overflow:hidden}
+.fal-header{display:flex;align-items:center;gap:8px;padding:9px 12px 8px}
+.fal-dot{width:7px;height:7px;border-radius:50%;background:var(--bdr2);flex-shrink:0}
+.fal-item.today .fal-dot{background:var(--acc);box-shadow:0 0 6px var(--acc)}
+.fal-item.future .fal-dot{background:var(--grn)}
+.fal-item.past .fal-dot{background:var(--tx3)}
+.fal-info{flex:1}
+.fal-date{font-size:10px;color:var(--tx3);letter-spacing:.5px;font-family:'Barlow Condensed',sans-serif;font-weight:600;text-transform:uppercase}
+.fal-item.today .fal-date{color:var(--acc)}
+.fal-flight{font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--tx);margin-top:1px}
+.fal-route{font-size:10px;color:var(--tx2);margin-top:1px}
+.fal-deptime{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:var(--tx)}
+.fal-type{padding:2px 7px;border-radius:4px;font-size:9px;font-weight:700;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;flex-shrink:0}
+.fal-type.base{background:rgba(0,212,255,.12);color:var(--acc);border:1px solid rgba(0,212,255,.25)}
+.fal-type.intl{background:rgba(255,184,0,.12);color:var(--amb);border:1px solid rgba(255,184,0,.25)}
+
+/* alarm toggles inside fal-item */
+.fal-alarms{padding:0 12px 10px;display:flex;flex-direction:column;gap:5px}
+.fal-atog{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:6px;background:rgba(0,0,0,.2);border:1px solid var(--bdr)}
+.fal-atog.active-base{border-color:rgba(0,212,255,.2);background:rgba(0,212,255,.04)}
+.fal-atog.active-intl{border-color:rgba(255,184,0,.2);background:rgba(255,184,0,.04)}
+.fal-atog .tog{flex-shrink:0}
+.fal-atog .atog-lbl{flex:1;font-size:11px;color:var(--tx2)}
+.fal-atog .atog-time{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--tx3)}
+.fal-atog.active-base .atog-lbl{color:var(--tx)}
+.fal-atog.active-intl .atog-lbl{color:var(--tx)}
+.fal-atog.active-base .atog-time{color:var(--acc)}
+.fal-atog.active-intl .atog-time{color:var(--amb)}
+
+/* DIRECT */
+.dsec{padding:10px 14px 14px}
+.dsec label{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--tx3);display:block;margin-bottom:4px;font-family:'Barlow Condensed',sans-serif;font-weight:600}
+.drow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.dlrow{margin-bottom:10px}
+input[type=text].lf{width:100%;padding:9px 12px;background:var(--surf2);border:1px solid var(--bdr2);border-radius:8px;color:var(--tx);font-family:'Barlow',sans-serif;font-size:13px;outline:none}
+input[type=text].lf:focus{border-color:var(--acc)}
+input[type=date],input[type=time]{width:100%;padding:9px 10px;background:var(--surf2);border:1px solid var(--bdr2);border-radius:8px;color:var(--tx);font-family:'Share Tech Mono',monospace;font-size:14px;outline:none;-webkit-appearance:none;color-scheme:dark}
 input[type=date]:focus,input[type=time]:focus{border-color:var(--acc)}
+.ig label{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--tx3);display:block;margin-bottom:4px;font-family:'Barlow Condensed',sans-serif;font-weight:600}
+.btn-da{width:100%;padding:12px;background:linear-gradient(135deg,#004d73,#007a99);border:1px solid rgba(0,212,255,.3);border-radius:9px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:3px;cursor:pointer;transition:all .2s}
+.btn-da:hover{box-shadow:0 6px 20px rgba(0,120,160,.4);transform:translateY(-1px)}
 
-.acfg{padding:8px 14px 10px}
-.orow{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:8px;border:1px solid var(--bdr);background:var(--surf2);margin-bottom:7px}
-.tog{width:34px;height:19px;border-radius:10px;background:var(--bdr2);border:none;cursor:pointer;position:relative;transition:all .2s;flex-shrink:0;outline:none}
-.tog::after{content:'';position:absolute;left:3px;top:3px;width:13px;height:13px;border-radius:50%;background:var(--tx3);transition:all .2s}
-.tog.on{background:rgba(0,212,255,.2);border:1px solid var(--acc)}
-.tog.on::after{left:17px;background:var(--acc)}
-.olbl{flex:1}
-.olbl-m{font-size:13px;font-weight:500;color:var(--tx)}
-.olbl-s{font-size:10px;color:var(--tx3);margin-top:1px}
-.oedit{display:flex;gap:4px;align-items:center;flex-shrink:0}
-.ni{width:44px;padding:5px 4px;background:var(--bg);border:1px solid var(--bdr2);border-radius:6px;color:var(--tx);font-family:'Share Tech Mono',monospace;font-size:13px;text-align:center;outline:none;-webkit-appearance:none;-moz-appearance:textfield}
-.ni::-webkit-inner-spin-button{-webkit-appearance:none}
-.ni:focus{border-color:var(--acc)}
-.ul{font-size:10px;color:var(--tx3)}
-.db{width:24px;height:24px;border-radius:6px;background:rgba(255,59,92,.1);border:1px solid rgba(255,59,92,.25);color:var(--red);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;transition:background .2s}
-.db:hover{background:rgba(255,59,92,.2)}
-.add-btn{width:100%;padding:9px;background:transparent;border:1px dashed var(--bdr2);border-radius:8px;color:var(--tx3);font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;letter-spacing:2px;cursor:pointer;transition:all .2s;margin-top:2px}
-.add-btn:hover{border-color:var(--acc);color:var(--acc)}
+/* SET ALL BUTTON */
+.btn-set-all{display:block;width:calc(100% - 40px);margin:12px 20px 0;padding:14px;background:linear-gradient(135deg,#004d73,#007a99);border:1px solid rgba(0,212,255,.3);border-radius:12px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:4px;cursor:pointer;transition:all .2s;text-align:center}
+.btn-set-all:hover{box-shadow:0 8px 28px rgba(0,120,160,.5);transform:translateY(-1px)}
 
-.btn-set{display:block;width:calc(100% - 40px);margin:14px 20px 0;padding:15px;background:linear-gradient(135deg,#004d73,#007a99);border:1px solid rgba(0,212,255,.3);border-radius:12px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:4px;cursor:pointer;transition:all .2s;text-align:center}
-.btn-set:hover{box-shadow:0 8px 28px rgba(0,120,160,.5);transform:translateY(-1px)}
-
+/* ACTIVE ALARMS */
 .aal{padding:6px 12px 10px}
-.ac{padding:10px 12px;border-radius:10px;border:1px solid var(--bdr);background:var(--surf2);margin-bottom:7px;display:flex;align-items:center;gap:10px;animation:fin .25s ease}
-@keyframes fin{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+.ac{padding:9px 11px;border-radius:9px;border:1px solid var(--bdr);background:var(--surf2);margin-bottom:6px;display:flex;align-items:center;gap:9px;animation:fin .25s ease}
+@keyframes fin{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}
 .ac.armed{border-color:rgba(0,230,118,.3)}
 .ac.ring{border-color:var(--amb);animation:pring .5s ease-in-out infinite alternate}
-@keyframes pring{from{box-shadow:0 0 0 rgba(255,184,0,0)}to{box-shadow:0 0 18px rgba(255,184,0,.3)}}
-.ac.past{opacity:.45}
-.adot{width:8px;height:8px;border-radius:50%;background:var(--bdr2);flex-shrink:0}
-.ac.armed .adot{background:var(--grn);box-shadow:0 0 6px var(--grn)}
+@keyframes pring{from{box-shadow:0 0 0 rgba(255,184,0,0)}to{box-shadow:0 0 16px rgba(255,184,0,.3)}}
+.ac.past{opacity:.4}
+.adot{width:7px;height:7px;border-radius:50%;background:var(--bdr2);flex-shrink:0}
+.ac.armed .adot{background:var(--grn);box-shadow:0 0 5px var(--grn)}
 .ac.ring .adot{background:var(--amb);animation:blk .4s infinite}
 @keyframes blk{50%{opacity:0}}
-.ai{flex:1}
-.at{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;color:var(--tx)}
+.ai{flex:1;min-width:0}
+.at{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;color:var(--tx)}
 .ac.ring .at{color:var(--amb)}
-.am{font-size:11px;color:var(--tx2);margin-top:1px}
-.acd{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--tx3);margin-top:2px}
+.am{font-size:10px;color:var(--tx2);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.acd{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--tx3);margin-top:2px}
 .ac.armed .acd{color:var(--grn)}
 .ac.ring .acd{color:var(--amb)}
-.dis-btn{padding:5px 10px;background:rgba(255,184,0,.12);border:1px solid rgba(255,184,0,.4);border-radius:6px;color:var(--amb);font-size:11px;font-weight:700;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;cursor:pointer;white-space:nowrap;transition:background .2s}
-.dis-btn:hover{background:rgba(255,184,0,.22)}
-.adl{width:26px;height:26px;border-radius:6px;background:rgba(255,59,92,.08);border:1px solid rgba(255,59,92,.2);color:var(--red);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;transition:background .2s;flex-shrink:0}
+.dis-btn{padding:4px 9px;background:rgba(255,184,0,.12);border:1px solid rgba(255,184,0,.4);border-radius:5px;color:var(--amb);font-size:10px;font-weight:700;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;cursor:pointer;white-space:nowrap;flex-shrink:0}
+.adl{width:24px;height:24px;border-radius:5px;background:rgba(255,59,92,.08);border:1px solid rgba(255,59,92,.2);color:var(--red);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
 .adl:hover{background:rgba(255,59,92,.18)}
+.empty{padding:20px;text-align:center;font-size:10px;color:var(--tx3);font-family:'Share Tech Mono',monospace;letter-spacing:1px}
 
-.empty{padding:22px;text-align:center;font-size:11px;color:var(--tx3);font-family:'Share Tech Mono',monospace;letter-spacing:1px}
-
-.ro{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:200;display:none;align-items:center;justify-content:center;flex-direction:column;gap:18px;backdrop-filter:blur(10px)}
+/* RING OVERLAY */
+.ro{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:200;display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px;backdrop-filter:blur(10px)}
 .ro.show{display:flex}
-.rp{width:110px;height:110px;border-radius:50%;background:rgba(255,184,0,.1);border:2px solid var(--amb);display:flex;align-items:center;justify-content:center;font-size:42px;animation:rpulse 1s ease-in-out infinite}
-@keyframes rpulse{0%,100%{box-shadow:0 0 0 0 rgba(255,184,0,.4)}50%{box-shadow:0 0 0 25px rgba(255,184,0,0)}}
-.rt{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:4px;color:var(--amb);text-align:center}
-.rd{font-family:'Share Tech Mono',monospace;font-size:13px;color:var(--tx2);text-align:center}
-.rb{padding:13px 36px;background:var(--amb);border:none;border-radius:28px;color:#000;font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:3px;cursor:pointer;transition:all .2s}
-.rb:hover{transform:scale(1.05);box-shadow:0 8px 22px rgba(255,184,0,.4)}
+.rp{width:100px;height:100px;border-radius:50%;background:rgba(255,184,0,.1);border:2px solid var(--amb);display:flex;align-items:center;justify-content:center;font-size:38px;animation:rpulse 1s ease-in-out infinite}
+@keyframes rpulse{0%,100%{box-shadow:0 0 0 0 rgba(255,184,0,.4)}50%{box-shadow:0 0 0 24px rgba(255,184,0,0)}}
+.rt{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:4px;color:var(--amb);text-align:center;padding:0 24px}
+.rd{font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--tx2);text-align:center;padding:0 24px}
+.rb{padding:12px 32px;background:var(--amb);border:none;border-radius:26px;color:#000;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:3px;cursor:pointer}
 
-.sb{position:fixed;bottom:0;left:0;right:0;background:rgba(10,12,16,.95);border-top:1px solid var(--bdr);backdrop-filter:blur(20px);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;z-index:100}
-.si .sl{font-size:9px;letter-spacing:1.5px;color:var(--tx3);text-transform:uppercase;font-family:'Barlow Condensed',sans-serif;font-weight:600}
-.si .sv{font-family:'Share Tech Mono',monospace;font-size:14px;color:var(--tx2);margin-top:1px;text-align:center}
+/* STATUS BAR */
+.sb{position:fixed;bottom:0;left:0;right:0;background:rgba(10,12,16,.95);border-top:1px solid var(--bdr);backdrop-filter:blur(20px);padding:9px 20px;display:flex;align-items:center;justify-content:space-between;z-index:100}
+.si .sl{font-size:9px;letter-spacing:1.5px;color:var(--tx3);text-transform:uppercase;font-family:'Barlow Condensed',sans-serif;font-weight:600;text-align:center}
+.si .sv{font-family:'Share Tech Mono',monospace;font-size:13px;color:var(--tx2);margin-top:1px;text-align:center}
 .si .sv.ok{color:var(--grn)}
 
-.toast{position:fixed;top:18px;left:50%;transform:translateX(-50%) translateY(-70px);background:var(--surf);border:1px solid var(--bdr2);border-radius:10px;padding:9px 18px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:600;letter-spacing:1px;z-index:999;transition:all .3s cubic-bezier(.34,1.56,.64,1);white-space:nowrap;box-shadow:0 8px 28px rgba(0,0,0,.5)}
+/* TOAST */
+.toast{position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(-60px);background:var(--surf);border:1px solid var(--bdr2);border-radius:9px;padding:8px 16px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:600;letter-spacing:1px;z-index:999;transition:all .3s cubic-bezier(.34,1.56,.64,1);white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.5)}
 .toast.show{transform:translateX(-50%) translateY(0)}
 .toast.ok{border-color:var(--grn);color:var(--grn)}
 .toast.er{border-color:var(--red);color:var(--red)}
 .toast.in{border-color:var(--acc);color:var(--acc)}
+
+/* SETTINGS SAVE BTN */
+.btn-save{width:100%;padding:10px;background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.25);border-radius:8px;color:var(--acc);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:600;letter-spacing:2px;cursor:pointer;margin-top:10px;transition:all .2s}
+.btn-save:hover{background:rgba(0,212,255,.14)}
 </style>
 </head>
 <body>
@@ -143,56 +210,121 @@ input[type=date]:focus,input[type=time]:focus{border-color:var(--acc)}
   <div class="clock"><div class="t" id="clk">--:--:--</div><div class="d" id="clkd">---</div></div>
 </header>
 
-<div class="apt-row">
-  <button class="apt-btn active" data-code="ICN" onclick="selApt('ICN',this)"><span class="iata">ICN</span><span class="nm">인천국제공항</span></button>
-  <button class="apt-btn" data-code="GMP" onclick="selApt('GMP',this)"><span class="iata">GMP</span><span class="nm">김포국제공항</span></button>
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('schedule',this)">📋 스케줄</button>
+  <button class="tab" onclick="switchTab('direct',this)">⏰ 직접 설정</button>
+  <button class="tab" onclick="switchTab('settings',this)">⚙️ 환경설정</button>
 </div>
 
-<div class="card">
-  <div class="ch"><div class="ico">📋</div><div class="lbl">스케줄 이미지 AI 분석</div></div>
-  <div class="upz" id="upz">
-    <input type="file" accept="image/*" id="imgIn" onchange="handleImg(event)">
-    <img id="prevImg" alt="preview">
-    <div class="up-ico" id="upIco">📷</div>
-    <div class="up-t" id="upT">스케줄 이미지 업로드</div>
-    <div class="up-s" id="upS">탭하여 갤러리 / 카메라 선택</div>
+<!-- ══ PANEL: SCHEDULE ══ -->
+<div class="panel show" id="panel-schedule">
+
+  <div class="card">
+    <div class="ch"><div class="ico">📋</div><div class="lbl">스케줄 이미지 AI 분석</div></div>
+    <div class="upz" id="upz">
+      <input type="file" accept="image/*" id="imgIn" onchange="handleImg(event)">
+      <img id="prevImg" alt="preview">
+      <div class="up-ico" id="upIco">📷</div>
+      <div class="up-t" id="upT">스케줄 이미지 업로드</div>
+      <div class="up-s" id="upS">탭하여 갤러리 / 카메라 선택</div>
+    </div>
+    <div class="prog" id="prog">
+      <div class="prog-t"><div class="prog-f"></div></div>
+      <div class="prog-l" id="progL">AI SCANNING SCHEDULE...</div>
+    </div>
+    <button class="btn-az" id="azBtn" onclick="analyze()">🔍 &nbsp;AI 출발 편 인식</button>
   </div>
-  <div class="prog" id="prog"><div class="prog-t"><div class="prog-f"></div></div><div class="prog-l">AI SCANNING · ICN / GMP DEPARTURE</div></div>
-  <button class="btn-az" id="azBtn" onclick="analyze()">🔍 &nbsp; AI 출발 시간 인식</button>
-  <div class="flist" id="flist"></div>
+
+  <!-- detected flights list -->
+  <div class="card" id="flightCard" style="display:none">
+    <div class="ch">
+      <div class="ico">✈️</div>
+      <div class="lbl">인식된 출발 편</div>
+      <span class="cnt" id="flightCnt">0</span>
+    </div>
+    <div class="fal-list" id="falList"></div>
+  </div>
+
+  <button class="btn-set-all" id="btnSetAll" style="display:none" onclick="registerAllActive()">
+    ✈ &nbsp;활성 알람 전체 등록
+  </button>
+
 </div>
 
-<div class="card">
-  <div class="ch"><div class="ico">⏱</div><div class="lbl">출발 시간 직접 입력</div></div>
-  <div class="man">
-    <div class="irow">
-      <div class="ig"><label>날짜</label><input type="date" id="depDate"></div>
-      <div class="ig"><label>출발 (HH:MM)</label><input type="time" id="depTime"></div>
+<!-- ══ PANEL: DIRECT ══ -->
+<div class="panel" id="panel-direct">
+  <div class="card" style="margin-top:12px">
+    <div class="ch"><div class="ico">⏰</div><div class="lbl">알람 직접 추가</div></div>
+    <div class="dsec">
+      <div class="dlrow">
+        <label>알람 이름</label>
+        <input type="text" class="lf" id="dLabel" placeholder="예: 기상, 출근 준비, 공항 출발...">
+      </div>
+      <div class="drow">
+        <div class="ig"><label>날짜</label><input type="date" id="dDate"></div>
+        <div class="ig"><label>시간 (HH:MM)</label><input type="time" id="dTime"></div>
+      </div>
+      <button class="btn-da" onclick="addDirectAlarm()">⏰ &nbsp;알람 추가</button>
     </div>
   </div>
 </div>
 
-<div class="card">
-  <div class="ch"><div class="ico">🔔</div><div class="lbl">알람 설정</div></div>
-  <div class="acfg" id="acfg"></div>
+<!-- ══ PANEL: SETTINGS ══ -->
+<div class="panel" id="panel-settings">
+  <div class="card" style="margin-top:12px">
+    <div class="ch"><div class="ico">🏠</div><div class="lbl">베이스 공항 설정</div></div>
+    <div class="sset">
+      <div class="srow">
+        <label>베이스 공항 IATA 코드</label>
+        <input type="text" class="sinp" id="baseApt" maxlength="3" placeholder="예: ICN, GMP, PUS">
+      </div>
+    </div>
+  </div>
+
+  <!-- BASE presets -->
+  <div class="card" style="margin-top:12px">
+    <div class="ch">
+      <div class="ico" style="background:rgba(0,212,255,.1);border-color:rgba(0,212,255,.2)">🏠</div>
+      <div class="lbl">베이스 출발 프리셋</div>
+      <span class="cnt" style="color:var(--acc)">BASE</span>
+    </div>
+    <div class="pgroup" id="basePresets"></div>
+  </div>
+
+  <!-- INTL presets -->
+  <div class="card" style="margin-top:12px">
+    <div class="ch">
+      <div class="ico" style="background:rgba(255,184,0,.1);border-color:rgba(255,184,0,.2)">🌏</div>
+      <div class="lbl">해외 스테이션 프리셋</div>
+      <span class="cnt" style="color:var(--amb)">INTL</span>
+    </div>
+    <div class="pgroup" id="intlPresets"></div>
+  </div>
 </div>
 
-<button class="btn-set" onclick="setAlarms()">✈ &nbsp; 알람 등록</button>
-
-<div class="card" style="margin-top:14px">
-  <div class="ch"><div class="ico" style="background:rgba(0,230,118,.1);border-color:rgba(0,230,118,.2)">📡</div><div class="lbl">등록된 알람</div><span class="cnt" id="acnt">0</span></div>
-  <div class="aal" id="aal"><div class="empty" id="emp">// NO ALARMS ARMED //</div></div>
+<!-- ══ ACTIVE ALARMS (always visible) ══ -->
+<div class="card" style="margin-top:12px">
+  <div class="ch">
+    <div class="ico" style="background:rgba(0,230,118,.1);border-color:rgba(0,230,118,.2)">📡</div>
+    <div class="lbl">등록된 알람</div>
+    <span class="cnt" id="acnt">0</span>
+  </div>
+  <div class="aal" id="aal">
+    <div class="empty">// NO ALARMS ARMED //</div>
+  </div>
 </div>
 
-</div>
+</div><!-- /app -->
 
+<!-- Status bar -->
 <div class="sb">
-  <div class="si"><div class="sl">공항</div><div class="sv" id="sb-apt">ICN</div></div>
-  <div class="si"><div class="sl">출발</div><div class="sv" id="sb-dep">--:--</div></div>
+  <div class="si"><div class="sl">베이스</div><div class="sv" id="sb-apt">---</div></div>
+  <div class="si"><div class="sl">다음 출발</div><div class="sv" id="sb-dep">--:--</div></div>
   <div class="si"><div class="sl">알람</div><div class="sv ok" id="sb-cnt">0</div></div>
   <div class="si"><div class="sl">상태</div><div class="sv" id="sb-st">STANDBY</div></div>
 </div>
 
+<!-- Ring overlay -->
 <div class="ro" id="ro">
   <div class="rp">🔔</div>
   <div class="rt" id="rtt">알람</div>
@@ -202,32 +334,118 @@ input[type=date]:focus,input[type=time]:focus{border-color:var(--acc)}
 
 <div class="toast" id="toast"></div>
 
-<script src="vendor/tesseract/tesseract.min.js"></script>
 <script>
-var apt = 'ICN';
-var offs = [
-  {id:1,h:2,m:30,lbl:'출근 준비',on:true},
-  {id:2,h:1,m:30,lbl:'공항 출발',on:true},
-  {id:3,h:0,m:30,lbl:'게이트 마감',on:false}
+/* ══════════════════════════════════
+   DEFAULT STATE
+══════════════════════════════════ */
+var DEFAULT_BASE_OFFS = [
+  {id:'b1', h:3, m:0,  lbl:'기상'},
+  {id:'b2', h:2, m:30, lbl:'출근 준비'},
+  {id:'b3', h:1, m:30, lbl:'공항 출발'},
+  {id:'b4', h:0, m:40, lbl:'탑승 게이트 마감'}
 ];
-var oc = 4;
-var alms = [];
+var DEFAULT_INTL_OFFS = [
+  {id:'i1', h:2, m:0,  lbl:'기상 (해외)'},
+  {id:'i2', h:1, m:30, lbl:'호텔 체크아웃'},
+  {id:'i3', h:1, m:0,  lbl:'공항 이동'},
+  {id:'i4', h:0, m:40, lbl:'탑승 게이트 마감'}
+];
+
+/* ══════════════════════════════════
+   RUNTIME STATE
+══════════════════════════════════ */
+var baseApt = 'ICN';               // 베이스 공항
+var baseOffs = [];                 // BASE 프리셋 [{id,h,m,lbl}]
+var intlOffs = [];                 // INTL 프리셋
+var baseOn   = {};                 // toggle state
+var intlOn   = {};
+var baseOc   = 100;
+var intlOc   = 200;
+
+var alms = [];                     // 등록된 알람
+var detectedFlights = [];          // AI 인식 결과
+// flightToggles[flightIdx][offId] = true/false
+var flightToggles = {};
+
 var curImg = null;
-var aCtx = null;
-var oscs = [];
-var scannedFlights = [];
+var aCtx = null, oscs = [];
 
+/* ══════════════════════════════════
+   UTILS
+══════════════════════════════════ */
 function p2(n){return String(n).padStart(2,'0');}
+function fmt(dt){return p2(dt.getHours())+':'+p2(dt.getMinutes());}
+function uid(){return String(Date.now())+String(Math.random()).slice(2,6);}
+function todayStr(){
+  var n=new Date();
+  return n.getFullYear()+'-'+p2(n.getMonth()+1)+'-'+p2(n.getDate());
+}
+function buildDate(ds,ts){
+  var tp=ts.split(':'), h=parseInt(tp[0],10), m=parseInt(tp[1],10);
+  if(ds){
+    var dp=ds.split('-');
+    return new Date(parseInt(dp[0],10),parseInt(dp[1],10)-1,parseInt(dp[2],10),h,m,0,0);
+  }
+  var d=new Date(); d.setHours(h,m,0,0); return d;
+}
+function escQ(s){return String(s).replace(/"/g,'&quot;');}
 
+/* ══════════════════════════════════
+   LOAD / SAVE SETTINGS
+══════════════════════════════════ */
+function loadSettings(){
+  try{
+    var s=localStorage.getItem('crewclock_settings');
+    if(s){
+      var d=JSON.parse(s);
+      baseApt  = (d.baseApt||'ICN').toUpperCase();
+      baseOffs = d.baseOffs || deepCopy(DEFAULT_BASE_OFFS);
+      intlOffs = d.intlOffs || deepCopy(DEFAULT_INTL_OFFS);
+      baseOn   = d.baseOn   || {};
+      intlOn   = d.intlOn   || {};
+    } else {
+      resetDefaults();
+    }
+  } catch(e){ resetDefaults(); }
+  // fill defaults for on state
+  baseOffs.forEach(function(o){ if(baseOn[o.id]===undefined) baseOn[o.id]=true; });
+  intlOffs.forEach(function(o){ if(intlOn[o.id]===undefined) intlOn[o.id]=true; });
+}
+function saveSettings(){
+  try{
+    localStorage.setItem('crewclock_settings', JSON.stringify({
+      baseApt:baseApt, baseOffs:baseOffs, intlOffs:intlOffs,
+      baseOn:baseOn, intlOn:intlOn
+    }));
+  } catch(e){}
+}
+function resetDefaults(){
+  baseOffs = deepCopy(DEFAULT_BASE_OFFS);
+  intlOffs = deepCopy(DEFAULT_INTL_OFFS);
+  baseOn={}; intlOn={};
+  baseOffs.forEach(function(o){baseOn[o.id]=true;});
+  intlOffs.forEach(function(o){intlOn[o.id]=true;});
+}
+function deepCopy(o){return JSON.parse(JSON.stringify(o));}
+
+/* ══════════════════════════════════
+   INIT
+══════════════════════════════════ */
 function init(){
-  var d=new Date();
-  document.getElementById('depDate').value=d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate());
-  renderOffs();
+  loadSettings();
+  document.getElementById('dDate').value = todayStr();
+  document.getElementById('baseApt').value = baseApt;
+  renderBasePresets();
+  renderIntlPresets();
+  updateSB();
   tickClock();
   setInterval(tickClock,1000);
   setInterval(checkAlarms,1000);
 }
 
+/* ══════════════════════════════════
+   CLOCK
+══════════════════════════════════ */
 function tickClock(){
   var n=new Date();
   document.getElementById('clk').textContent=p2(n.getHours())+':'+p2(n.getMinutes())+':'+p2(n.getSeconds());
@@ -236,25 +454,111 @@ function tickClock(){
   updateCDs();
 }
 
-function selApt(code,btn){
-  setSelectedAirport(code,true);
-  toast(code+' 출발 기준 설정','in');
-}
-
-function setSelectedAirport(code,keepButton){
-  apt=code||apt;
-  document.getElementById('sb-apt').textContent=apt;
-  var matched=false;
-  document.querySelectorAll('.apt-btn').forEach(function(b){
-    var on=b.getAttribute('data-code')===apt;
-    b.classList.toggle('active',on);
-    if(on)matched=true;
-  });
-  if(!matched&&!keepButton){
-    document.querySelectorAll('.apt-btn').forEach(function(b){b.classList.remove('active');});
+/* ══════════════════════════════════
+   TABS
+══════════════════════════════════ */
+function switchTab(name,btn){
+  document.querySelectorAll('.tab').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('show');});
+  document.getElementById('panel-'+name).classList.add('show');
+  if(name==='settings'){
+    document.getElementById('baseApt').value=baseApt;
+    renderBasePresets();
+    renderIntlPresets();
   }
 }
 
+/* ══════════════════════════════════
+   SETTINGS PANEL
+══════════════════════════════════ */
+function saveSettingsUI(){
+  var v=(document.getElementById('baseApt').value||'').trim().toUpperCase().slice(0,3);
+  if(v.length<2){toast('공항 코드를 입력하세요','er');return;}
+  // sync preset DOM values
+  syncAllPresets();
+  baseApt=v;
+  saveSettings();
+  document.getElementById('sb-apt').textContent=baseApt;
+  toast('설정 저장됨','ok');
+}
+
+function syncAllPresets(){
+  baseOffs.forEach(function(o){
+    var hEl=document.getElementById('boh-'+o.id), mEl=document.getElementById('bom-'+o.id), lEl=document.getElementById('bolbl-'+o.id);
+    if(hEl) o.h=Math.max(0,parseInt(hEl.value)||0);
+    if(mEl) o.m=Math.max(0,Math.min(59,parseInt(mEl.value)||0));
+    if(lEl) o.lbl=lEl.value||'알람';
+  });
+  intlOffs.forEach(function(o){
+    var hEl=document.getElementById('ioh-'+o.id), mEl=document.getElementById('iom-'+o.id), lEl=document.getElementById('iolbl-'+o.id);
+    if(hEl) o.h=Math.max(0,parseInt(hEl.value)||0);
+    if(mEl) o.m=Math.max(0,Math.min(59,parseInt(mEl.value)||0));
+    if(lEl) o.lbl=lEl.value||'알람';
+  });
+}
+
+/* render preset rows */
+function renderBasePresets(){
+  var c=document.getElementById('basePresets');
+  c.innerHTML=baseOffs.map(function(o){
+    var on=!!baseOn[o.id];
+    return presetRow(o,on,'b','base');
+  }).join('')
+  +'<button class="add-btn" onclick="addBaseOff()">+ BASE 알람 추가</button>'
+  +'<button class="btn-save" onclick="saveSettingsUI()">설정 저장</button>';
+}
+function renderIntlPresets(){
+  var c=document.getElementById('intlPresets');
+  c.innerHTML=intlOffs.map(function(o){
+    var on=!!intlOn[o.id];
+    return presetRow(o,on,'i','intl');
+  }).join('')
+  +'<button class="add-btn amb" onclick="addIntlOff()">+ INTL 알람 추가</button>';
+}
+
+function presetRow(o,on,prefix,type){
+  var togClass='tog'+(on?(type==='base'?' on':' on-amb'):'');
+  var pid=prefix+'oh-'+o.id, mid=prefix+'om-'+o.id, lid=prefix+'olbl-'+o.id;
+  // fix ids: prefix already contains the letter
+  pid=prefix+'oh-'+o.id; mid=prefix+'om-'+o.id; lid=prefix+'olbl-'+o.id;
+  return '<div class="orow" id="'+prefix+'orow-'+o.id+'">'
+    +'<button class="'+togClass+'" onclick="togPre(\''+prefix+'\',\''+o.id+'\',this)" aria-label="toggle"></button>'
+    +'<div class="olbl">'
+    +'<input class="lbl-inp" type="text" value="'+escQ(o.lbl)+'" id="'+lid+'" placeholder="알람 이름">'
+    +'<div class="olbl-s">출발 '+o.h+'시간 '+o.m+'분 전</div>'
+    +'</div>'
+    +'<div class="oedit">'
+    +'<input type="number" class="ni" value="'+o.h+'" min="0" max="48" id="'+pid+'" oninput="syncPreRow(\''+prefix+'\',\''+o.id+'\')">&thinsp;<span class="ul">H</span>&nbsp;'
+    +'<input type="number" class="ni" value="'+o.m+'" min="0" max="59" id="'+mid+'" oninput="syncPreRow(\''+prefix+'\',\''+o.id+'\')">&thinsp;<span class="ul">M</span>&nbsp;'
+    +'<button class="db" onclick="delPre(\''+prefix+'\',\''+o.id+'\')" aria-label="삭제">&#x2715;</button>'
+    +'</div></div>';
+}
+
+function togPre(prefix,id,btn){
+  if(prefix==='b'){ baseOn[id]=!baseOn[id]; btn.className='tog'+(baseOn[id]?' on':''); }
+  else { intlOn[id]=!intlOn[id]; btn.className='tog'+(intlOn[id]?' on-amb':''); }
+}
+function syncPreRow(prefix,id){
+  var arr=prefix==='b'?baseOffs:intlOffs;
+  var o=arr.find(function(x){return x.id===id;}); if(!o)return;
+  var hEl=document.getElementById(prefix+'oh-'+id), mEl=document.getElementById(prefix+'om-'+id), lEl=document.getElementById(prefix+'olbl-'+id);
+  if(hEl) o.h=Math.max(0,parseInt(hEl.value)||0);
+  if(mEl) o.m=Math.max(0,Math.min(59,parseInt(mEl.value)||0));
+  if(lEl) o.lbl=lEl.value||'알람';
+  var sub=document.querySelector('#'+prefix+'orow-'+id+' .olbl-s');
+  if(sub) sub.textContent='출발 '+o.h+'시간 '+o.m+'분 전';
+}
+function delPre(prefix,id){
+  if(prefix==='b'){baseOffs=baseOffs.filter(function(x){return x.id!==id;});delete baseOn[id];renderBasePresets();}
+  else{intlOffs=intlOffs.filter(function(x){return x.id!==id;});delete intlOn[id];renderIntlPresets();}
+}
+function addBaseOff(){var id='b'+(baseOc++);baseOffs.push({id:id,h:1,m:0,lbl:'알람'});baseOn[id]=true;renderBasePresets();}
+function addIntlOff(){var id='i'+(intlOc++);intlOffs.push({id:id,h:1,m:0,lbl:'알람'});intlOn[id]=true;renderIntlPresets();}
+
+/* ══════════════════════════════════
+   IMAGE UPLOAD
+══════════════════════════════════ */
 function handleImg(e){
   var f=e.target.files[0]; if(!f)return;
   curImg=f;
@@ -266,550 +570,288 @@ function handleImg(e){
     document.getElementById('upT').textContent=f.name;
     document.getElementById('upS').textContent='탭하여 다시 선택';
     document.getElementById('azBtn').style.display='block';
-    document.getElementById('flist').style.display='none';
+    document.getElementById('flightCard').style.display='none';
+    document.getElementById('btnSetAll').style.display='none';
   };
   r.readAsDataURL(f);
 }
 
-async function analyze(){
+/* ══════════════════════════════════
+   AI ANALYZE
+══════════════════════════════════ */
+function analyze(){
   if(!curImg)return;
+  syncAllPresets();
   var btn=document.getElementById('azBtn');
   var pg=document.getElementById('prog');
-  var pl=pg.querySelector('.prog-l');
   btn.disabled=true; btn.style.display='none'; pg.style.display='block';
 
-  try{
-    pl.textContent='OCR ENGINE LOADING · IMAGE PREP';
-    var ocr=await readScheduleData(curImg,function(msg){pl.textContent=msg;},apt);
-    var flights=parseFlightsFromOcr(ocr);
-    pg.style.display='none'; btn.disabled=false; btn.style.display='block';
-    renderFlights(flights,ocr.text);
-  }catch(e){
-    pg.style.display='none'; btn.disabled=false; btn.style.display='block';
-    toast('OCR 인식 실패. 이미지를 더 선명하게 올려주세요.','er');
-  }
-}
+  var r=new FileReader();
+  r.onload=function(ev){
+    var b64=ev.target.result.split(',')[1];
+    var mt=curImg.type||'image/jpeg';
 
-async function readScheduleData(file,onProgress,depApt){
-  if(window.Tesseract){
-    onProgress('IMAGE PREPROCESSING');
-    var image=await preprocessImage(file);
-    var result=await runTesseract(image,onProgress);
-    var data=toOcrData(result);
-    if(!hasScheduleSignals(data,depApt)){
-      onProgress('OCR RETRY · ORIGINAL IMAGE');
-      result=await runTesseract(file,onProgress);
-      data=mergeOcrData(data,toOcrData(result));
-    }
-    return data;
-  }
+    var today=new Date();
+    var todayIso=today.getFullYear()+'-'+p2(today.getMonth()+1)+'-'+p2(today.getDate());
 
-  if('TextDetector' in window){
-    onProgress('BROWSER TEXT DETECTOR');
-    var detector=new window.TextDetector();
-    var bitmap=await createImageBitmap(file);
-    var blocks=await detector.detect(bitmap);
-    return {
-      text:blocks.map(function(b){return b.rawValue||'';}).join(' '),
-      words:blocks.map(function(b){
-        var box=b.boundingBox||{x:0,y:0,width:0,height:0};
-        return {text:(b.rawValue||'').toUpperCase(),x:box.x,y:box.y,w:box.width,h:box.height};
-      })
-    };
-  }
+    var prompt='You are an airline crew scheduling assistant. The crew member\'s home base airport is: '+baseApt+'.\n'
+      +'Today\'s date is: '+todayIso+'.\n\n'
+      +'Analyze this monthly schedule image. Find ALL flight legs that have a specific departure airport and departure time.\n\n'
+      +'RULES:\n'
+      +'- Each cell may contain multiple flight legs on the same day\n'
+      +'- A flight leg looks like: "KE 913 ICN 09:55 - MAD 18:00" or "KE 041 ICN 16:40 - SEA 10:40" or "KE 914 MAD 20:00 - ICN"\n'
+      +'- Extract: date (YYYY-MM-DD), flight number, departure airport IATA, departure time HH:MM (24h), arrival airport IATA\n'
+      +'- Only include legs where both departure airport AND departure time are clearly shown\n'
+      +'- Classify each leg: if depApt === "'+baseApt+'" then type="base", else type="intl"\n'
+      +'- Include ALL months/dates in the image; dates in the past relative to today should still be included\n\n'
+      +'Respond ONLY with minified JSON, no markdown:\n'
+      +'{"flights":[{"date":"2026-05-03","flight":"KE913","depApt":"ICN","depTime":"09:55","arrApt":"MAD","type":"base"}]}\n'
+      +'If no flights found: {"flights":[]}';
 
-  return {text:file.name||'',words:[]};
-}
-
-function runTesseract(image,onProgress){
-  return Tesseract.recognize(image,'eng',{
-      workerPath:'vendor/tesseract/worker.min.js',
-      corePath:'vendor/tesseract/tesseract-core.wasm.js',
-      langPath:'vendor/tesseract',
-      tessedit_char_whitelist:'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789:.- ',
-      preserve_interword_spaces:'1',
-      logger:function(m){
-        if(!m||!m.status)return;
-        var pct=typeof m.progress==='number'?(' '+Math.round(m.progress*100)+'%'):'';
-        onProgress('OCR '+m.status.toUpperCase()+pct);
-      }
+    fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2000,
+        messages:[{role:'user',content:[
+          {type:'image',source:{type:'base64',media_type:mt,data:b64}},
+          {type:'text',text:prompt}
+        ]}]})
+    })
+    .then(function(res){return res.json();})
+    .then(function(data){
+      var txt=(data.content||[]).map(function(i){return i.text||'';}).join('');
+      var parsed;
+      try{parsed=JSON.parse(txt.replace(/```json|```/g,'').trim());}
+      catch(e){parsed={flights:[]};}
+      pg.style.display='none';
+      detectedFlights=parsed.flights||[];
+      renderFlightList();
+    })
+    .catch(function(err){
+      pg.style.display='none'; btn.disabled=false; btn.style.display='block';
+      toast('분석 실패. 다시 시도해주세요.','er');
     });
-}
-
-function toOcrData(result){
-  return {
-    text:(result.data&&result.data.text)||'',
-    words:normalizeOcrWords((result.data&&result.data.words)||[])
   };
+  r.onerror=function(){pg.style.display='none';btn.disabled=false;btn.style.display='block';toast('이미지 읽기 실패','er');};
+  r.readAsDataURL(curImg);
 }
 
-function hasScheduleSignals(data,depApt){
-  var text=((data&&data.text)||'').toUpperCase();
-  var hasApt=text.indexOf(depApt)>=0||(data.words||[]).some(function(w){return fixAirportToken(w.text)===depApt;});
-  var hasTime=/\b([0-2]?\d[:.]?[0-5]\d|\d{3,4})\b/.test(text)||(data.words||[]).some(function(w){return !!normTime(fixTimeToken(w.text));});
-  return hasApt&&hasTime;
-}
+/* ══════════════════════════════════
+   RENDER FLIGHT LIST
+══════════════════════════════════ */
+function renderFlightList(){
+  var card=document.getElementById('flightCard');
+  var list=document.getElementById('falList');
+  var cnt=document.getElementById('flightCnt');
+  var btnAll=document.getElementById('btnSetAll');
 
-function mergeOcrData(a,b){
-  return {
-    text:((a&&a.text)||'')+'\n'+((b&&b.text)||''),
-    words:[].concat((a&&a.words)||[],(b&&b.words)||[])
-  };
-}
-
-function preprocessImage(file){
-  return new Promise(function(resolve,reject){
-    var url=URL.createObjectURL(file);
-    var img=new Image();
-    img.onload=function(){
-      var scale=Math.max(2,Math.min(4,1800/Math.max(img.width,img.height)));
-      var canvas=document.createElement('canvas');
-      canvas.width=Math.round(img.width*scale);
-      canvas.height=Math.round(img.height*scale);
-      var ctx=canvas.getContext('2d',{willReadFrequently:true});
-      ctx.fillStyle='#fff';
-      ctx.fillRect(0,0,canvas.width,canvas.height);
-      ctx.imageSmoothingEnabled=false;
-      ctx.drawImage(img,0,0,canvas.width,canvas.height);
-      var data=ctx.getImageData(0,0,canvas.width,canvas.height);
-      var total=0,count=0;
-      for(var j=0;j<data.data.length;j+=16){
-        total+=0.299*data.data[j]+0.587*data.data[j+1]+0.114*data.data[j+2];
-        count++;
-      }
-      var invert=(total/Math.max(count,1))<120;
-      for(var i=0;i<data.data.length;i+=4){
-        var r=data.data[i],g=data.data[i+1],b=data.data[i+2];
-        var gray=0.299*r+0.587*g+0.114*b;
-        var high=invert?(gray>145?0:255):(gray>168?255:0);
-        data.data[i]=high;
-        data.data[i+1]=high;
-        data.data[i+2]=high;
-      }
-      ctx.putImageData(data,0,0);
-      URL.revokeObjectURL(url);
-      resolve(canvas.toDataURL('image/png'));
-    };
-    img.onerror=function(){URL.revokeObjectURL(url);reject(new Error('image load failed'));};
-    img.src=url;
-  });
-}
-
-function normalizeOcrWords(words){
-  return words.map(function(w){
-    var text=String(w.text||'').toUpperCase().replace(/[^A-Z0-9:.]/g,'');
-    var box=w.bbox||{};
-    return {
-      text:text,
-      x:Number(box.x0||0),
-      y:Number(box.y0||0),
-      w:Number((box.x1||0)-(box.x0||0)),
-      h:Number((box.y1||0)-(box.y0||0))
-    };
-  }).filter(function(w){return w.text;});
-}
-
-function normalizeCalendarLine(line){
-  return String(line||'').toUpperCase()
-    .replace(/[|]/g,' ')
-    .replace(/[０-９]/g,function(ch){return String.fromCharCode(ch.charCodeAt(0)-65248);})
-    .replace(/[–—]/g,'-')
-    .replace(/\s+/g,' ')
-    .trim();
-}
-
-function getCalendarYearMonth(text){
-  var m=String(text||'').match(/\b(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)[A-Z]*\s+(20\d{2})\b/i);
-  if(!m){
-    var now=new Date();
-    return {year:now.getFullYear(),month:now.getMonth()+1};
-  }
-  return {year:Number(m[2]),month:monthToNumber(m[1])};
-}
-
-function monthToNumber(value){
-  var map={JAN:1,FEB:2,MAR:3,APR:4,MAY:5,JUN:6,JUL:7,AUG:8,SEP:9,OCT:10,NOV:11,DEC:12};
-  return map[String(value||'').slice(0,3).toUpperCase()]||1;
-}
-
-function parseCalendarDate(line,yearMonth){
-  var m=String(line||'').match(/\b(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)[A-Z]*\s+(\d{1,2})\b/i);
-  if(!m)return '';
-  var month=monthToNumber(m[1]);
-  var day=Number(m[2]);
-  return yearMonth.year+'-'+p2(month)+'-'+p2(day);
-}
-
-function isNonFlightLine(line){
-  return /^(LO|DO|ATDO|RESERVE|OFF|STBY|SBY)\b/.test(line);
-}
-
-function parseFlightsFromOcr(ocr){
-  var textFlights=parseFlightsFromCalendarText(ocr.text||'');
-  var wordFlights=parseFlightsFromWords(ocr.words||[]);
-  var flights=mergeFlightSets(textFlights,wordFlights);
-  if(!flights.length){
-    var fromFile=parseFlightFromFilename(curImg&&curImg.name);
-    if(fromFile)flights.push(fromFile);
-  }
-  return dedupeFlights(flights);
-}
-
-function mergeFlightSets(primary, secondary){
-  var merged=(primary||[]).slice();
-  (secondary||[]).forEach(function(extra){
-    var match=merged.find(function(base){
-      return base.flight===extra.flight &&
-        base.depTime===extra.depTime &&
-        base.origin===extra.origin &&
-        base.dest===extra.dest;
-    });
-    if(match){
-      if(!match.depDate&&extra.depDate)match.depDate=extra.depDate;
-      if(!match.arrTime&&extra.arrTime)match.arrTime=extra.arrTime;
-      return;
-    }
-    merged.push(extra);
-  });
-  return merged;
-}
-
-function parseFlightsFromWords(words){
-  var clean=words.map(function(w){
-    return Object.assign({},w,{text:fixOcrToken(w.text)});
-  }).filter(function(w){return w.text;});
-  var rows=groupWordsByRow(clean);
-  var flights=[];
-
-  rows.forEach(function(row){
-    var parsed=parseFlightRow(row.words);
-    if(parsed)flights.push(parsed);
-  });
-
-  return flights;
-}
-
-function fixOcrToken(value){
-  return String(value||'').toUpperCase()
-    .replace(/[|]/g,'I')
-    .replace(/０/g,'0').replace(/１/g,'1').replace(/２/g,'2').replace(/３/g,'3').replace(/４/g,'4')
-    .replace(/５/g,'5').replace(/６/g,'6').replace(/７/g,'7').replace(/８/g,'8').replace(/９/g,'9')
-    .replace(/[^A-Z0-9:.]/g,'');
-}
-
-function fixAirportToken(value){
-  return fixOcrToken(value)
-    .replace(/^1CN$/,'ICN')
-    .replace(/^ICM$/,'ICN')
-    .replace(/^GMP$/,'GMP');
-}
-
-function fixTimeToken(value){
-  var token=fixOcrToken(value)
-    .replace(/[OQD]/g,'0')
-    .replace(/[IL]/g,'1')
-    .replace(/S/g,'5')
-    .replace(/B/g,'8');
-  return token;
-}
-
-function centerY(word){
-  return word.y+word.h/2;
-}
-
-function groupWordsByRow(words){
-  var sorted=words.slice().sort(function(a,b){return a.y-b.y||a.x-b.x;});
-  var rows=[];
-  sorted.forEach(function(word){
-    var row=rows.find(function(r){return Math.abs(r.y-centerY(word))<=Math.max(18,word.h);});
-    if(!row){
-      row={y:centerY(word),words:[]};
-      rows.push(row);
-    }
-    row.words.push(word);
-  });
-  rows.forEach(function(row){
-    row.words.sort(function(a,b){return a.x-b.x;});
-  });
-  return rows;
-}
-
-function parseFlightRow(words){
-  for(var i=0;i<words.length;i++){
-    var flight=fixFlightToken(words[i].text);
-    if(!flight)continue;
-    for(var j=i+1;j<words.length-2;j++){
-      var origin=fixAirportToken(words[j].text);
-      var depTime=normTime(fixTimeToken(words[j+1].text));
-      var dest=fixAirportToken(words[j+2].text);
-      var arrTime=j+3<words.length?normTime(fixTimeToken(words[j+3].text)):'';
-      if(!isAirportCode(origin)||!depTime||!isAirportCode(dest))continue;
-      return {
-        flight:flight,
-        origin:origin,
-        depTime:depTime,
-        dest:dest,
-        arrTime:arrTime,
-        depDate:''
-      };
-    }
-  }
-  return null;
-}
-
-function parseFlightsFromCalendarText(text){
-  var yearMonth=getCalendarYearMonth(text);
-  var lines=(text||'').split(/\r?\n/).map(function(line){
-    return normalizeCalendarLine(line);
-  }).filter(Boolean);
-  var flights=[];
-  var currentDate='';
-
-  lines.forEach(function(line){
-    var date=parseCalendarDate(line,yearMonth);
-    if(date){
-      currentDate=date;
-      return;
-    }
-    if(isNonFlightLine(line))return;
-    collectFlightsFromChunk(line,currentDate,flights);
-  });
-
-  return flights;
-}
-
-function collectFlightsFromChunk(chunk,currentDate,flights){
-  var regex=/([A-Z]{2}\s?\d{2,4})\s+([A-Z]{3})\s+([0-2]?\d[:.]?[0-5]\d|\d{3,4})\s*[-–]\s*([A-Z]{3})(?:\s+([0-2]?\d[:.]?[0-5]\d|\d{3,4}))?/g;
-  var m;
-  while((m=regex.exec(chunk))!==null){
-    var flight=fixFlightToken(m[1]);
-    var origin=fixAirportToken(m[2]);
-    var depTime=normTime(fixTimeToken(m[3]));
-    var dest=fixAirportToken(m[4]);
-    var arrTime=normTime(fixTimeToken(m[5]||''));
-    if(!flight||!isAirportCode(origin)||!depTime||!isAirportCode(dest))continue;
-    flights.push({
-      flight:flight,
-      origin:origin,
-      depTime:depTime,
-      dest:dest,
-      arrTime:arrTime,
-      depDate:currentDate
-    });
-  }
-}
-
-function normTime(value){
-  var raw=String(value||'').replace(/[^\d]/g,'');
-  if(raw.length===3)raw='0'+raw;
-  if(raw.length!==4)return '';
-  var h=parseInt(raw.slice(0,2),10),m=parseInt(raw.slice(2),10);
-  if(h>23||m>59)return '';
-  return p2(h)+':'+p2(m);
-}
-
-function fixFlightToken(value){
-  var token=fixOcrToken(value).replace(/[OQD]/g,'0');
-  return /^[A-Z]{2}\d{2,4}$/.test(token)?token:'';
-}
-
-function isAirportCode(value){
-  return /^[A-Z]{3}$/.test(value) && !/^(MAY|SUN|MON|TUE|WED|THU|FRI|SAT|RES|ATD|L0|LO|D0|DO)$/.test(value);
-}
-
-function dedupeFlights(flights){
-  var seen={};
-  return flights.filter(function(f){
-    var key=f.flight+'|'+(f.depDate||'')+'|'+(f.origin||'')+'|'+f.depTime+'|'+f.dest;
-    if(seen[key])return false;
-    seen[key]=true;
-    return true;
-  }).sort(function(a,b){
-    return (a.depDate||'9999-99-99').localeCompare(b.depDate||'9999-99-99') || a.depTime.localeCompare(b.depTime);
-  });
-}
-
-function parseFlightFromFilename(name){
-  if(!name)return null;
-  var upper=name.toUpperCase();
-  var route=upper.match(/\b([A-Z]{3})[-_ ]?([A-Z]{3})\b/);
-  var time=(upper.match(/([0-2]?\d[:.]?[0-5]\d|\d{3,4})/)||[])[1];
-  time=normTime(time);
-  if(!time)return null;
-  var flight=fixFlightToken((upper.match(/\b([A-Z]{2}\d{2,4})\b/)||[])[1]||'')||'FLIGHT';
-  return {
-    flight:flight,
-    origin:route?route[1]:'---',
-    depTime:time,
-    dest:route?route[2]:'---',
-    arrTime:'',
-    depDate:''
-  };
-}
-
-function renderFlights(flights,rawText){
-  var list=document.getElementById('flist');
-  list.style.display='block';
-  scannedFlights=flights.slice();
-  if(!flights.length){
-    list.innerHTML='<div class="empty">출발편을 찾지 못했습니다<br>달력 셀 안의 편명, 출발공항, 시간, 도착공항이 또렷하게 보이도록 다시 촬영하거나 직접 입력하세요</div>';
-    toast('인식 결과 없음','er');
+  if(!detectedFlights.length){
+    card.style.display='block';
+    cnt.textContent='0';
+    list.innerHTML='<div class="empty">인식된 출발 편이 없습니다<br>직접 설정 탭을 이용하세요</div>';
+    btnAll.style.display='none';
     return;
   }
-  list.innerHTML=flights.map(function(f,index){
-    var route=(f.origin||'---')+' &rarr; '+(f.dest||'---');
-    var meta=(f.depDate?f.depDate+' · ':'')+route+(f.arrTime?' · ARR '+f.arrTime:'');
-    return '<div class="fi" onclick="selFlightByIndex(this,'+index+')"><div class="fdot"></div><div class="finfo"><div class="fnum">'+escHtml(f.flight)+'</div><div class="froute">'+escHtml(meta)+'</div></div><div class="ftime">'+escHtml(f.depTime)+'</div></div>';
-  }).join('');
-  toast(flights.length+'개 편 발견','ok');
-}
 
-function escHtml(value){
-  return String(value).replace(/[&<>"']/g,function(ch){
-    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch];
-  });
-}
-
-function escAttr(value){
-  return String(value).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-}
-
-function selFlightByIndex(el,index){
-  var f=scannedFlights[index];
-  if(!f)return;
-  document.querySelectorAll('.fi').forEach(function(f){f.classList.remove('sel');});
-  el.classList.add('sel');
-  document.getElementById('depTime').value=f.depTime;
-  if(f.depDate)document.getElementById('depDate').value=f.depDate;
-  document.getElementById('sb-dep').textContent=f.depTime;
-  setSelectedAirport(f.origin||apt,false);
-  toast(f.flight+' '+f.depTime+' 선택됨','ok');
-}
-
-function renderOffs(){
-  var c=document.getElementById('acfg');
-  c.innerHTML=offs.map(function(o){
-    return '<div class="orow" id="orow-'+o.id+'">'+
-      '<button class="tog'+(o.on?' on':'')+'" onclick="togO('+o.id+')" aria-label="toggle"></button>'+
-      '<div class="olbl"><div class="olbl-m">'+o.lbl+'</div><div class="olbl-s" id="os-'+o.id+'">출발 '+o.h+'시간 '+o.m+'분 전</div></div>'+
-      '<div class="oedit">'+
-      '<input type="number" class="ni" value="'+o.h+'" min="0" max="24" id="oh-'+o.id+'" oninput="syncO('+o.id+')" onchange="syncO('+o.id+')">&nbsp;<span class="ul">H</span>&nbsp;'+
-      '<input type="number" class="ni" value="'+o.m+'" min="0" max="59" id="om-'+o.id+'" oninput="syncO('+o.id+')" onchange="syncO('+o.id+')">&nbsp;<span class="ul">M</span>&nbsp;'+
-      '<button class="db" onclick="delO('+o.id+')" aria-label="삭제">&#x2715;</button>'+
-      '</div></div>';
-  }).join('')+'<button class="add-btn" onclick="addO()">+ 알람 추가</button>';
-}
-
-function togO(id){
-  var o=offs.find(function(x){return x.id===id;});
-  if(o){o.on=!o.on;renderOffs();}
-}
-
-function syncO(id){
-  var o=offs.find(function(x){return x.id===id;});
-  if(!o)return;
-  var hEl=document.getElementById('oh-'+id);
-  var mEl=document.getElementById('om-'+id);
-  if(hEl)o.h=Math.max(0,parseInt(hEl.value)||0);
-  if(mEl)o.m=Math.max(0,Math.min(59,parseInt(mEl.value)||0));
-  var s=document.getElementById('os-'+id);
-  if(s)s.textContent='출발 '+o.h+'시간 '+o.m+'분 전';
-}
-
-function delO(id){offs=offs.filter(function(x){return x.id!==id;});renderOffs();}
-
-function addO(){offs.push({id:oc++,h:1,m:0,lbl:'알람',on:true});renderOffs();}
-
-function setAlarms(){
-  offs.forEach(function(o){
-    var hEl=document.getElementById('oh-'+o.id);
-    var mEl=document.getElementById('om-'+o.id);
-    if(hEl)o.h=Math.max(0,parseInt(hEl.value)||0);
-    if(mEl)o.m=Math.max(0,Math.min(59,parseInt(mEl.value)||0));
+  // sort by date+time, today-first then future, then past
+  var today=new Date(); today.setHours(0,0,0,0);
+  detectedFlights.sort(function(a,b){
+    var da=parseFlightDate(a), db=parseFlightDate(b);
+    return da-db;
   });
 
-  var dv=document.getElementById('depDate').value;
-  var tv=document.getElementById('depTime').value;
-  if(!tv){toast('출발 시간을 입력하세요','er');return;}
+  cnt.textContent=String(detectedFlights.length);
+  card.style.display='block';
+  btnAll.style.display='block';
 
-  var pts=tv.split(':');
-  var dep=dv?new Date(dv):new Date();
-  dep.setHours(parseInt(pts[0]),parseInt(pts[1]),0,0);
-
-  var enabled=offs.filter(function(o){return o.on;});
-  if(!enabled.length){toast('켜진 알람이 없습니다','er');return;}
-
-  var now=new Date(), added=0;
-  enabled.forEach(function(o){
-    var ms=(o.h*60+o.m)*60000;
-    var at=new Date(dep.getTime()-ms);
-    var dup=alms.find(function(a){return !a.dism&&Math.abs(a.time-at)<1000;});
-    if(dup)return;
-    alms.push({
-      id:Date.now()+Math.random(),
-      time:at,
-      dep:new Date(dep),
-      lbl:o.lbl,
-      ostr:o.h+'H '+o.m+'M 전',
-      armed:true,
-      dism:at<=now,
-      ring:false
+  // init toggle state for each flight
+  detectedFlights.forEach(function(f,idx){
+    if(!flightToggles[idx]) flightToggles[idx]={};
+    var offs=f.type==='base'?baseOffs:intlOffs;
+    var onMap=f.type==='base'?baseOn:intlOn;
+    offs.forEach(function(o){
+      if(flightToggles[idx][o.id]===undefined) flightToggles[idx][o.id]=!!onMap[o.id];
     });
-    added++;
   });
 
-  if(!added){toast('등록할 알람 없음 (중복 또는 만료)','er');return;}
+  list.innerHTML=detectedFlights.map(function(f,idx){
+    return renderFalItem(f,idx);
+  }).join('');
+
+  toast(detectedFlights.length+'개 편 인식됨','ok');
+}
+
+function parseFlightDate(f){
+  if(!f.date) return new Date(9999,0,1);
+  var dp=f.date.split('-');
+  var tp=(f.depTime||'00:00').split(':');
+  return new Date(parseInt(dp[0]),parseInt(dp[1])-1,parseInt(dp[2]),parseInt(tp[0]),parseInt(tp[1]),0,0);
+}
+
+function renderFalItem(f,idx){
+  var now=new Date();
+  var fdt=parseFlightDate(f);
+  var todayDate=new Date(); todayDate.setHours(0,0,0,0);
+  var fDate=new Date(fdt); fDate.setHours(0,0,0,0);
+  var cls='fal-item';
+  var dayLabel='';
+  if(fDate.getTime()===todayDate.getTime()){cls+=' today';dayLabel=' · TODAY';}
+  else if(fdt>now){cls+=' future';}
+  else{cls+=' past';}
+
+  var dp=f.date?f.date.split('-'):['','',''];
+  var dateStr=dp[1]+'/'+dp[2];
+  var D=['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  var dow=fdt?D[fdt.getDay()]:'';
+
+  var typeLabel=f.type==='base'?'BASE':'INTL';
+  var typeCls=f.type==='base'?'base':'intl';
+
+  var offs=f.type==='base'?baseOffs:intlOffs;
+
+  var togsHtml=offs.map(function(o){
+    var on=!!flightToggles[idx][o.id];
+    var alarmTime=new Date(parseFlightDate(f).getTime()-(o.h*60+o.m)*60000);
+    var alarmStr=fmt(alarmTime);
+    var activeCls=on?(f.type==='base'?' active-base':' active-intl'):'';
+    var togCls='tog'+(on?(f.type==='base'?' on':' on-amb'):'');
+    return '<div class="fal-atog'+activeCls+'" id="fatog-'+idx+'-'+o.id+'">'
+      +'<button class="'+togCls+'" onclick="togFlightAlarm('+idx+',\''+o.id+'\')" aria-label="toggle"></button>'
+      +'<span class="atog-lbl">'+escQ(o.lbl)+'</span>'
+      +'<span class="atog-time">'+alarmStr+'</span>'
+      +'</div>';
+  }).join('');
+
+  return '<div class="'+cls+'" id="fali-'+idx+'">'
+    +'<div class="fal-header">'
+    +'<div class="fal-dot"></div>'
+    +'<div class="fal-info">'
+    +'<div class="fal-date">'+dow+' '+dateStr+dayLabel+'</div>'
+    +'<div class="fal-flight">'+f.flight+' &nbsp;'+f.depApt+' &rarr; '+(f.arrApt||'---')+'</div>'
+    +'</div>'
+    +'<div class="fal-deptime">'+f.depTime+'</div>'
+    +'<div class="fal-type '+typeCls+'">'+typeLabel+'</div>'
+    +'</div>'
+    +'<div class="fal-alarms">'+togsHtml+'</div>'
+    +'</div>';
+}
+
+function togFlightAlarm(idx,offId){
+  if(!flightToggles[idx]) flightToggles[idx]={};
+  flightToggles[idx][offId]=!flightToggles[idx][offId];
+  // re-render just that item
+  var f=detectedFlights[idx]; if(!f)return;
+  var el=document.getElementById('fali-'+idx);
+  if(el){
+    var tmp=document.createElement('div');
+    tmp.innerHTML=renderFalItem(f,idx);
+    el.parentNode.replaceChild(tmp.firstChild,el);
+  }
+}
+
+/* ══════════════════════════════════
+   REGISTER ALL ACTIVE
+══════════════════════════════════ */
+function registerAllActive(){
+  syncAllPresets();
+  var now=new Date();
+  var added=0;
+
+  detectedFlights.forEach(function(f,idx){
+    var depDt=parseFlightDate(f);
+    var offs=f.type==='base'?baseOffs:intlOffs;
+    offs.forEach(function(o){
+      if(!flightToggles[idx]||!flightToggles[idx][o.id]) return;
+      var at=new Date(depDt.getTime()-(o.h*60+o.m)*60000);
+      if(at<=now) return; // 이미 지난 알람 skip
+      var dup=alms.find(function(a){return !a.dism&&Math.abs(a.time-at)<2000;});
+      if(dup) return;
+      alms.push({
+        id:uid(), time:at, dep:new Date(depDt),
+        lbl:o.lbl+' ('+f.flight+')', type:f.type,
+        armed:true, ring:false, dism:false
+      });
+      added++;
+    });
+  });
+
+  if(!added){toast('등록할 알람 없음 (이미 지났거나 중복)','er');return;}
   alms.sort(function(a,b){return a.time-b.time;});
-  renderAlms();
-  updateSB();
-  document.getElementById('sb-dep').textContent=tv;
+  renderAlms(); updateSB();
   toast(added+'개 알람 등록 완료','ok');
 }
 
+/* ══════════════════════════════════
+   DIRECT ALARM
+══════════════════════════════════ */
+function addDirectAlarm(){
+  var dv=document.getElementById('dDate').value;
+  var tv=document.getElementById('dTime').value;
+  var lbl=(document.getElementById('dLabel').value||'알람').trim();
+  if(!tv){toast('시간을 입력하세요','er');return;}
+  var at=buildDate(dv,tv);
+  var now=new Date();
+  if(at<=now){toast('이미 지난 시간입니다','er');return;}
+  var dup=alms.find(function(a){return !a.dism&&Math.abs(a.time-at)<2000;});
+  if(dup){toast('같은 시간 알람이 이미 있습니다','er');return;}
+  alms.push({id:uid(),time:at,dep:null,lbl:lbl,type:'direct',armed:true,ring:false,dism:false});
+  alms.sort(function(a,b){return a.time-b.time;});
+  renderAlms(); updateSB();
+  toast('"'+lbl+'" 등록 완료','ok');
+  document.getElementById('dLabel').value='';
+  document.getElementById('dTime').value='';
+}
+
+/* ══════════════════════════════════
+   RENDER ACTIVE ALARMS
+══════════════════════════════════ */
 function renderAlms(){
   var c=document.getElementById('aal');
   var cnt=document.getElementById('acnt');
   if(!alms.length){
-    c.innerHTML='<div class="empty" id="emp">// NO ALARMS ARMED //</div>';
-    cnt.textContent='0';return;
+    cnt.textContent='0';
+    c.innerHTML='<div class="empty">// NO ALARMS ARMED //</div>';
+    return;
   }
-  cnt.textContent=alms.length;
+  cnt.textContent=String(alms.length);
   c.innerHTML=alms.map(function(a){
-    var ts=p2(a.time.getHours())+':'+p2(a.time.getMinutes());
-    var ds=p2(a.dep.getHours())+':'+p2(a.dep.getMinutes());
+    var ts=fmt(a.time);
     var cls='ac'+(a.ring?' ring':a.dism?' past':a.armed?' armed':'');
+    var typeBadge=a.type==='base'?'<span style="font-size:9px;color:var(--acc)">[BASE]</span>':
+                  a.type==='intl'?'<span style="font-size:9px;color:var(--amb)">[INTL]</span>':'';
+    var meta=a.dep?(a.lbl+' · DEP '+fmt(a.dep)):a.lbl;
     var act=a.ring
       ?'<button class="dis-btn" onclick="dismissA(\''+a.id+'\')">DISMISS</button>'
       :'<button class="adl" onclick="delA(\''+a.id+'\')" aria-label="삭제">&#x2715;</button>';
-    return '<div class="'+cls+'" id="ac-'+a.id+'"><div class="adot"></div><div class="ai"><div class="at">'+ts+'</div><div class="am">'+a.lbl+' &middot; DEP '+ds+'</div><div class="acd" id="cd-'+a.id+'"></div></div>'+act+'</div>';
+    return '<div class="'+cls+'" id="ac-'+a.id+'">'
+      +'<div class="adot"></div>'
+      +'<div class="ai"><div class="at">'+ts+'&nbsp;'+typeBadge+'</div>'
+      +'<div class="am">'+escQ(meta)+'</div>'
+      +'<div class="acd" id="cd-'+a.id+'"></div></div>'
+      +act+'</div>';
   }).join('');
 }
 
-function delA(id){
-  alms=alms.filter(function(a){return String(a.id)!==String(id);});
-  renderAlms();updateSB();
-}
-
+function delA(id){alms=alms.filter(function(a){return a.id!==id;});renderAlms();updateSB();}
 function dismissA(id){
-  var a=alms.find(function(x){return String(x.id)===String(id);});
+  var a=alms.find(function(x){return x.id===id;});
   if(a){a.dism=true;a.ring=false;}
-  stopSnd();
-  document.getElementById('ro').classList.remove('show');
+  var anyRing=alms.some(function(x){return x.ring;});
+  if(!anyRing){stopSnd();document.getElementById('ro').classList.remove('show');}
   renderAlms();updateSB();
 }
-
 function dismissOv(){
   alms.forEach(function(a){if(a.ring){a.dism=true;a.ring=false;}});
-  stopSnd();
-  document.getElementById('ro').classList.remove('show');
+  stopSnd();document.getElementById('ro').classList.remove('show');
   renderAlms();updateSB();
 }
 
+/* ══════════════════════════════════
+   COUNTDOWNS
+══════════════════════════════════ */
 function updateCDs(){
   var now=new Date();
   alms.forEach(function(a){
-    var el=document.getElementById('cd-'+a.id);
-    if(!el)return;
+    var el=document.getElementById('cd-'+a.id); if(!el)return;
     if(a.ring){el.textContent='▶ RINGING';return;}
     if(a.dism){el.textContent='✓ DISMISSED';return;}
     var diff=a.time-now;
@@ -820,61 +862,83 @@ function updateCDs(){
   });
 }
 
+/* ══════════════════════════════════
+   CHECK ALARMS
+══════════════════════════════════ */
 function checkAlarms(){
-  var now=new Date(),need=false;
+  var now=new Date(), needRender=false;
   alms.forEach(function(a){
     if(a.dism||a.ring)return;
-    var d=now-a.time;
-    if(d>=0&&d<60000){a.ring=true;trigAlarm(a);need=true;}
+    var diff=now-a.time;
+    if(diff>=0&&diff<60000){a.ring=true;needRender=true;trigAlarm(a);}
   });
-  if(need)renderAlms();
-  var before=alms.length;
-  alms=alms.filter(function(a){return !a.dism||(new Date()-a.time<300000);});
-  if(alms.length!==before){renderAlms();updateSB();}
+  alms.forEach(function(a){
+    if(a.ring&&(now-a.time)>=60000){
+      a.ring=false;a.dism=true;needRender=true;
+      if(!alms.some(function(x){return x.ring;})){stopSnd();document.getElementById('ro').classList.remove('show');}
+    }
+  });
+  if(needRender)renderAlms();
+  var bl=alms.length;
+  alms=alms.filter(function(a){return !a.dism||(now-a.time<300000);});
+  if(alms.length!==bl){renderAlms();updateSB();}
 }
 
 function trigAlarm(a){
-  var ts=p2(a.time.getHours())+':'+p2(a.time.getMinutes());
-  var ds=p2(a.dep.getHours())+':'+p2(a.dep.getMinutes());
-  document.getElementById('rtt').textContent=a.lbl;
-  document.getElementById('rdt').textContent=ts+' · 출발 '+ds+' ('+apt+') '+a.ostr;
+  document.getElementById('rtt').textContent='🔔 '+a.lbl;
+  document.getElementById('rdt').textContent=fmt(a.time)+(a.dep?' · 출발 '+fmt(a.dep):'');
   document.getElementById('ro').classList.add('show');
   playSnd();
-  if(navigator.vibrate)navigator.vibrate([400,150,400,150,400]);
+  if(navigator.vibrate)navigator.vibrate([400,150,400,150,400,150,400]);
 }
 
+/* ══════════════════════════════════
+   SOUND
+══════════════════════════════════ */
+function getACtx(){
+  if(!aCtx)aCtx=new(window.AudioContext||window.webkitAudioContext)();
+  if(aCtx.state==='suspended')aCtx.resume();
+  return aCtx;
+}
 function playSnd(){
   try{
-    if(!aCtx)aCtx=new(window.AudioContext||window.webkitAudioContext)();
-    stopSnd();
+    var ctx=getACtx(); stopSnd();
     function beep(f,s,d){
-      var o=aCtx.createOscillator(),g=aCtx.createGain();
-      o.connect(g);g.connect(aCtx.destination);
+      var o=ctx.createOscillator(),g=ctx.createGain();
+      o.connect(g);g.connect(ctx.destination);
       o.type='square';o.frequency.value=f;
-      g.gain.setValueAtTime(0,aCtx.currentTime+s);
-      g.gain.linearRampToValueAtTime(0.22,aCtx.currentTime+s+0.01);
-      g.gain.linearRampToValueAtTime(0,aCtx.currentTime+s+d-0.01);
-      o.start(aCtx.currentTime+s);o.stop(aCtx.currentTime+s+d);
-      oscs.push(o);
+      var t0=ctx.currentTime+s;
+      g.gain.setValueAtTime(0,t0);
+      g.gain.linearRampToValueAtTime(0.15,t0+0.01);
+      g.gain.linearRampToValueAtTime(0,t0+d-0.01);
+      o.start(t0);o.stop(t0+d);oscs.push(o);
     }
     for(var i=0;i<20;i++){var b=i*2;beep(880,b,.12);beep(660,b+.18,.12);beep(880,b+.36,.12);}
   }catch(e){}
 }
-
 function stopSnd(){oscs.forEach(function(o){try{o.stop();}catch(e){}});oscs=[];}
 
+/* ══════════════════════════════════
+   STATUS BAR
+══════════════════════════════════ */
 function updateSB(){
   var armed=alms.filter(function(a){return a.armed&&!a.dism;}).length;
-  document.getElementById('sb-cnt').textContent=armed;
+  document.getElementById('sb-apt').textContent=baseApt;
+  document.getElementById('sb-cnt').textContent=String(armed);
   document.getElementById('sb-cnt').className='sv'+(armed>0?' ok':'');
   document.getElementById('sb-st').textContent=armed>0?'ARMED':'STANDBY';
   document.getElementById('sb-st').className='sv'+(armed>0?' ok':'');
+  // next departure
+  var nextDep=alms.filter(function(a){return !a.dism&&a.dep&&a.dep>new Date();}).sort(function(a,b){return a.dep-b.dep;})[0];
+  document.getElementById('sb-dep').textContent=nextDep?fmt(nextDep.dep):'--:--';
 }
 
+/* ══════════════════════════════════
+   TOAST
+══════════════════════════════════ */
 function toast(msg,type){
   var t=document.getElementById('toast');
-  t.textContent=msg;
-  t.className='toast show '+type;
+  t.textContent=msg; t.className='toast show '+(type||'in');
   clearTimeout(t._tt);
   t._tt=setTimeout(function(){t.classList.remove('show');},2400);
 }
