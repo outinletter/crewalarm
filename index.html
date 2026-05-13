@@ -27,6 +27,8 @@ header{display:flex;align-items:center;justify-content:space-between;padding:18p
 .logo small{display:block;font-size:10px;font-family:'Barlow Condensed',sans-serif;font-weight:600;letter-spacing:2px;color:var(--tx2);margin-top:-4px}
 .clock .t{font-family:'Share Tech Mono',monospace;font-size:20px;color:var(--acc);letter-spacing:2px;text-align:right}
 .clock .d{font-size:10px;color:var(--tx2);letter-spacing:1px;text-align:right;text-transform:uppercase}
+.clock .tz{font-size:9px;color:var(--tx3);letter-spacing:.8px;text-align:right;margin-top:2px;font-family:'Barlow Condensed',sans-serif;font-weight:600}
+.clock .tz span{color:var(--tx2)}
 
 /* ── TABS ── */
 .tabs{display:flex;padding:14px 20px 0}
@@ -215,6 +217,36 @@ input[type=date]:focus{border-color:var(--acc)}
 /* ── FLIGHT LIST EMPTY ── */
 .empty{padding:20px;text-align:center;font-size:10px;color:var(--tx3);font-family:'Share Tech Mono',monospace;letter-spacing:1px}
 
+/* ── DIRECT ALARM LIST ── */
+.dal-list{padding:6px 12px 12px;display:flex;flex-direction:column;gap:6px}
+.dal-item{display:flex;align-items:center;gap:10px;padding:10px 12px;
+  border-radius:9px;border:1px solid rgba(0,230,118,.25);background:rgba(0,230,118,.04);
+  animation:dalfin .25s ease}
+@keyframes dalfin{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.dal-item.ring-now{border-color:var(--amb);animation:pring2 .5s ease-in-out infinite alternate}
+@keyframes pring2{from{box-shadow:0 0 0 rgba(255,184,0,0)}to{box-shadow:0 0 14px rgba(255,184,0,.3)}}
+.dal-dot{width:7px;height:7px;border-radius:50%;background:var(--grn);box-shadow:0 0 5px var(--grn);flex-shrink:0}
+.dal-item.ring-now .dal-dot{background:var(--amb);box-shadow:0 0 5px var(--amb);animation:blk2 .4s infinite}
+@keyframes blk2{50%{opacity:0}}
+.dal-info{flex:1;min-width:0}
+.dal-date-row{display:flex;align-items:baseline;gap:5px;margin-bottom:1px}
+.dal-dow{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:var(--tx)}
+.dal-date{font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--tx);letter-spacing:1px}
+.dal-today{font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:1.5px;
+  background:var(--acc);color:#000;border-radius:3px;padding:1px 5px}
+.dal-lbl{font-size:10px;color:var(--tx2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dal-cd{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--grn);margin-top:2px}
+.dal-item.ring-now .dal-cd{color:var(--amb)}
+.dal-time{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;color:var(--grn);flex-shrink:0}
+.dal-item.ring-now .dal-time{color:var(--amb)}
+.dal-del{width:24px;height:24px;border-radius:5px;background:rgba(255,59,92,.08);
+  border:1px solid rgba(255,59,92,.2);color:var(--red);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;transition:background .2s}
+.dal-del:hover{background:rgba(255,59,92,.18)}
+.dal-dis{padding:4px 9px;background:rgba(255,184,0,.12);border:1px solid rgba(255,184,0,.4);
+  border-radius:5px;color:var(--amb);font-size:10px;font-weight:700;
+  font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;cursor:pointer;white-space:nowrap;flex-shrink:0}
+
 /* ── RING OVERLAY ── */
 .ro{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:200;display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px;backdrop-filter:blur(10px)}
 .ro.show{display:flex}
@@ -243,7 +275,11 @@ input[type=date]:focus{border-color:var(--acc)}
 
 <header>
   <div class="logo">CrewClock<small>FLIGHT ALARM SYSTEM</small></div>
-  <div class="clock"><div class="t" id="clk">--:--:--</div><div class="d" id="clkd">---</div></div>
+  <div class="clock">
+    <div class="t" id="clk">--:--:--</div>
+    <div class="d" id="clkd">---</div>
+    <div class="tz" id="clktz">---</div>
+  </div>
 </header>
 
 <div class="tabs">
@@ -312,6 +348,16 @@ input[type=date]:focus{border-color:var(--acc)}
       </div>
       <button class="btn-da" onclick="addDirectAlarm()">⏰ &nbsp;알람 추가</button>
     </div>
+  </div>
+
+  <!-- 직접 설정 알람 목록 -->
+  <div class="card" id="dalCard" style="margin-top:12px;display:none">
+    <div class="ch">
+      <div class="ico" style="background:rgba(0,230,118,.1);border-color:rgba(0,230,118,.2)">🔔</div>
+      <div class="lbl">직접 설정 알람</div>
+      <span class="cnt" id="dalCnt" style="color:var(--grn)">0</span>
+    </div>
+    <div class="dal-list" id="dalList"></div>
   </div>
 </div>
 
@@ -473,13 +519,48 @@ function init(){
 /* ════════════════════════════════════
    CLOCK
 ════════════════════════════════════ */
+/* 타임존 → 도시명 캐시 */
+var _tzCity=null;
+function getTzCity(){
+  if(_tzCity) return _tzCity;
+  try{
+    var tz=Intl.DateTimeFormat().resolvedOptions().timeZone||'';
+    // "Asia/Seoul" → "Seoul", "America/New_York" → "New York"
+    var city=tz.split('/').pop().replace(/_/g,' ');
+    // UTC 오프셋
+    var off=-(new Date().getTimezoneOffset());
+    var sign=off>=0?'+':'-';
+    var absOff=Math.abs(off);
+    var offStr='UTC'+sign+Math.floor(absOff/60)+(absOff%60?':'+p2(absOff%60):'');
+    _tzCity=city+' ('+offStr+')';
+  }catch(e){_tzCity='Local';}
+  return _tzCity;
+}
+
 function tickClock(){
   var n=new Date();
   document.getElementById('clk').textContent=p2(n.getHours())+':'+p2(n.getMinutes())+':'+p2(n.getSeconds());
   var D=['SUN','MON','TUE','WED','THU','FRI','SAT'];
   document.getElementById('clkd').textContent=D[n.getDay()]+' '+n.getFullYear()+'.'+p2(n.getMonth()+1)+'.'+p2(n.getDate());
+  var tzEl=document.getElementById('clktz');
+  if(tzEl) tzEl.innerHTML='<span>'+getTzCity()+'</span>';
   var sbNow=document.getElementById('sb-now');
   if(sbNow) sbNow.textContent=p2(n.getHours())+':'+p2(n.getMinutes());
+  updateDirectCDs();
+}
+
+function updateDirectCDs(){
+  var now=new Date();
+  var D=['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  alms.filter(function(a){return a.type==='direct'&&!a.dism;}).forEach(function(a){
+    var el=document.getElementById('dcd-'+a.id); if(!el)return;
+    if(a.ring){el.textContent='▶ RINGING';return;}
+    var diff=a.time-now;
+    if(diff<=0){el.textContent='PASSED';return;}
+    var s2=Math.floor(diff/1000);
+    var hh=Math.floor(s2/3600),mm=Math.floor((s2%3600)/60),ss=s2%60;
+    el.textContent='T-'+(hh?hh+'H ':'')+mm+'M '+ss+'S';
+  });
 }
 
 /* ════════════════════════════════════
@@ -990,9 +1071,81 @@ function addDirectAlarm(){
   if(dup){toast('같은 시간 알람이 이미 있습니다','er');return;}
   alms.push({id:uid(),time:at,dep:null,lbl:lbl,type:'direct',armed:true,ring:false,dism:false});
   alms.sort(function(a,b){return a.time-b.time;});
-  renderAlms();updateSB();
+  renderDirectAlarms();
+  updateSB();
   toast('"'+lbl+'" '+p2(h)+':'+p2(m)+' 등록 완료','ok');
   document.getElementById('dLabel').value='';
+}
+
+/* ════════════════════════════════════
+   DIRECT ALARM LIST RENDER
+════════════════════════════════════ */
+function renderDirectAlarms(){
+  var card=document.getElementById('dalCard');
+  var list=document.getElementById('dalList');
+  var cnt=document.getElementById('dalCnt');
+  if(!card||!list)return;
+
+  var directs=alms.filter(function(a){return a.type==='direct'&&!a.dism;});
+  if(!directs.length){card.style.display='none';return;}
+
+  card.style.display='block';
+  if(cnt)cnt.textContent=String(directs.length);
+
+  var D=['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  var now=new Date();
+  var todayMid=new Date(); todayMid.setHours(0,0,0,0);
+
+  list.innerHTML=directs.map(function(a){
+    var t=a.time;
+    var dow=D[t.getDay()];
+    var tMid=new Date(t); tMid.setHours(0,0,0,0);
+    var isToday=tMid.getTime()===todayMid.getTime();
+    var dateStr=p2(t.getMonth()+1)+'/'+p2(t.getDate());
+    var timeStr=p2(t.getHours())+':'+p2(t.getMinutes());
+    var isRing=a.ring;
+    var cls='dal-item'+(isRing?' ring-now':'');
+
+    // countdown
+    var cdTxt='';
+    var diff=t-now;
+    if(isRing){cdTxt='▶ RINGING';}
+    else if(diff>0){
+      var s2=Math.floor(diff/1000);
+      var hh=Math.floor(s2/3600),mm=Math.floor((s2%3600)/60),ss=s2%60;
+      cdTxt='T-'+(hh?hh+'H ':'')+mm+'M '+ss+'S';
+    }else{cdTxt='PASSED';}
+
+    var act=isRing
+      ?'<button class="dal-dis" onclick="dismissDirectAlarm(\'+a.id+\')">DISMISS</button>'
+      :'<button class="dal-del" onclick="delDirectAlarm(\'+a.id+\')">&#x2715;</button>';
+
+    return '<div class="'+cls+'" id="dal-'+a.id+'">'
+      +'<div class="dal-dot"></div>'
+      +'<div class="dal-info">'
+      +'<div class="dal-date-row">'
+      +'<span class="dal-dow">'+dow+'</span>'
+      +'<span class="dal-date">'+dateStr+'</span>'
+      +(isToday?'<span class="dal-today">TODAY</span>':'')
+      +'</div>'
+      +'<div class="dal-lbl">'+escQ(a.lbl)+'</div>'
+      +'<div class="dal-cd" id="dcd-'+a.id+'">'+cdTxt+'</div>'
+      +'</div>'
+      +'<div class="dal-time">'+timeStr+'</div>'
+      +act
+      +'</div>';
+  }).join('');
+}
+
+function delDirectAlarm(id){
+  alms=alms.filter(function(a){return a.id!==id;});
+  renderDirectAlarms();updateSB();
+}
+function dismissDirectAlarm(id){
+  var a=alms.find(function(x){return x.id===id;});
+  if(a){a.dism=true;a.ring=false;}
+  if(!alms.some(function(x){return x.ring;})){stopSnd();document.getElementById('ro').classList.remove('show');}
+  renderDirectAlarms();updateSB();
 }
 
 /* ════════════════════════════════════
@@ -1067,10 +1220,10 @@ function checkAlarms(){
       if(!alms.some(function(x){return x.ring;})){stopSnd();document.getElementById('ro').classList.remove('show');}
     }
   });
-  if(needRender)renderAlms();
+  if(needRender){renderAlms();renderDirectAlarms();}
   var bl=alms.length;
   alms=alms.filter(function(a){return !a.dism||(now-a.time<300000);});
-  if(alms.length!==bl){renderAlms();updateSB();}
+  if(alms.length!==bl){renderAlms();renderDirectAlarms();updateSB();}
 }
 function trigAlarm(a){
   document.getElementById('rtt').textContent='🔔 '+a.lbl;
