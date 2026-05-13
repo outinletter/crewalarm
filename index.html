@@ -144,8 +144,8 @@ input[type=date]:focus,input[type=time]:focus{border-color:var(--acc)}
 </header>
 
 <div class="apt-row">
-  <button class="apt-btn active" onclick="selApt('ICN',this)"><span class="iata">ICN</span><span class="nm">인천국제공항</span></button>
-  <button class="apt-btn" onclick="selApt('GMP',this)"><span class="iata">GMP</span><span class="nm">김포국제공항</span></button>
+  <button class="apt-btn active" data-code="ICN" onclick="selApt('ICN',this)"><span class="iata">ICN</span><span class="nm">인천국제공항</span></button>
+  <button class="apt-btn" data-code="GMP" onclick="selApt('GMP',this)"><span class="iata">GMP</span><span class="nm">김포국제공항</span></button>
 </div>
 
 <div class="card">
@@ -215,6 +215,7 @@ var alms = [];
 var curImg = null;
 var aCtx = null;
 var oscs = [];
+var scannedFlights = [];
 
 function p2(n){return String(n).padStart(2,'0');}
 
@@ -236,11 +237,22 @@ function tickClock(){
 }
 
 function selApt(code,btn){
-  apt=code;
-  document.querySelectorAll('.apt-btn').forEach(function(b){b.classList.remove('active');});
-  btn.classList.add('active');
-  document.getElementById('sb-apt').textContent=code;
+  setSelectedAirport(code,true);
   toast(code+' 출발 기준 설정','in');
+}
+
+function setSelectedAirport(code,keepButton){
+  apt=code||apt;
+  document.getElementById('sb-apt').textContent=apt;
+  var matched=false;
+  document.querySelectorAll('.apt-btn').forEach(function(b){
+    var on=b.getAttribute('data-code')===apt;
+    b.classList.toggle('active',on);
+    if(on)matched=true;
+  });
+  if(!matched&&!keepButton){
+    document.querySelectorAll('.apt-btn').forEach(function(b){b.classList.remove('active');});
+  }
 }
 
 function handleImg(e){
@@ -269,7 +281,7 @@ async function analyze(){
   try{
     pl.textContent='OCR ENGINE LOADING · IMAGE PREP';
     var ocr=await readScheduleData(curImg,function(msg){pl.textContent=msg;},apt);
-    var flights=parseFlightsFromOcr(ocr,apt);
+    var flights=parseFlightsFromOcr(ocr);
     pg.style.display='none'; btn.disabled=false; btn.style.display='block';
     renderFlights(flights,ocr.text);
   }catch(e){
@@ -397,36 +409,81 @@ function normalizeOcrWords(words){
   }).filter(function(w){return w.text;});
 }
 
-function parseFlightsFromOcr(ocr,depApt){
-  var flights=parseFlightsFromWords(ocr.words||[],depApt);
-  if(!flights.length)flights=parseFlightsFromText(ocr.text||'',depApt);
+function normalizeCalendarLine(line){
+  return String(line||'').toUpperCase()
+    .replace(/[|]/g,' ')
+    .replace(/[０-９]/g,function(ch){return String.fromCharCode(ch.charCodeAt(0)-65248);})
+    .replace(/[–—]/g,'-')
+    .replace(/\s+/g,' ')
+    .trim();
+}
+
+function getCalendarYearMonth(text){
+  var m=String(text||'').match(/\b(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)[A-Z]*\s+(20\d{2})\b/i);
+  if(!m){
+    var now=new Date();
+    return {year:now.getFullYear(),month:now.getMonth()+1};
+  }
+  return {year:Number(m[2]),month:monthToNumber(m[1])};
+}
+
+function monthToNumber(value){
+  var map={JAN:1,FEB:2,MAR:3,APR:4,MAY:5,JUN:6,JUL:7,AUG:8,SEP:9,OCT:10,NOV:11,DEC:12};
+  return map[String(value||'').slice(0,3).toUpperCase()]||1;
+}
+
+function parseCalendarDate(line,yearMonth){
+  var m=String(line||'').match(/\b(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)[A-Z]*\s+(\d{1,2})\b/i);
+  if(!m)return '';
+  var month=monthToNumber(m[1]);
+  var day=Number(m[2]);
+  return yearMonth.year+'-'+p2(month)+'-'+p2(day);
+}
+
+function isNonFlightLine(line){
+  return /^(LO|DO|ATDO|RESERVE|OFF|STBY|SBY)\b/.test(line);
+}
+
+function parseFlightsFromOcr(ocr){
+  var textFlights=parseFlightsFromCalendarText(ocr.text||'');
+  var wordFlights=parseFlightsFromWords(ocr.words||[]);
+  var flights=mergeFlightSets(textFlights,wordFlights);
   if(!flights.length){
-    var fromFile=parseFlightFromFilename(curImg&&curImg.name,depApt);
+    var fromFile=parseFlightFromFilename(curImg&&curImg.name);
     if(fromFile)flights.push(fromFile);
   }
   return dedupeFlights(flights);
 }
 
-function parseFlightsFromWords(words,depApt){
+function mergeFlightSets(primary, secondary){
+  var merged=(primary||[]).slice();
+  (secondary||[]).forEach(function(extra){
+    var match=merged.find(function(base){
+      return base.flight===extra.flight &&
+        base.depTime===extra.depTime &&
+        base.origin===extra.origin &&
+        base.dest===extra.dest;
+    });
+    if(match){
+      if(!match.depDate&&extra.depDate)match.depDate=extra.depDate;
+      if(!match.arrTime&&extra.arrTime)match.arrTime=extra.arrTime;
+      return;
+    }
+    merged.push(extra);
+  });
+  return merged;
+}
+
+function parseFlightsFromWords(words){
   var clean=words.map(function(w){
     return Object.assign({},w,{text:fixOcrToken(w.text)});
   }).filter(function(w){return w.text;});
-  var airports=clean.filter(function(w){return w.text===depApt||fixAirportToken(w.text)===depApt;});
-  var times=clean.filter(function(w){return normTime(fixTimeToken(w.text));});
+  var rows=groupWordsByRow(clean);
   var flights=[];
 
-  airports.forEach(function(ap){
-    var rowTol=Math.max(18,ap.h*1.3);
-    var sameRowTimes=times.filter(function(t){
-      return centerY(t)>centerY(ap)-rowTol&&centerY(t)<centerY(ap)+rowTol&&t.x>ap.x+ap.w*0.35;
-    }).sort(function(a,b){return a.x-b.x;});
-    if(!sameRowTimes.length)return;
-    var timeWord=sameRowTimes[0];
-    flights.push({
-      flight:findFlightWord(clean,ap)||'FLIGHT',
-      depTime:normTime(fixTimeToken(timeWord.text)),
-      dest:findDestWord(clean,ap,timeWord,depApt)||'---'
-    });
+  rows.forEach(function(row){
+    var parsed=parseFlightRow(row.words);
+    if(parsed)flights.push(parsed);
   });
 
   return flights;
@@ -460,70 +517,86 @@ function centerY(word){
   return word.y+word.h/2;
 }
 
-function findFlightWord(words,airportWord){
-  var rowTol=Math.max(18,airportWord.h*1.4);
-  var candidates=words.filter(function(w){
-    return centerY(w)>centerY(airportWord)-rowTol&&centerY(w)<centerY(airportWord)+rowTol&&w.x<airportWord.x;
-  }).sort(function(a,b){return b.x-a.x;});
-  for(var i=0;i<candidates.length;i++){
-    var text=fixOcrToken(candidates[i].text);
-    if(/^[A-Z]{2}\d{2,4}$/.test(text))return text;
+function groupWordsByRow(words){
+  var sorted=words.slice().sort(function(a,b){return a.y-b.y||a.x-b.x;});
+  var rows=[];
+  sorted.forEach(function(word){
+    var row=rows.find(function(r){return Math.abs(r.y-centerY(word))<=Math.max(18,word.h);});
+    if(!row){
+      row={y:centerY(word),words:[]};
+      rows.push(row);
+    }
+    row.words.push(word);
+  });
+  rows.forEach(function(row){
+    row.words.sort(function(a,b){return a.x-b.x;});
+  });
+  return rows;
+}
+
+function parseFlightRow(words){
+  for(var i=0;i<words.length;i++){
+    var flight=fixFlightToken(words[i].text);
+    if(!flight)continue;
+    for(var j=i+1;j<words.length-2;j++){
+      var origin=fixAirportToken(words[j].text);
+      var depTime=normTime(fixTimeToken(words[j+1].text));
+      var dest=fixAirportToken(words[j+2].text);
+      var arrTime=j+3<words.length?normTime(fixTimeToken(words[j+3].text)):'';
+      if(!isAirportCode(origin)||!depTime||!isAirportCode(dest))continue;
+      return {
+        flight:flight,
+        origin:origin,
+        depTime:depTime,
+        dest:dest,
+        arrTime:arrTime,
+        depDate:''
+      };
+    }
   }
-  return '';
+  return null;
 }
 
-function findDestWord(words,airportWord,timeWord,depApt){
-  var rowTol=Math.max(18,airportWord.h*1.4);
-  var candidates=words.filter(function(w){
-    var code=fixAirportToken(w.text);
-    return /^[A-Z]{3}$/.test(code)&&code!==depApt&&
-      centerY(w)>centerY(airportWord)-rowTol&&centerY(w)<centerY(airportWord)+rowTol&&w.x>timeWord.x;
-  }).sort(function(a,b){return a.x-b.x;});
-  return candidates.length?fixAirportToken(candidates[0].text):'';
-}
-
-function parseFlightsFromText(text,depApt){
-  var normalized=(text||'').toUpperCase()
-    .replace(/[|]/g,' ')
-    .replace(/[０-９]/g,function(ch){return String.fromCharCode(ch.charCodeAt(0)-65248);})
-    .replace(/\s+/g,' ')
-    .trim();
-  var lines=(text||'').toUpperCase().split(/\r?\n/).map(function(line){
-    return line.replace(/[|]/g,' ').replace(/\s+/g,' ').trim();
+function parseFlightsFromCalendarText(text){
+  var yearMonth=getCalendarYearMonth(text);
+  var lines=(text||'').split(/\r?\n/).map(function(line){
+    return normalizeCalendarLine(line);
   }).filter(Boolean);
-
   var flights=[];
-  lines.forEach(function(line){collectFlightsFromChunk(line,depApt,flights);});
-  collectFlightsFromChunk(normalized,depApt,flights);
-  flights=dedupeFlights(flights);
+  var currentDate='';
 
-  if(!flights.length){
-    var fromFile=parseFlightFromFilename(curImg&&curImg.name,depApt);
-    if(fromFile)flights.push(fromFile);
-  }
+  lines.forEach(function(line){
+    var date=parseCalendarDate(line,yearMonth);
+    if(date){
+      currentDate=date;
+      return;
+    }
+    if(isNonFlightLine(line))return;
+    collectFlightsFromChunk(line,currentDate,flights);
+  });
 
   return flights;
 }
 
-function collectFlightsFromChunk(chunk,depApt,flights){
-  var escaped=depApt.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-  var patterns=[
-    new RegExp('\\b([A-Z]{2}\\s?\\d{2,4})?\\s*\\b'+escaped+'\\b\\s*([0-2]?\\d[:.]?[0-5]\\d|\\d{3,4})\\s*([A-Z]{3})?','g'),
-    new RegExp('\\b([A-Z]{2}\\s?\\d{2,4})\\b[^A-Z0-9]{0,12}\\b'+escaped+'\\b[^0-9]{0,8}([0-2]?\\d[:.]?[0-5]\\d|\\d{3,4})(?:[^A-Z]{0,8}([A-Z]{3}))?','g')
-  ];
-
-  patterns.forEach(function(re){
-    var m;
-    while((m=re.exec(chunk))!==null){
-      var time=normTime(m[2]);
-      if(!time)continue;
-      flights.push({
-        flight:(m[1]||findFlightNear(chunk,m.index)||'FLIGHT').replace(/\s/g,''),
-        depTime:time,
-        dest:(m[3]&&m[3]!==depApt)?m[3]:findDestNear(chunk,m.index,depApt)
-      });
-    }
-  });
+function collectFlightsFromChunk(chunk,currentDate,flights){
+  var regex=/([A-Z]{2}\s?\d{2,4})\s+([A-Z]{3})\s+([0-2]?\d[:.]?[0-5]\d|\d{3,4})\s*[-–]\s*([A-Z]{3})(?:\s+([0-2]?\d[:.]?[0-5]\d|\d{3,4}))?/g;
+  var m;
+  while((m=regex.exec(chunk))!==null){
+    var flight=fixFlightToken(m[1]);
+    var origin=fixAirportToken(m[2]);
+    var depTime=normTime(fixTimeToken(m[3]));
+    var dest=fixAirportToken(m[4]);
+    var arrTime=normTime(fixTimeToken(m[5]||''));
+    if(!flight||!isAirportCode(origin)||!depTime||!isAirportCode(dest))continue;
+    flights.push({
+      flight:flight,
+      origin:origin,
+      depTime:depTime,
+      dest:dest,
+      arrTime:arrTime,
+      depDate:currentDate
+    });
+  }
 }
 
 function normTime(value){
@@ -535,52 +608,58 @@ function normTime(value){
   return p2(h)+':'+p2(m);
 }
 
-function findFlightNear(chunk,index){
-  var left=chunk.slice(Math.max(0,index-24),index);
-  var m=left.match(/([A-Z]{2}\s?\d{2,4})\s*$/);
-  return m?m[1]:'';
+function fixFlightToken(value){
+  var token=fixOcrToken(value).replace(/[OQD]/g,'0');
+  return /^[A-Z]{2}\d{2,4}$/.test(token)?token:'';
 }
 
-function findDestNear(chunk,index,depApt){
-  var right=chunk.slice(index,index+48);
-  var m=right.match(/\b([A-Z]{3})\b/g)||[];
-  return m.find(function(code){return code!==depApt;})||'---';
+function isAirportCode(value){
+  return /^[A-Z]{3}$/.test(value) && !/^(MAY|SUN|MON|TUE|WED|THU|FRI|SAT|RES|ATD|L0|LO|D0|DO)$/.test(value);
 }
 
 function dedupeFlights(flights){
   var seen={};
   return flights.filter(function(f){
-    var key=f.flight+'|'+f.depTime+'|'+f.dest;
+    var key=f.flight+'|'+(f.depDate||'')+'|'+(f.origin||'')+'|'+f.depTime+'|'+f.dest;
     if(seen[key])return false;
     seen[key]=true;
     return true;
-  }).sort(function(a,b){return a.depTime.localeCompare(b.depTime);});
+  }).sort(function(a,b){
+    return (a.depDate||'9999-99-99').localeCompare(b.depDate||'9999-99-99') || a.depTime.localeCompare(b.depTime);
+  });
 }
 
-function parseFlightFromFilename(name,depApt){
+function parseFlightFromFilename(name){
   if(!name)return null;
   var upper=name.toUpperCase();
-  var aptMatch=upper.indexOf(depApt);
-  if(aptMatch<0)return null;
-  var after=upper.slice(aptMatch+depApt.length,aptMatch+depApt.length+16);
-  var time=(after.match(/([0-2]?\d[:.]?[0-5]\d|\d{3,4})/)||[])[1];
+  var route=upper.match(/\b([A-Z]{3})[-_ ]?([A-Z]{3})\b/);
+  var time=(upper.match(/([0-2]?\d[:.]?[0-5]\d|\d{3,4})/)||[])[1];
   time=normTime(time);
   if(!time)return null;
-  var flight=(upper.match(/\b([A-Z]{2}\d{2,4})\b/)||[])[1]||'FLIGHT';
-  var dest=(upper.match(/\b([A-Z]{3})[-_ ]?([A-Z]{3})\b/)||[])[2]||'---';
-  return {flight:flight,depTime:time,dest:dest===depApt?'---':dest};
+  var flight=fixFlightToken((upper.match(/\b([A-Z]{2}\d{2,4})\b/)||[])[1]||'')||'FLIGHT';
+  return {
+    flight:flight,
+    origin:route?route[1]:'---',
+    depTime:time,
+    dest:route?route[2]:'---',
+    arrTime:'',
+    depDate:''
+  };
 }
 
 function renderFlights(flights,rawText){
   var list=document.getElementById('flist');
   list.style.display='block';
+  scannedFlights=flights.slice();
   if(!flights.length){
-    list.innerHTML='<div class="empty">'+apt+' 출발 편을 찾지 못했습니다<br>이미지에서 '+apt+' 오른쪽의 출발시간이 보이게 다시 촬영하거나 직접 입력하세요</div>';
+    list.innerHTML='<div class="empty">출발편을 찾지 못했습니다<br>달력 셀 안의 편명, 출발공항, 시간, 도착공항이 또렷하게 보이도록 다시 촬영하거나 직접 입력하세요</div>';
     toast('인식 결과 없음','er');
     return;
   }
-  list.innerHTML=flights.map(function(f){
-    return '<div class="fi" onclick="selFlight(this,\''+escAttr(f.depTime)+'\',\''+escAttr(f.flight)+'\')"><div class="fdot"></div><div class="finfo"><div class="fnum">'+escHtml(f.flight)+'</div><div class="froute">'+apt+' &rarr; '+escHtml(f.dest||'---')+'</div></div><div class="ftime">'+escHtml(f.depTime)+'</div></div>';
+  list.innerHTML=flights.map(function(f,index){
+    var route=(f.origin||'---')+' &rarr; '+(f.dest||'---');
+    var meta=(f.depDate?f.depDate+' · ':'')+route+(f.arrTime?' · ARR '+f.arrTime:'');
+    return '<div class="fi" onclick="selFlightByIndex(this,'+index+')"><div class="fdot"></div><div class="finfo"><div class="fnum">'+escHtml(f.flight)+'</div><div class="froute">'+escHtml(meta)+'</div></div><div class="ftime">'+escHtml(f.depTime)+'</div></div>';
   }).join('');
   toast(flights.length+'개 편 발견','ok');
 }
@@ -595,12 +674,16 @@ function escAttr(value){
   return String(value).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
 }
 
-function selFlight(el,time,num){
+function selFlightByIndex(el,index){
+  var f=scannedFlights[index];
+  if(!f)return;
   document.querySelectorAll('.fi').forEach(function(f){f.classList.remove('sel');});
   el.classList.add('sel');
-  document.getElementById('depTime').value=time;
-  document.getElementById('sb-dep').textContent=time;
-  toast(num+' '+time+' 선택됨','ok');
+  document.getElementById('depTime').value=f.depTime;
+  if(f.depDate)document.getElementById('depDate').value=f.depDate;
+  document.getElementById('sb-dep').textContent=f.depTime;
+  setSelectedAirport(f.origin||apt,false);
+  toast(f.flight+' '+f.depTime+' 선택됨','ok');
 }
 
 function renderOffs(){
