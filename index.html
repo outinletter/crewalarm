@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>CrewClock</title>
+<style>
+:root{
+  --bg:#0a0c10;--surf:#111520;--surf2:#181e2e;
+  --bdr:#1e2840;--bdr2:#2a3450;
+  --acc:#00d4ff;--amb:#ffb800;--red:#ff3b5c;--grn:#00e676;
+  --tx:#e8eaf6;--tx2:#7b8db0;--tx3:#4a5568;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--tx);font-family:'Barlow',sans-serif;min-height:100vh;padding-bottom:90px}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 60% 40% at 50% 0%,rgba(0,80,140,.15) 0%,transparent 70%),repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(0,212,255,.03) 39px,rgba(0,212,255,.03) 40px),repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(0,212,255,.03) 39px,rgba(0,212,255,.03) 40px);pointer-events:none;z-index:0}
+.app{position:relative;z-index:1;max-width:480px;margin:0 auto;padding:0}
+
+header{display:flex;align-items:center;justify-content:space-between;padding:20px 20px 0}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:4px;color:var(--acc)}
+.logo small{display:block;font-size:11px;font-family:'Barlow Condensed',sans-serif;font-weight:600;letter-spacing:2px;color:var(--tx2);margin-top:-4px}
+.clock .t{font-family:'Share Tech Mono',monospace;font-size:22px;color:var(--acc);letter-spacing:2px;text-align:right}
+.clock .d{font-size:10px;color:var(--tx2);letter-spacing:1px;text-align:right;text-transform:uppercase}
+
+.apt-row{display:flex;gap:8px;padding:16px 20px 0}
+.apt-btn{flex:1;padding:10px;border:1px solid var(--bdr2);border-radius:8px;background:var(--surf);color:var(--tx2);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:600;letter-spacing:2px;cursor:pointer;text-align:center;transition:all .2s}
+.apt-btn .iata{font-family:'Bebas Neue',sans-serif;font-size:20px;display:block}
+.apt-btn .nm{font-size:9px;letter-spacing:1px;margin-top:-2px}
+.apt-btn.active{background:rgba(0,212,255,.08);border-color:var(--acc);color:var(--acc)}
+.apt-btn.active .iata{color:var(--acc)}
+
+.card{margin:14px 20px 0;background:var(--surf);border:1px solid var(--bdr);border-radius:12px;overflow:hidden}
+.ch{display:flex;align-items:center;gap:8px;padding:11px 16px;border-bottom:1px solid var(--bdr);background:rgba(0,0,0,.2)}
+.ch .ico{width:26px;height:26px;border-radius:6px;background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.2);display:flex;align-items:center;justify-content:center;font-size:13px}
+.ch .lbl{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;letter-spacing:2px;color:var(--tx2);text-transform:uppercase;flex:1}
+.ch .cnt{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--acc)}
+
+.upz{padding:22px 16px;text-align:center;cursor:pointer;transition:background .2s;position:relative}
+.upz:hover{background:rgba(0,212,255,.03)}
+.upz input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.up-ico{width:52px;height:52px;border:2px dashed var(--bdr2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;margin:0 auto 10px;color:var(--tx3);transition:all .2s}
+.upz:hover .up-ico{border-color:var(--acc);color:var(--acc)}
+.up-t{font-size:14px;font-weight:500;color:var(--tx2)}
+.up-s{font-size:11px;color:var(--tx3);margin-top:4px}
+#prevImg{width:100%;max-height:190px;object-fit:contain;border-radius:8px;margin-bottom:10px;display:none}
+.btn-az{display:none;width:calc(100% - 32px);margin:0 16px 16px;padding:13px;background:linear-gradient(135deg,#0066aa,#00aad4);border:none;border-radius:10px;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;letter-spacing:3px;cursor:pointer;transition:all .2s}
+.btn-az:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,170,212,.4)}
+.btn-az:disabled{opacity:.6;pointer-events:none}
+.prog{display:none;padding:6px 16px 14px}
+.prog-t{height:3px;background:var(--bdr);border-radius:2px;overflow:hidden}
+.prog-f{height:100%;background:linear-gradient(90deg,var(--acc),#0066aa);border-radius:2px;animation:sc 1.4s ease-in-out infinite}
+@keyframes sc{0%{width:0;margin-left:0}50%{width:55%}100%{width:0;margin-left:100%}}
+.prog-l{font-size:10px;color:var(--tx3);text-align:center;margin-top:5px;letter-spacing:1px;font-family:'Share Tech Mono',monospace}
+.flist{display:none;padding:6px 12px 10px}
+.fi{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;border:1px solid var(--bdr);background:var(--surf2);margin-bottom:6px;cursor:pointer;transition:all .2s}
+.fi:hover,.fi.sel{border-color:var(--acc);background:rgba(0,212,255,.05)}
+.fdot{width:7px;height:7px;border-radius:50%;background:var(--bdr2);flex-shrink:0;transition:all .2s}
+.fi.sel .fdot{background:var(--acc)}
+.finfo{flex:1}
+.fnum{font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--acc)}
+.froute{font-size:11px;color:var(--tx2);margin-top:1px}
+.ftime{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;color:var(--tx)}
+
+.man{padding:10px 16px 14px}
+.irow{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ig label{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--tx3);display:block;margin-bottom:4px;font-family:'Barlow Condensed',sans-serif;font-weight:600}
+input[type=date],input[type=time]{width:100%;padding:10px 10px;background:var(--surf2);border:1px solid var(--bdr2);border-radius:8px;color:var(--tx);font-family:'Share Tech Mono',monospace;font-size:16px;outline:none;-webkit-appearance:none;color-scheme:dark}
+input[type=date]:focus,input[type=time]:focus{border-color:var(--acc)}
+
+.acfg{padding:8px 14px 10px}
+.orow{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:8px;border:1px solid var(--bdr);background:var(--surf2);margin-bottom:7px}
+.tog{width:34px;height:19px;border-radius:10px;background:var(--bdr2);border:none;cursor:pointer;position:relative;transition:all .2s;flex-shrink:0;outline:none}
+.tog::after{content:'';position:absolute;left:3px;top:3px;width:13px;height:13px;border-radius:50%;background:var(--tx3);transition:all .2s}
+.tog.on{background:rgba(0,212,255,.2);border:1px solid var(--acc)}
+.tog.on::after{left:17px;background:var(--acc)}
+.olbl{flex:1}
+.olbl-m{font-size:13px;font-weight:500;color:var(--tx)}
+.olbl-s{font-size:10px;color:var(--tx3);margin-top:1px}
+.oedit{display:flex;gap:4px;align-items:center;flex-shrink:0}
+.ni{width:44px;padding:5px 4px;background:var(--bg);border:1px solid var(--bdr2);border-radius:6px;color:var(--tx);font-family:'Share Tech Mono',monospace;font-size:13px;text-align:center;outline:none;-webkit-appearance:none;-moz-appearance:textfield}
+.ni::-webkit-inner-spin-button{-webkit-appearance:none}
+.ni:focus{border-color:var(--acc)}
+.ul{font-size:10px;color:var(--tx3)}
+.db{width:24px;height:24px;border-radius:6px;background:rgba(255,59,92,.1);border:1px solid rgba(255,59,92,.25);color:var(--red);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;transition:background .2s}
+.db:hover{background:rgba(255,59,92,.2)}
+.add-btn{width:100%;padding:9px;background:transparent;border:1px dashed var(--bdr2);border-radius:8px;color:var(--tx3);font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;letter-spacing:2px;cursor:pointer;transition:all .2s;margin-top:2px}
+.add-btn:hover{border-color:var(--acc);color:var(--acc)}
+
+.btn-set{display:block;width:calc(100% - 40px);margin:14px 20px 0;padding:15px;background:linear-gradient(135deg,#004d73,#007a99);border:1px solid rgba(0,212,255,.3);border-radius:12px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:4px;cursor:pointer;transition:all .2s;text-align:center}
+.btn-set:hover{box-shadow:0 8px 28px rgba(0,120,160,.5);transform:translateY(-1px)}
+
+.aal{padding:6px 12px 10px}
+.ac{padding:10px 12px;border-radius:10px;border:1px solid var(--bdr);background:var(--surf2);margin-bottom:7px;display:flex;align-items:center;gap:10px;animation:fin .25s ease}
+@keyframes fin{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+.ac.armed{border-color:rgba(0,230,118,.3)}
+.ac.ring{border-color:var(--amb);animation:pring .5s ease-in-out infinite alternate}
+@keyframes pring{from{box-shadow:0 0 0 rgba(255,184,0,0)}to{box-shadow:0 0 18px rgba(255,184,0,.3)}}
+.ac.past{opacity:.45}
+.adot{width:8px;height:8px;border-radius:50%;background:var(--bdr2);flex-shrink:0}
+.ac.armed .adot{background:var(--grn);box-shadow:0 0 6px var(--grn)}
+.ac.ring .adot{background:var(--amb);animation:blk .4s infinite}
+@keyframes blk{50%{opacity:0}}
+.ai{flex:1}
+.at{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;color:var(--tx)}
+.ac.ring .at{color:var(--amb)}
+.am{font-size:11px;color:var(--tx2);margin-top:1px}
+.acd{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--tx3);margin-top:2px}
+.ac.armed .acd{color:var(--grn)}
+.ac.ring .acd{color:var(--amb)}
+.dis-btn{padding:5px 10px;background:rgba(255,184,0,.12);border:1px solid rgba(255,184,0,.4);border-radius:6px;color:var(--amb);font-size:11px;font-weight:700;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;cursor:pointer;white-space:nowrap;transition:background .2s}
+.dis-btn:hover{background:rgba(255,184,0,.22)}
+.adl{width:26px;height:26px;border-radius:6px;background:rgba(255,59,92,.08);border:1px solid rgba(255,59,92,.2);color:var(--red);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;transition:background .2s;flex-shrink:0}
+.adl:hover{background:rgba(255,59,92,.18)}
+
+.empty{padding:22px;text-align:center;font-size:11px;color:var(--tx3);font-family:'Share Tech Mono',monospace;letter-spacing:1px}
+
+.ro{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:200;display:none;align-items:center;justify-content:center;flex-direction:column;gap:18px;backdrop-filter:blur(10px)}
+.ro.show{display:flex}
+.rp{width:110px;height:110px;border-radius:50%;background:rgba(255,184,0,.1);border:2px solid var(--amb);display:flex;align-items:center;justify-content:center;font-size:42px;animation:rpulse 1s ease-in-out infinite}
+@keyframes rpulse{0%,100%{box-shadow:0 0 0 0 rgba(255,184,0,.4)}50%{box-shadow:0 0 0 25px rgba(255,184,0,0)}}
+.rt{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:4px;color:var(--amb);text-align:center}
+.rd{font-family:'Share Tech Mono',monospace;font-size:13px;color:var(--tx2);text-align:center}
+.rb{padding:13px 36px;background:var(--amb);border:none;border-radius:28px;color:#000;font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:3px;cursor:pointer;transition:all .2s}
+.rb:hover{transform:scale(1.05);box-shadow:0 8px 22px rgba(255,184,0,.4)}
+
+.sb{position:fixed;bottom:0;left:0;right:0;background:rgba(10,12,16,.95);border-top:1px solid var(--bdr);backdrop-filter:blur(20px);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;z-index:100}
+.si .sl{font-size:9px;letter-spacing:1.5px;color:var(--tx3);text-transform:uppercase;font-family:'Barlow Condensed',sans-serif;font-weight:600}
+.si .sv{font-family:'Share Tech Mono',monospace;font-size:14px;color:var(--tx2);margin-top:1px;text-align:center}
+.si .sv.ok{color:var(--grn)}
+
+.toast{position:fixed;top:18px;left:50%;transform:translateX(-50%) translateY(-70px);background:var(--surf);border:1px solid var(--bdr2);border-radius:10px;padding:9px 18px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:600;letter-spacing:1px;z-index:999;transition:all .3s cubic-bezier(.34,1.56,.64,1);white-space:nowrap;box-shadow:0 8px 28px rgba(0,0,0,.5)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.ok{border-color:var(--grn);color:var(--grn)}
+.toast.er{border-color:var(--red);color:var(--red)}
+.toast.in{border-color:var(--acc);color:var(--acc)}
+</style>
+</head>
+<body>
+<div class="app">
+
+<header>
+  <div class="logo">CrewClock<small>FLIGHT ALARM SYSTEM</small></div>
+  <div class="clock"><div class="t" id="clk">--:--:--</div><div class="d" id="clkd">---</div></div>
+</header>
+
+<div class="apt-row">
+  <button class="apt-btn active" onclick="selApt('ICN',this)"><span class="iata">ICN</span><span class="nm">인천국제공항</span></button>
+  <button class="apt-btn" onclick="selApt('GMP',this)"><span class="iata">GMP</span><span class="nm">김포국제공항</span></button>
+</div>
+
+<div class="card">
+  <div class="ch"><div class="ico">📋</div><div class="lbl">스케줄 이미지 AI 분석</div></div>
+  <div class="upz" id="upz">
+    <input type="file" accept="image/*" id="imgIn" onchange="handleImg(event)">
+    <img id="prevImg" alt="preview">
+    <div class="up-ico" id="upIco">📷</div>
+    <div class="up-t" id="upT">스케줄 이미지 업로드</div>
+    <div class="up-s" id="upS">탭하여 갤러리 / 카메라 선택</div>
+  </div>
+  <div class="prog" id="prog"><div class="prog-t"><div class="prog-f"></div></div><div class="prog-l">AI SCANNING · ICN / GMP DEPARTURE</div></div>
+  <button class="btn-az" id="azBtn" onclick="analyze()">🔍 &nbsp; AI 출발 시간 인식</button>
+  <div class="flist" id="flist"></div>
+</div>
+
+<div class="card">
+  <div class="ch"><div class="ico">⏱</div><div class="lbl">출발 시간 직접 입력</div></div>
+  <div class="man">
+    <div class="irow">
+      <div class="ig"><label>날짜</label><input type="date" id="depDate"></div>
+      <div class="ig"><label>출발 (HH:MM)</label><input type="time" id="depTime"></div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="ch"><div class="ico">🔔</div><div class="lbl">알람 설정</div></div>
+  <div class="acfg" id="acfg"></div>
+</div>
+
+<button class="btn-set" onclick="setAlarms()">✈ &nbsp; 알람 등록</button>
+
+<div class="card" style="margin-top:14px">
+  <div class="ch"><div class="ico" style="background:rgba(0,230,118,.1);border-color:rgba(0,230,118,.2)">📡</div><div class="lbl">등록된 알람</div><span class="cnt" id="acnt">0</span></div>
+  <div class="aal" id="aal"><div class="empty" id="emp">// NO ALARMS ARMED //</div></div>
+</div>
+
+</div>
+
+<div class="sb">
+  <div class="si"><div class="sl">공항</div><div class="sv" id="sb-apt">ICN</div></div>
+  <div class="si"><div class="sl">출발</div><div class="sv" id="sb-dep">--:--</div></div>
+  <div class="si"><div class="sl">알람</div><div class="sv ok" id="sb-cnt">0</div></div>
+  <div class="si"><div class="sl">상태</div><div class="sv" id="sb-st">STANDBY</div></div>
+</div>
+
+<div class="ro" id="ro">
+  <div class="rp">🔔</div>
+  <div class="rt" id="rtt">알람</div>
+  <div class="rd" id="rdt"></div>
+  <button class="rb" onclick="dismissOv()">확인 · DISMISS</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="vendor/tesseract/tesseract.min.js"></script>
+<script>
+var apt = 'ICN';
+var offs = [
+  {id:1,h:2,m:30,lbl:'출근 준비',on:true},
+  {id:2,h:1,m:30,lbl:'공항 출발',on:true},
+  {id:3,h:0,m:30,lbl:'게이트 마감',on:false}
+];
+var oc = 4;
+var alms = [];
+var curImg = null;
+var aCtx = null;
+var oscs = [];
+
+function p2(n){return String(n).padStart(2,'0');}
+
+function init(){
+  var d=new Date();
+  document.getElementById('depDate').value=d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate());
+  renderOffs();
+  tickClock();
+  setInterval(tickClock,1000);
+  setInterval(checkAlarms,1000);
+}
+
+function tickClock(){
+  var n=new Date();
+  document.getElementById('clk').textContent=p2(n.getHours())+':'+p2(n.getMinutes())+':'+p2(n.getSeconds());
+  var D=['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  document.getElementById('clkd').textContent=D[n.getDay()]+' '+n.getFullYear()+'.'+p2(n.getMonth()+1)+'.'+p2(n.getDate());
+  updateCDs();
+}
+
+function selApt(code,btn){
+  apt=code;
+  document.querySelectorAll('.apt-btn').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  document.getElementById('sb-apt').textContent=code;
+  toast(code+' 출발 기준 설정','in');
+}
+
+function handleImg(e){
+  var f=e.target.files[0]; if(!f)return;
+  curImg=f;
+  var r=new FileReader();
+  r.onload=function(ev){
+    var img=document.getElementById('prevImg');
+    img.src=ev.target.result; img.style.display='block';
+    document.getElementById('upIco').style.display='none';
+    document.getElementById('upT').textContent=f.name;
+    document.getElementById('upS').textContent='탭하여 다시 선택';
+    document.getElementById('azBtn').style.display='block';
+    document.getElementById('flist').style.display='none';
+  };
+  r.readAsDataURL(f);
+}
+
+async function analyze(){
+  if(!curImg)return;
+  var btn=document.getElementById('azBtn');
+  var pg=document.getElementById('prog');
+  var pl=pg.querySelector('.prog-l');
+  btn.disabled=true; btn.style.display='none'; pg.style.display='block';
+
+  try{
+    pl.textContent='OCR ENGINE LOADING · IMAGE PREP';
+    var text=await readScheduleText(curImg,function(msg){pl.textContent=msg;});
+    var flights=parseFlightsFromText(text,apt);
+    pg.style.display='none'; btn.disabled=false; btn.style.display='block';
+    renderFlights(flights,text);
+  }catch(e){
+    pg.style.display='none'; btn.disabled=false; btn.style.display='block';
+    toast('OCR 인식 실패. 이미지를 더 선명하게 올려주세요.','er');
+  }
+}
+
+async function readScheduleText(file,onProgress){
+  if(window.Tesseract){
+    var result=await Tesseract.recognize(file,'eng',{
+      workerPath:'vendor/tesseract/worker.min.js',
+      corePath:'vendor/tesseract/tesseract-core.wasm.js',
+      langPath:'vendor/tesseract',
+      logger:function(m){
+        if(!m||!m.status)return;
+        var pct=typeof m.progress==='number'?(' '+Math.round(m.progress*100)+'%'):'';
+        onProgress('OCR '+m.status.toUpperCase()+pct);
+      }
+    });
+    return (result.data&&result.data.text)||'';
+  }
+
+  if('TextDetector' in window){
+    onProgress('BROWSER TEXT DETECTOR');
+    var detector=new window.TextDetector();
+    var bitmap=await createImageBitmap(file);
+    var blocks=await detector.detect(bitmap);
+    return blocks.map(function(b){return b.rawValue||'';}).join(' ');
+  }
+
+  return file.name||'';
+}
+
+function parseFlightsFromText(text,depApt){
+  var normalized=(text||'').toUpperCase()
+    .replace(/[|]/g,' ')
+    .replace(/[０-９]/g,function(ch){return String.fromCharCode(ch.charCodeAt(0)-65248);})
+    .replace(/\s+/g,' ')
+    .trim();
+  var lines=(text||'').toUpperCase().split(/\r?\n/).map(function(line){
+    return line.replace(/[|]/g,' ').replace(/\s+/g,' ').trim();
+  }).filter(Boolean);
+
+  var flights=[];
+  lines.forEach(function(line){collectFlightsFromChunk(line,depApt,flights);});
+  collectFlightsFromChunk(normalized,depApt,flights);
+  flights=dedupeFlights(flights);
+
+  if(!flights.length){
+    var fromFile=parseFlightFromFilename(curImg&&curImg.name,depApt);
+    if(fromFile)flights.push(fromFile);
+  }
+
+  return flights;
+}
+
+function collectFlightsFromChunk(chunk,depApt,flights){
+  var escaped=depApt.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  var patterns=[
+    new RegExp('\\b([A-Z]{2}\\s?\\d{2,4})?\\s*\\b'+escaped+'\\b\\s*([0-2]?\\d[:.]?[0-5]\\d|\\d{3,4})\\s*([A-Z]{3})?','g'),
+    new RegExp('\\b([A-Z]{2}\\s?\\d{2,4})\\b[^A-Z0-9]{0,12}\\b'+escaped+'\\b[^0-9]{0,8}([0-2]?\\d[:.]?[0-5]\\d|\\d{3,4})(?:[^A-Z]{0,8}([A-Z]{3}))?','g')
+  ];
+
+  patterns.forEach(function(re){
+    var m;
+    while((m=re.exec(chunk))!==null){
+      var time=normTime(m[2]);
+      if(!time)continue;
+      flights.push({
+        flight:(m[1]||findFlightNear(chunk,m.index)||'FLIGHT').replace(/\s/g,''),
+        depTime:time,
+        dest:(m[3]&&m[3]!==depApt)?m[3]:findDestNear(chunk,m.index,depApt)
+      });
+    }
+  });
+}
+
+function normTime(value){
+  var raw=String(value||'').replace(/[^\d]/g,'');
+  if(raw.length===3)raw='0'+raw;
+  if(raw.length!==4)return '';
+  var h=parseInt(raw.slice(0,2),10),m=parseInt(raw.slice(2),10);
+  if(h>23||m>59)return '';
+  return p2(h)+':'+p2(m);
+}
+
+function findFlightNear(chunk,index){
+  var left=chunk.slice(Math.max(0,index-24),index);
+  var m=left.match(/([A-Z]{2}\s?\d{2,4})\s*$/);
+  return m?m[1]:'';
+}
+
+function findDestNear(chunk,index,depApt){
+  var right=chunk.slice(index,index+48);
+  var m=right.match(/\b([A-Z]{3})\b/g)||[];
+  return m.find(function(code){return code!==depApt;})||'---';
+}
+
+function dedupeFlights(flights){
+  var seen={};
+  return flights.filter(function(f){
+    var key=f.flight+'|'+f.depTime+'|'+f.dest;
+    if(seen[key])return false;
+    seen[key]=true;
+    return true;
+  }).sort(function(a,b){return a.depTime.localeCompare(b.depTime);});
+}
+
+function parseFlightFromFilename(name,depApt){
+  if(!name)return null;
+  var upper=name.toUpperCase();
+  var aptMatch=upper.indexOf(depApt);
+  if(aptMatch<0)return null;
+  var after=upper.slice(aptMatch+depApt.length,aptMatch+depApt.length+16);
+  var time=(after.match(/([0-2]?\d[:.]?[0-5]\d|\d{3,4})/)||[])[1];
+  time=normTime(time);
+  if(!time)return null;
+  var flight=(upper.match(/\b([A-Z]{2}\d{2,4})\b/)||[])[1]||'FLIGHT';
+  var dest=(upper.match(/\b([A-Z]{3})[-_ ]?([A-Z]{3})\b/)||[])[2]||'---';
+  return {flight:flight,depTime:time,dest:dest===depApt?'---':dest};
+}
+
+function renderFlights(flights,rawText){
+  var list=document.getElementById('flist');
+  list.style.display='block';
+  if(!flights.length){
+    list.innerHTML='<div class="empty">'+apt+' 출발 편을 찾지 못했습니다<br>이미지에서 '+apt+' 오른쪽의 출발시간이 보이게 다시 촬영하거나 직접 입력하세요</div>';
+    toast('인식 결과 없음','er');
+    return;
+  }
+  list.innerHTML=flights.map(function(f){
+    return '<div class="fi" onclick="selFlight(this,\''+escAttr(f.depTime)+'\',\''+escAttr(f.flight)+'\')"><div class="fdot"></div><div class="finfo"><div class="fnum">'+escHtml(f.flight)+'</div><div class="froute">'+apt+' &rarr; '+escHtml(f.dest||'---')+'</div></div><div class="ftime">'+escHtml(f.depTime)+'</div></div>';
+  }).join('');
+  toast(flights.length+'개 편 발견','ok');
+}
+
+function escHtml(value){
+  return String(value).replace(/[&<>"']/g,function(ch){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch];
+  });
+}
+
+function escAttr(value){
+  return String(value).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+}
+
+function selFlight(el,time,num){
+  document.querySelectorAll('.fi').forEach(function(f){f.classList.remove('sel');});
+  el.classList.add('sel');
+  document.getElementById('depTime').value=time;
+  document.getElementById('sb-dep').textContent=time;
+  toast(num+' '+time+' 선택됨','ok');
+}
+
+function renderOffs(){
+  var c=document.getElementById('acfg');
+  c.innerHTML=offs.map(function(o){
+    return '<div class="orow" id="orow-'+o.id+'">'+
+      '<button class="tog'+(o.on?' on':'')+'" onclick="togO('+o.id+')" aria-label="toggle"></button>'+
+      '<div class="olbl"><div class="olbl-m">'+o.lbl+'</div><div class="olbl-s" id="os-'+o.id+'">출발 '+o.h+'시간 '+o.m+'분 전</div></div>'+
+      '<div class="oedit">'+
+      '<input type="number" class="ni" value="'+o.h+'" min="0" max="24" id="oh-'+o.id+'" oninput="syncO('+o.id+')" onchange="syncO('+o.id+')">&nbsp;<span class="ul">H</span>&nbsp;'+
+      '<input type="number" class="ni" value="'+o.m+'" min="0" max="59" id="om-'+o.id+'" oninput="syncO('+o.id+')" onchange="syncO('+o.id+')">&nbsp;<span class="ul">M</span>&nbsp;'+
+      '<button class="db" onclick="delO('+o.id+')" aria-label="삭제">&#x2715;</button>'+
+      '</div></div>';
+  }).join('')+'<button class="add-btn" onclick="addO()">+ 알람 추가</button>';
+}
+
+function togO(id){
+  var o=offs.find(function(x){return x.id===id;});
+  if(o){o.on=!o.on;renderOffs();}
+}
+
+function syncO(id){
+  var o=offs.find(function(x){return x.id===id;});
+  if(!o)return;
+  var hEl=document.getElementById('oh-'+id);
+  var mEl=document.getElementById('om-'+id);
+  if(hEl)o.h=Math.max(0,parseInt(hEl.value)||0);
+  if(mEl)o.m=Math.max(0,Math.min(59,parseInt(mEl.value)||0));
+  var s=document.getElementById('os-'+id);
+  if(s)s.textContent='출발 '+o.h+'시간 '+o.m+'분 전';
+}
+
+function delO(id){offs=offs.filter(function(x){return x.id!==id;});renderOffs();}
+
+function addO(){offs.push({id:oc++,h:1,m:0,lbl:'알람',on:true});renderOffs();}
+
+function setAlarms(){
+  offs.forEach(function(o){
+    var hEl=document.getElementById('oh-'+o.id);
+    var mEl=document.getElementById('om-'+o.id);
+    if(hEl)o.h=Math.max(0,parseInt(hEl.value)||0);
+    if(mEl)o.m=Math.max(0,Math.min(59,parseInt(mEl.value)||0));
+  });
+
+  var dv=document.getElementById('depDate').value;
+  var tv=document.getElementById('depTime').value;
+  if(!tv){toast('출발 시간을 입력하세요','er');return;}
+
+  var pts=tv.split(':');
+  var dep=dv?new Date(dv):new Date();
+  dep.setHours(parseInt(pts[0]),parseInt(pts[1]),0,0);
+
+  var enabled=offs.filter(function(o){return o.on;});
+  if(!enabled.length){toast('켜진 알람이 없습니다','er');return;}
+
+  var now=new Date(), added=0;
+  enabled.forEach(function(o){
+    var ms=(o.h*60+o.m)*60000;
+    var at=new Date(dep.getTime()-ms);
+    var dup=alms.find(function(a){return !a.dism&&Math.abs(a.time-at)<1000;});
+    if(dup)return;
+    alms.push({
+      id:Date.now()+Math.random(),
+      time:at,
+      dep:new Date(dep),
+      lbl:o.lbl,
+      ostr:o.h+'H '+o.m+'M 전',
+      armed:true,
+      dism:at<=now,
+      ring:false
+    });
+    added++;
+  });
+
+  if(!added){toast('등록할 알람 없음 (중복 또는 만료)','er');return;}
+  alms.sort(function(a,b){return a.time-b.time;});
+  renderAlms();
+  updateSB();
+  document.getElementById('sb-dep').textContent=tv;
+  toast(added+'개 알람 등록 완료','ok');
+}
+
+function renderAlms(){
+  var c=document.getElementById('aal');
+  var cnt=document.getElementById('acnt');
+  if(!alms.length){
+    c.innerHTML='<div class="empty" id="emp">// NO ALARMS ARMED //</div>';
+    cnt.textContent='0';return;
+  }
+  cnt.textContent=alms.length;
+  c.innerHTML=alms.map(function(a){
+    var ts=p2(a.time.getHours())+':'+p2(a.time.getMinutes());
+    var ds=p2(a.dep.getHours())+':'+p2(a.dep.getMinutes());
+    var cls='ac'+(a.ring?' ring':a.dism?' past':a.armed?' armed':'');
+    var act=a.ring
+      ?'<button class="dis-btn" onclick="dismissA(\''+a.id+'\')">DISMISS</button>'
+      :'<button class="adl" onclick="delA(\''+a.id+'\')" aria-label="삭제">&#x2715;</button>';
+    return '<div class="'+cls+'" id="ac-'+a.id+'"><div class="adot"></div><div class="ai"><div class="at">'+ts+'</div><div class="am">'+a.lbl+' &middot; DEP '+ds+'</div><div class="acd" id="cd-'+a.id+'"></div></div>'+act+'</div>';
+  }).join('');
+}
+
+function delA(id){
+  alms=alms.filter(function(a){return String(a.id)!==String(id);});
+  renderAlms();updateSB();
+}
+
+function dismissA(id){
+  var a=alms.find(function(x){return String(x.id)===String(id);});
+  if(a){a.dism=true;a.ring=false;}
+  stopSnd();
+  document.getElementById('ro').classList.remove('show');
+  renderAlms();updateSB();
+}
+
+function dismissOv(){
+  alms.forEach(function(a){if(a.ring){a.dism=true;a.ring=false;}});
+  stopSnd();
+  document.getElementById('ro').classList.remove('show');
+  renderAlms();updateSB();
+}
+
+function updateCDs(){
+  var now=new Date();
+  alms.forEach(function(a){
+    var el=document.getElementById('cd-'+a.id);
+    if(!el)return;
+    if(a.ring){el.textContent='▶ RINGING';return;}
+    if(a.dism){el.textContent='✓ DISMISSED';return;}
+    var diff=a.time-now;
+    if(diff<=0){el.textContent='PASSED';return;}
+    var s=Math.floor(diff/1000);
+    var h=Math.floor(s/3600),mm=Math.floor((s%3600)/60),ss=s%60;
+    el.textContent='T-'+(h?h+'H ':'')+mm+'M '+ss+'S';
+  });
+}
+
+function checkAlarms(){
+  var now=new Date(),need=false;
+  alms.forEach(function(a){
+    if(a.dism||a.ring)return;
+    var d=now-a.time;
+    if(d>=0&&d<60000){a.ring=true;trigAlarm(a);need=true;}
+  });
+  if(need)renderAlms();
+  var before=alms.length;
+  alms=alms.filter(function(a){return !a.dism||(new Date()-a.time<300000);});
+  if(alms.length!==before){renderAlms();updateSB();}
+}
+
+function trigAlarm(a){
+  var ts=p2(a.time.getHours())+':'+p2(a.time.getMinutes());
+  var ds=p2(a.dep.getHours())+':'+p2(a.dep.getMinutes());
+  document.getElementById('rtt').textContent=a.lbl;
+  document.getElementById('rdt').textContent=ts+' · 출발 '+ds+' ('+apt+') '+a.ostr;
+  document.getElementById('ro').classList.add('show');
+  playSnd();
+  if(navigator.vibrate)navigator.vibrate([400,150,400,150,400]);
+}
+
+function playSnd(){
+  try{
+    if(!aCtx)aCtx=new(window.AudioContext||window.webkitAudioContext)();
+    stopSnd();
+    function beep(f,s,d){
+      var o=aCtx.createOscillator(),g=aCtx.createGain();
+      o.connect(g);g.connect(aCtx.destination);
+      o.type='square';o.frequency.value=f;
+      g.gain.setValueAtTime(0,aCtx.currentTime+s);
+      g.gain.linearRampToValueAtTime(0.22,aCtx.currentTime+s+0.01);
+      g.gain.linearRampToValueAtTime(0,aCtx.currentTime+s+d-0.01);
+      o.start(aCtx.currentTime+s);o.stop(aCtx.currentTime+s+d);
+      oscs.push(o);
+    }
+    for(var i=0;i<20;i++){var b=i*2;beep(880,b,.12);beep(660,b+.18,.12);beep(880,b+.36,.12);}
+  }catch(e){}
+}
+
+function stopSnd(){oscs.forEach(function(o){try{o.stop();}catch(e){}});oscs=[];}
+
+function updateSB(){
+  var armed=alms.filter(function(a){return a.armed&&!a.dism;}).length;
+  document.getElementById('sb-cnt').textContent=armed;
+  document.getElementById('sb-cnt').className='sv'+(armed>0?' ok':'');
+  document.getElementById('sb-st').textContent=armed>0?'ARMED':'STANDBY';
+  document.getElementById('sb-st').className='sv'+(armed>0?' ok':'');
+}
+
+function toast(msg,type){
+  var t=document.getElementById('toast');
+  t.textContent=msg;
+  t.className='toast show '+type;
+  clearTimeout(t._tt);
+  t._tt=setTimeout(function(){t.classList.remove('show');},2400);
+}
+
+init();
+</script>
+</body>
+</html>
