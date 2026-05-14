@@ -1143,13 +1143,15 @@ function handleICS(e){
       if(upS)upS.textContent=flights.length+' flights found';
       detectedFlights=flights;
       initFlightToggles();
+      // Auto-register alarms for ALL upcoming flights
+      var autoAdded=autoRegisterAll();
       renderICSResult(flights);
       renderHomeFlightList();
       renderCal();
       renderDaySchedule(calSelDate);
-      toast(flights.length+' flights imported','ok');
+      toast(flights.length+' flights, '+autoAdded+' alarms set','ok');
 
-      // Auto-close sheet after short delay and go to home
+      // Auto-close sheet and go home
       setTimeout(function(){
         closeUploadSheet();
         switchTab('calendar',null);
@@ -1189,7 +1191,7 @@ function parseICS(text){
     }
   });
   // RESERVE / standby keywords to skip
-  var SKIP_KEYWORDS=['RESERVE','RESERV','STANDBY','STBY','DO ','DAY OFF','OFF','LO ','LAYOVER','REST'];
+  var SKIP_KEYWORDS=['RESERVE','RESERV','STANDBY','STBY','DO','DAY OFF','OFF','LO ','LAYOVER','REST','ATDO','RES'];
 
   // Parse into flight-like objects
   var flights=[];
@@ -1203,7 +1205,11 @@ function parseICS(text){
 
     // Skip RESERVE and non-flight events
     var sumUpper=summary.toUpperCase();
-    var isReserve=SKIP_KEYWORDS.some(function(kw){return sumUpper===kw||sumUpper.startsWith(kw);});
+    var isReserve=SKIP_KEYWORDS.some(function(kw){
+      return sumUpper===kw.trim()
+        ||sumUpper===kw.trim()+' '
+        ||sumUpper.match(new RegExp('^'+kw.trim().replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(\\s|$)'));
+    });
     if(isReserve)return;
     // Also skip if no flight number pattern at all (pure status events)
     var hasFlight=/[A-Z]{1,3}\s?\d{2,4}/.test(summary);
@@ -1268,9 +1274,9 @@ function renderICSResult(flights){
 function initFlightToggles(){
   detectedFlights.forEach(function(f,idx){
     if(!flightToggles[idx])flightToggles[idx]={};
-    var offs=f.type==='base'?baseOffs:intlOffs;
-    var onMap=f.type==='base'?baseOn:intlOn;
-    offs.forEach(function(o){if(flightToggles[idx][o.id]===undefined)flightToggles[idx][o.id]=!!onMap[o.id];});
+    var offs=f.type==='intl'?intlOffs:baseOffs;
+    // Auto-enable ALL preset alarms on import
+    offs.forEach(function(o){flightToggles[idx][o.id]=true;});
   });
 }
 
@@ -1342,9 +1348,10 @@ function renderFalItem(f,idx,extraCls){
       +'</div>';
   }).join('');
 
-  var regBtn='<button class="fal-reg-btn '+(regDone?'done':'idle')+'" '
-    +(regDone?'':'onclick="event.stopPropagation();registerFlight('+idx+')"')
-    +'>'+(regDone?'&#10003;':'Set')+'</button>';
+  // No manual Set button — auto-registered. Show status indicator only.
+  var regBtn=regDone
+    ?'<span class="fal-reg-btn done" style="pointer-events:none">&#10003;</span>'
+    :'';
 
   var dropBtn='<button class="fal-drop-btn" onclick="event.stopPropagation();toggleFlight('+idx+')">'
     +'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>'
@@ -1421,6 +1428,28 @@ function toggleMasterAlarm(idx){
 }
 
 function togglePast(btn){var sec=document.getElementById('pastSection');if(!sec)return;var open=sec.style.display==='block';sec.style.display=open?'none':'block';btn.textContent=open?'▸ \u00a0past flights':'▴ \u00a0hide past flights';}
+
+/* 전체 편 자동 알람 등록 */
+function autoRegisterAll(){
+  syncAllPresets();
+  var now=new Date();var added=0;
+  detectedFlights.forEach(function(f,idx){
+    var depDt=parseFlightDate(f);
+    if(depDt<now)return;  // skip past
+    var offs=f.type==='intl'?intlOffs:baseOffs;
+    offs.forEach(function(o){
+      if(!flightToggles[idx]||!flightToggles[idx][o.id])return;
+      var at=new Date(depDt.getTime()-(o.h*60+o.m)*60000);
+      if(at<=now)return;
+      if(alms.find(function(a){return !a.dism&&Math.abs(a.time-at)<2000;}))return;
+      alms.push({id:uid(),time:at,dep:new Date(depDt),lbl:o.lbl+' ('+f.flight+')',type:f.type,armed:true,ring:false,dism:false});
+      added++;
+    });
+    registeredFlights[idx]=true;
+  });
+  if(added>0){alms.sort(function(a,b){return a.time-b.time;});}
+  return added;
+}
 
 function registerFlight(idx){
   syncAllPresets();var f=detectedFlights[idx];if(!f)return;
