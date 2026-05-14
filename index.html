@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>CREW CLOCK</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<!-- Tesseract.js for offline OCR -->
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <style>
 :root{
   /* 연한 하늘색 파스텔 테마 */
@@ -642,7 +644,7 @@ var DEF_INTL=[{id:'i1',h:2,m:0,lbl:'Wake Up (Overseas)'},{id:'i2',h:1,m:30,lbl:'
 var baseApt='ICN',baseOffs=[],intlOffs=[],baseOn={},intlOn={},bOc=100,iOc=200;
 var alms=[],detectedFlights=[],flightToggles={},openFlights={},registeredFlights={};
 var curImg=null,aCtx=null,oscs=[];
-var drumH_val=6,drumM_val=0;
+var _now=new Date(),drumH_val=_now.getHours(),drumM_val=_now.getMinutes();
 var calYear,calMonth,calSelDate;
 var ITEM_H=26;
 var isOnline=navigator.onLine;
@@ -672,7 +674,7 @@ function updateOcrModeUI(){
   }else{
     badge.className='ocr-badge offline';badge.textContent='● Offline';
     if(title)title.textContent='Offline OCR Mode';
-    if(desc)desc.textContent='Basic OCR using on-device text extraction. Upload clear, high-contrast images.';
+    if(desc)desc.textContent='Tesseract.js OCR runs fully on-device. Upload a clear, high-contrast schedule image for best results.';
   }
 }
 
@@ -705,6 +707,7 @@ function switchTab(name,btn){
   document.getElementById('panel-'+name).classList.add('show');
   if(name==='settings'){document.getElementById('baseAptInput').value=baseApt;renderBasePresets();renderIntlPresets();}
   if(name==='calendar'){renderDaySchedule(calSelDate);renderHomeFlightList();}
+  if(name==='alarm'){var _n=new Date();setDrum('drumH',_n.getHours(),true);setDrum('drumM',_n.getMinutes(),true);}
 }
 
 /* ═══ UPLOAD SHEET ═══ */
@@ -925,45 +928,57 @@ function analyze(){
   reader.readAsDataURL(curImg);
 }
 
-/* ═══ OFFLINE OCR ═══ */
-// Uses canvas + simple pattern matching for offline fallback
+/* ═══ OFFLINE OCR (Tesseract.js) ═══ */
 function analyzeOffline(){
   if(!curImg){toast('Please select an image first','er');return;}
   syncAllPresets();
-  var btn=document.getElementById('azBtn');var pg=document.getElementById('prog');
+  var btn=document.getElementById('azBtn');
+  var pg=document.getElementById('prog');
+  var pl=document.getElementById('progL');
   btn.disabled=true;btn.style.display='none';pg.style.display='block';
-  document.getElementById('progL').textContent='Running offline OCR...';
-  var img=new Image();
-  var url=URL.createObjectURL(curImg);
-  img.onload=function(){
-    var canvas=document.createElement('canvas');
-    canvas.width=img.width;canvas.height=img.height;
-    var ctx=canvas.getContext('2d');ctx.drawImage(img,0,0);
-    URL.revokeObjectURL(url);
-    // Extract text via canvas (basic: we do pattern matching on filename + EXIF metadata approach)
-    // For real offline OCR we use Tesseract if available, else fallback pattern
-    if(typeof Tesseract!=='undefined'){
-      document.getElementById('progL').textContent='Running Tesseract OCR...';
-      Tesseract.recognize(canvas,'eng',{logger:function(m){if(m.status==='recognizing text')document.getElementById('progL').textContent='OCR: '+Math.round(m.progress*100)+'%';}})
-        .then(function(result){
-          pg.style.display='none';btn.disabled=false;btn.style.display='block';
-          var text=result.data.text;
-          var flights=parseScheduleText(text);
-          detectedFlights=flights;initFlightToggles();renderHomeFlightList();renderSheetFalWrap();renderCal();renderDaySchedule(calSelDate);
-          closeUploadSheet();
-          toast(flights.length+' flights detected (OCR)','ok');
-        }).catch(function(err){
-          pg.style.display='none';btn.disabled=false;btn.style.display='block';
-          toast('OCR error: '+err.message,'er');
-        });
-    }else{
-      // Tesseract not loaded — try to load it dynamically
-      pg.style.display='none';btn.disabled=false;btn.style.display='block';
-      toast('Offline OCR requires network to load Tesseract','er');
-    }
-  };
-  img.onerror=function(){pg.style.display='none';btn.disabled=false;btn.style.display='block';toast('Failed to load image','er');};
-  img.src=url;
+  pl.textContent='Preparing offline OCR...';
+
+  function onProgress(m){
+    if(m.status==='loading tesseract core')pl.textContent='Loading OCR engine...';
+    else if(m.status==='initializing tesseract')pl.textContent='Initializing OCR...';
+    else if(m.status==='loading language traineddata')pl.textContent='Loading language data...';
+    else if(m.status==='initializing api')pl.textContent='Starting OCR API...';
+    else if(m.status==='recognizing text')pl.textContent='Reading text... '+Math.round((m.progress||0)*100)+'%';
+  }
+
+  function finish(text){
+    pg.style.display='none';btn.disabled=false;btn.style.display='block';
+    var flights=parseScheduleText(text);
+    detectedFlights=flights;
+    initFlightToggles();renderHomeFlightList();renderSheetFalWrap();renderCal();renderDaySchedule(calSelDate);
+    closeUploadSheet();
+    toast(flights.length+' flights detected (Offline OCR)','ok');
+  }
+
+  function fail(err){
+    pg.style.display='none';btn.disabled=false;btn.style.display='block';
+    toast('OCR error: '+(err.message||err),'er');
+    console.error('[OCR]',err);
+  }
+
+  function runTesseract(){
+    pl.textContent='Starting OCR recognition...';
+    Tesseract.recognize(curImg,'eng',{logger:onProgress})
+      .then(function(result){finish(result.data.text);})
+      .catch(fail);
+  }
+
+  if(typeof Tesseract!=='undefined'){
+    runTesseract();
+  }else{
+    // Dynamic load fallback
+    pl.textContent='Loading Tesseract.js...';
+    var sc=document.createElement('script');
+    sc.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+    sc.onload=function(){runTesseract();};
+    sc.onerror=function(){fail(new Error('Failed to load Tesseract.js. Check your connection.'));};
+    document.head.appendChild(sc);
+  }
 }
 
 // Auto-select online vs offline based on connection
@@ -974,49 +989,94 @@ document.getElementById('azBtn').addEventListener('click',function(e){
 // Remove inline onclick to prevent double-fire — handled by listener above
 document.getElementById('azBtn').removeAttribute('onclick');
 
-/* ═══ OFFLINE TEXT PARSER ═══ */
-function parseScheduleText(text){
-  var lines=text.split('\n');
+/* ═══ OFFLINE TEXT PARSER (Airline Schedule Specialized) ═══ */
+function parseScheduleText(rawText){
+  var text=rawText;
   var flights=[];
   var today=new Date();
   var curYear=today.getFullYear();
-  // Detect month from text
-  var months={jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
+
+  // ── Step 1: Detect month/year from header (e.g. "May 2026") ──
+  var MONTHS={jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
   var curMo=today.getMonth();
-  var moMatch=text.match(/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\w*\s+(\d{4})\b/i);
-  if(moMatch){curMo=months[moMatch[1].toLowerCase().slice(0,3)];curYear=parseInt(moMatch[2]);}
-  // Find date cells: "May 03" or "03" patterns
-  var curDay=null;
-  // Flight pattern: KE 913 ICN 09:55, KE041 ICN 16:40, etc.
-  var flightRe=/\b([A-Z]{2}\d{2,4})\s+([A-Z]{3})\s+(\d{1,2}:\d{2})/g;
-  var dateRe=/\b(\d{1,2})\s*\n/g;
-  var fullDateRe=/\b(?:May|Jun|Jul|Aug|Sep|Oct|Nov|Dec|Jan|Feb|Mar|Apr)\s+(\d{1,2})/gi;
-  // Build day->date map
-  var dayMap={};
+  var moMatch=text.match(/(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{4})/i);
+  if(!moMatch) moMatch=text.match(/(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\w*\s+(\d{4})/i);
+  if(moMatch){
+    var moKey=moMatch[1].toLowerCase().slice(0,3);
+    curMo=MONTHS[moKey]!==undefined?MONTHS[moKey]:curMo;
+    curYear=parseInt(moMatch[2]);
+  }
+
+  // ── Step 2: Build position → date map from calendar grid ──
+  // Find "May 01", "May 02"... or just "01","02"... patterns with context
+  var dateMap={};  // charIndex → {y,m,d}
+  // Full "MON DD" pattern
+  var fullDateRe=/(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\w*\s+(\d{1,2})/gi;
   var fdm;
   while((fdm=fullDateRe.exec(text))!==null){
-    var dayNum=parseInt(fdm[1]);
-    var moKey=fdm[0].trim().toLowerCase().slice(0,3);
-    var mo=months[moKey];
-    if(mo!==undefined)dayMap[dayNum]={y:curYear,m:mo,d:dayNum};
+    var d=parseInt(fdm[1]);
+    var mk=fdm[0].trim().toLowerCase().slice(0,3);
+    var mo=MONTHS[mk]!==undefined?MONTHS[mk]:curMo;
+    var yr=curYear;
+    if(mo<curMo-1) yr++;  // handle year wrap
+    dateMap[fdm.index]={y:yr,m:mo,d:d};
   }
-  // Match flights
-  var fm;var re2=/\b([A-Z]{2}\s?\d{2,4})\s+([A-Z]{3})\s+(\d{1,2}:\d{2})\s*[-–]\s*([A-Z]{3})/g;
-  var nearbyDayRe=/(\d{1,2})\s*\n?[^\n]*?([A-Z]{2}\s?\d{2,4})\s+([A-Z]{3})\s+(\d{1,2}:\d{2})/;
-  // Simplified: scan each line
-  lines.forEach(function(line){
-    var m2=line.match(/([A-Z]{2}\s?\d{2,4})\s+([A-Z]{3})\s+(\d{1,2}:\d{2})\s*[-–]\s*([A-Z]{3})/);
-    if(m2){
-      var fnum=m2[1].replace(/\s/,'');
-      var dep=m2[2];var depT=m2[3];var arr=m2[4];
-      var type=dep===baseApt?'base':'intl';
-      // Try to find date from context
-      var dateKey=Object.keys(dayMap)[0];
-      // Use today as fallback
-      var dt=dayMap[Object.keys(dayMap).find(function(k){return true;})||''];
-      var dateStr=dt?dt.y+'-'+p2(dt.m+1)+'-'+p2(dt.d):todayStr();
-      flights.push({date:dateStr,flight:fnum,depApt:dep,depTime:depT,arrApt:arr,type:type});
+  // Standalone day numbers (less reliable, use as fallback)
+  var dayOnlyRe=new RegExp('(?:^|\\n)\\s*(\\d{1,2})\\s*(?:\\n|$)','gm');
+  var dom;
+  while((dom=dayOnlyRe.exec(text))!==null){
+    if(!dateMap[dom.index]){
+      var dv=parseInt(dom[1]);
+      if(dv>=1&&dv<=31) dateMap[dom.index]={y:curYear,m:curMo,d:dv};
     }
+  }
+
+  // ── Step 3: Sort date positions ──
+  var datePosArr=Object.keys(dateMap).map(Number).sort(function(a,b){return a-b;});
+
+  // ── Step 4: Find date for a given text position ──
+  function dateForPos(pos){
+    // Find latest datePos <= pos
+    var best=null;
+    for(var i=0;i<datePosArr.length;i++){
+      if(datePosArr[i]<=pos) best=dateMap[datePosArr[i]];
+      else break;
+    }
+    if(!best) best={y:curYear,m:curMo,d:1};
+    return best.y+'-'+p2(best.m+1)+'-'+p2(best.d);
+  }
+
+  // ── Step 5: Flight leg patterns ──
+  // Pattern A: "KE 913 ICN 09:55 - MAD 18:00"  (full leg with dep+arr)
+  // Pattern B: "KE913 ICN 09:55"                (dep only)
+  // Pattern C: "KE 041 ICN 16:40 - SEA"         (dep + arr airport, no arr time)
+  var seenKeys={};
+
+  // Pattern A & C: flight with dep airport + dep time + optional arr
+  var reA=/([A-Z]{1,3}\s?\d{2,4})\s+([A-Z]{3})\s+(\d{1,2}:\d{2})\s*[-–]?\s*([A-Z]{3})?/g;
+  var mA;
+  while((mA=reA.exec(text))!==null){
+    var fnum=mA[1].replace(/\s/,'');
+    var depApt=mA[2];
+    var depTime=mA[3];
+    // Normalize time
+    var tParts=depTime.split(':');
+    var hh=parseInt(tParts[0]),mm=parseInt(tParts[1]);
+    if(hh>23||mm>59) continue;
+    depTime=p2(hh)+':'+p2(mm);
+    var arrApt=mA[4]||'';
+    var dateStr=dateForPos(mA.index);
+    var type=depApt===baseApt?'base':'intl';
+    var key=dateStr+'-'+fnum+'-'+depApt+'-'+depTime;
+    if(seenKeys[key]) continue;
+    seenKeys[key]=true;
+    flights.push({date:dateStr,flight:fnum,depApt:depApt,depTime:depTime,arrApt:arrApt,type:type});
+  }
+
+  // Deduplicate and sort
+  flights.sort(function(a,b){
+    if(a.date!==b.date) return a.date<b.date?-1:1;
+    return a.depTime<b.depTime?-1:1;
   });
   return flights;
 }
