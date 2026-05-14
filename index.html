@@ -3,6 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#3b82c4">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="CrewClock">
+<link rel="manifest" href="data:application/json,%7B%22name%22%3A%22CREW+CLOCK%22%2C%22short_name%22%3A%22CrewClock%22%2C%22start_url%22%3A%22.%2F%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23e8f4fd%22%2C%22theme_color%22%3A%22%233b82c4%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%3Csvg+xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27+viewBox%3D%270+0+192+192%27%3E%3Ccircle+cx%3D%2796%27+cy%3D%2796%27+r%3D%2796%27+fill%3D%27%233b82c4%27%2F%3E%3Ctext+y%3D%27128%27+x%3D%2796%27+text-anchor%3D%27middle%27+font-size%3D%27100%27+font-family%3D%27Arial%27%3E%E2%9C%88%3C%2Ftext%3E%3C%2Fsvg%3E%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%7D%5D%7D">
 <title>CREW CLOCK</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
@@ -428,6 +433,46 @@ body.dark .dl-inp[type=date]{color-scheme:dark}
 .ro-btn{width:100%;padding:13px;background:var(--amb);border:none;border-radius:10px;
   color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif}
 
+/* ── NOTIFICATION BANNER ── */
+.notif-banner{
+  position:fixed;bottom:80px;left:16px;right:16px;
+  background:var(--tx);color:#fff;
+  border-radius:14px;padding:14px 16px;
+  display:none;align-items:center;gap:12px;
+  box-shadow:0 8px 32px rgba(0,0,0,.25);
+  z-index:150;animation:slideUp .3s ease;
+}
+@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+.notif-banner.show{display:flex}
+.notif-banner .nb-ico{font-size:22px;flex-shrink:0}
+.notif-banner .nb-body{flex:1}
+.notif-banner .nb-title{font-size:13px;font-weight:700;margin-bottom:2px}
+.notif-banner .nb-sub{font-size:11px;opacity:.8}
+.notif-banner .nb-action{background:var(--blue);border:none;border-radius:8px;
+  color:#fff;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;
+  white-space:nowrap;font-family:Inter,sans-serif;flex-shrink:0}
+.notif-banner .nb-close{background:transparent;border:none;color:#fff;
+  font-size:18px;cursor:pointer;opacity:.7;padding:0 4px;flex-shrink:0}
+
+/* ── PWA INSTALL BANNER ── */
+.pwa-banner{
+  position:fixed;bottom:0;left:0;right:0;
+  background:var(--white);border-top:1px solid var(--bdr);
+  padding:14px 16px;display:none;align-items:center;gap:12px;
+  box-shadow:0 -4px 20px rgba(59,130,196,.12);z-index:140;
+}
+.pwa-banner.show{display:flex}
+.pwa-banner .pb-ico{width:40px;height:40px;border-radius:10px;background:var(--blue);
+  display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.pwa-banner .pb-body{flex:1}
+.pwa-banner .pb-title{font-size:13px;font-weight:700;color:var(--tx)}
+.pwa-banner .pb-sub{font-size:10px;color:var(--tx2);margin-top:1px}
+.pwa-banner .pb-btn{background:var(--blue);border:none;border-radius:8px;
+  color:#fff;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;
+  white-space:nowrap;font-family:Inter,sans-serif;flex-shrink:0}
+.pwa-banner .pb-close{background:transparent;border:none;color:var(--tx3);
+  font-size:20px;cursor:pointer;padding:0 4px;flex-shrink:0}
+
 /* ── TOAST ── */
 .toast{position:fixed;top:18px;left:50%;transform:translateX(-50%) translateY(-60px);
   background:var(--tx);color:#fff;border-radius:10px;padding:9px 16px;font-size:12px;
@@ -556,6 +601,9 @@ body.dark .dl-inp[type=date]{color-scheme:dark}
       <div class="preset-body" id="intlPresets"></div>
     </div>
     <button class="btn-save" onclick="saveSettingsUI()">Save Settings</button>
+    <button onclick="clearAllData()" style="width:100%;padding:11px;background:transparent;border:1.5px solid var(--red);border-radius:10px;color:var(--red);font-size:13px;font-weight:600;cursor:pointer;margin-top:8px;font-family:Inter,sans-serif">
+      Clear All Saved Data
+    </button>
   </div>
 </div>
 
@@ -606,6 +654,28 @@ body.dark .dl-inp[type=date]{color-scheme:dark}
     <button class="ro-btn" onclick="dismissOv()">DISMISS</button>
   </div>
 </div>
+<!-- Notification permission banner -->
+<div class="notif-banner" id="notifBanner">
+  <div class="nb-ico">🔔</div>
+  <div class="nb-body">
+    <div class="nb-title">Enable Background Alarms</div>
+    <div class="nb-sub">Allow notifications to ring even when screen is off</div>
+  </div>
+  <button class="nb-action" onclick="requestNotifPermission()">Allow</button>
+  <button class="nb-close" onclick="dismissNotifBanner()">&#x2715;</button>
+</div>
+
+<!-- PWA install banner (Android Chrome) -->
+<div class="pwa-banner" id="pwaBanner">
+  <div class="pb-ico">✈</div>
+  <div class="pb-body">
+    <div class="pb-title">Add to Home Screen</div>
+    <div class="pb-sub">Install for reliable background alarms</div>
+  </div>
+  <button class="pb-btn" id="pwaInstallBtn" onclick="installPWA()">Install</button>
+  <button class="pb-close" onclick="dismissPWA()">&#x2715;</button>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -655,6 +725,60 @@ function loadSettings(){
   intlOffs.forEach(function(o){if(intlOn[o.id]===undefined)intlOn[o.id]=true;});
 }
 function saveSettings(){try{syncAllPresets();localStorage.setItem('crewclock_v4',JSON.stringify({baseApt:baseApt,baseOffs:baseOffs,intlOffs:intlOffs,baseOn:baseOn,intlOn:intlOn}));}catch(e){}}
+
+/* ── 스케줄 + 알람 영속 저장 ── */
+function saveFlights(){
+  try{
+    localStorage.setItem('crewclock_flights', JSON.stringify(detectedFlights));
+    localStorage.setItem('crewclock_toggles', JSON.stringify(flightToggles));
+    localStorage.setItem('crewclock_registered', JSON.stringify(registeredFlights));
+  }catch(e){console.warn('[save flights]',e);}
+}
+
+function saveAlarms(){
+  try{
+    var data=alms.map(function(a){
+      return {
+        id:a.id,
+        time:a.time instanceof Date?a.time.toISOString():a.time,
+        dep:a.dep instanceof Date?a.dep.toISOString():(a.dep||null),
+        lbl:a.lbl,type:a.type,armed:a.armed,ring:false,dism:a.dism
+      };
+    });
+    localStorage.setItem('crewclock_alarms', JSON.stringify(data));
+  }catch(e){console.warn('[save alarms]',e);}
+}
+
+function loadFlights(){
+  try{
+    var f=localStorage.getItem('crewclock_flights');
+    if(f) detectedFlights=JSON.parse(f);
+    var t=localStorage.getItem('crewclock_toggles');
+    if(t) flightToggles=JSON.parse(t);
+    var r=localStorage.getItem('crewclock_registered');
+    if(r) registeredFlights=JSON.parse(r);
+  }catch(e){console.warn('[load flights]',e);}
+}
+
+function loadAlarms(){
+  try{
+    var raw=localStorage.getItem('crewclock_alarms');
+    if(!raw) return;
+    var data=JSON.parse(raw);
+    var now=new Date();
+    alms=data
+      .filter(function(a){ return !a.dism || (new Date(a.time)-now>-300000); })
+      .map(function(a){
+        return {
+          id:a.id,
+          time:new Date(a.time),
+          dep:a.dep?new Date(a.dep):null,
+          lbl:a.lbl,type:a.type,armed:a.armed,ring:false,dism:a.dism
+        };
+      });
+  }catch(e){console.warn('[load alarms]',e);}
+}
+
 function resetDef(){baseOffs=dc(DEF_BASE);intlOffs=dc(DEF_INTL);baseOn={};intlOn={};baseOffs.forEach(function(o){baseOn[o.id]=true;});intlOffs.forEach(function(o){intlOn[o.id]=true;});}
 
 /* ═══ INIT ═══ */
@@ -665,7 +789,13 @@ function init(){
   document.getElementById('baseAptInput').value=baseApt;
   var dark=localStorage.getItem('crewclock_dark')==='1';
   if(dark){document.body.classList.add('dark');var b=document.getElementById('darkTogBtn');if(b)b.classList.add('on');}
+  // Load persisted schedule + alarms
+  loadFlights();
+  loadAlarms();
   renderCal();renderBasePresets();renderIntlPresets();initDrums();updateOcrModeUI();
+  // Restore home flight list if we had flights saved
+  if(detectedFlights.length){ renderHomeFlightList(); }
+  if(alms.length){ renderDirectAlarms(); }
   tickClock();setInterval(tickClock,1000);setInterval(checkAlarms,1000);
 }
 
@@ -1145,6 +1275,7 @@ function handleICS(e){
       initFlightToggles();
       // Auto-register alarms for ALL upcoming flights
       var autoAdded=autoRegisterAll();
+      saveFlights();
       renderICSResult(flights);
       renderHomeFlightList();
       renderCal();
@@ -1447,7 +1578,7 @@ function autoRegisterAll(){
     });
     registeredFlights[idx]=true;
   });
-  if(added>0){alms.sort(function(a,b){return a.time-b.time;});}
+  if(added>0){alms.sort(function(a,b){return a.time-b.time;});saveAlarms();syncAlarmsToSW();acquireWakeLock();}
   return added;
 }
 
@@ -1468,6 +1599,7 @@ function registerFlight(idx){
   registeredFlights[idx]=true;rerenderFlight(idx);
   if(!added){toast(f.flight+' — expired or duplicate','er');return;}
   alms.sort(function(a,b){return a.time-b.time;});
+  saveAlarms();syncAlarmsToSW();acquireWakeLock();
   renderCal();renderDaySchedule(calSelDate);renderHomeFlightList();
   toast(f.flight+' — '+added+' alarms set','ok');
 }
@@ -1482,6 +1614,7 @@ function addDirectAlarm(){
   if(alms.find(function(a){return !a.dism&&Math.abs(a.time-at)<2000;})){toast('An alarm already exists at this time','er');return;}
   alms.push({id:uid(),time:at,dep:null,lbl:lbl,type:'direct',armed:true,ring:false,dism:false});
   alms.sort(function(a,b){return a.time-b.time;});
+  saveAlarms();syncAlarmsToSW();acquireWakeLock();
   renderDirectAlarms();renderCal();renderDaySchedule(calSelDate);
   toast('"'+lbl+'" '+p2(h)+':'+p2(m),'ok');
   document.getElementById('dLabel').value='';
@@ -1512,8 +1645,8 @@ function renderDirectAlarms(){
   }).join('')+'</div>';
 }
 
-function delDirectAlarm(id){alms=alms.filter(function(a){return a.id!==id;});renderDirectAlarms();renderCal();}
-function dismissDirectAlarm(id){var a=alms.find(function(x){return x.id===id;});if(a){a.dism=true;a.ring=false;}if(!alms.some(function(x){return x.ring;})){stopSnd();document.getElementById('ro').classList.remove('show');}renderDirectAlarms();}
+function delDirectAlarm(id){alms=alms.filter(function(a){return a.id!==id;});saveAlarms();renderDirectAlarms();renderCal();}
+function dismissDirectAlarm(id){var a=alms.find(function(x){return x.id===id;});if(a){a.dism=true;a.ring=false;}saveAlarms();if(!alms.some(function(x){return x.ring;})){stopSnd();document.getElementById('ro').classList.remove('show');}renderDirectAlarms();}
 
 function updateDirectCDs(){
   var now=new Date();
@@ -1538,13 +1671,35 @@ function checkAlarms(){
   alms.forEach(function(a){if(a.ring&&(now-a.time)>=60000){a.ring=false;a.dism=true;needRender=true;if(!alms.some(function(x){return x.ring;})){stopSnd();document.getElementById('ro').classList.remove('show');}}});
   if(needRender)renderDirectAlarms();
   var bl=alms.length;alms=alms.filter(function(a){return !a.dism||(now-a.time<300000);});
-  if(alms.length!==bl)renderDirectAlarms();
+  if(alms.length!==bl){saveAlarms();renderDirectAlarms();}
 }
-function trigAlarm(a){document.getElementById('rtt').textContent=a.lbl;document.getElementById('rdt').textContent=fmt(a.time)+(a.dep?' · DEP '+fmt(a.dep):'');document.getElementById('ro').classList.add('show');playSnd();if(navigator.vibrate)navigator.vibrate([400,150,400,150,400]);}
-function dismissOv(){alms.forEach(function(a){if(a.ring){a.dism=true;a.ring=false;}});stopSnd();document.getElementById('ro').classList.remove('show');renderDirectAlarms();}
+function trigAlarm(a){
+  document.getElementById('rtt').textContent=a.lbl;
+  document.getElementById('rdt').textContent=fmt(a.time)+(a.dep?' · DEP '+fmt(a.dep):'');
+  document.getElementById('ro').classList.add('show');
+  playSnd();
+  if(navigator.vibrate)navigator.vibrate([400,150,400,150,400,150,400]);
+  showNotificationIfGranted(a);
+  acquireWakeLock();
+}
+function dismissOv(){alms.forEach(function(a){if(a.ring){a.dism=true;a.ring=false;}});saveAlarms();stopSnd();document.getElementById('ro').classList.remove('show');renderDirectAlarms();}
 function dismissA(id){var a=alms.find(function(x){return x.id===id;});if(a){a.dism=true;a.ring=false;}if(!alms.some(function(x){return x.ring;})){stopSnd();document.getElementById('ro').classList.remove('show');}renderDirectAlarms();}
 
 /* ═══ SETTINGS ═══ */
+function clearAllData(){
+  if(!confirm('Clear all saved flights and alarms?')) return;
+  try{
+    localStorage.removeItem('crewclock_flights');
+    localStorage.removeItem('crewclock_alarms');
+    localStorage.removeItem('crewclock_toggles');
+    localStorage.removeItem('crewclock_registered');
+  }catch(e){}
+  detectedFlights=[];alms=[];flightToggles={};openFlights={};registeredFlights={};
+  renderHomeFlightList();renderDirectAlarms();renderCal();renderDaySchedule(calSelDate);
+  if(swReg&&swReg.active) swReg.active.postMessage({type:'CANCEL_ALL'});
+  toast('All data cleared','ok');
+}
+
 function toggleDark(btn){var d=document.body.classList.toggle('dark');btn.classList.toggle('on',d);localStorage.setItem('crewclock_dark',d?'1':'0');}
 function saveSettingsUI(){var v=(document.getElementById('baseAptInput').value||'').trim().toUpperCase().slice(0,3);if(v.length<2){toast('Please enter an airport code','er');return;}syncAllPresets();baseApt=v;saveSettings();toast('Settings saved','ok');}
 function syncAllPresets(){
