@@ -1,1289 +1,1461 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>CrewClock</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Share+Tech+Mono&family=Barlow:wght@300;400;500;600&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
+<title>CREW CLOCK</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#0a0c10;--surf:#111520;--surf2:#181e2e;
-  --bdr:#1e2840;--bdr2:#2a3450;
-  --acc:#00d4ff;--amb:#ffb800;--red:#ff3b5c;--grn:#00e676;
-  --tx:#e8eaf6;--tx2:#7b8db0;--tx3:#4a5568;
+  /* 연한 하늘색 파스텔 테마 */
+  --bg:#e8f4fd;
+  --white:#f4faff;
+  --blue:#3b82c4;--blue2:#2d6eac;
+  --blue-light:rgba(59,130,196,.10);--blue-mid:rgba(59,130,196,.20);
+  --tx:#1a2e42;--tx2:#4a6a85;--tx3:#8aaec8;
+  --bdr:#c8e0f0;--bdr2:#a8cce4;
+  --grn:#2eaa70;--red:#e0505a;--amb:#e8923a;
+  --shadow:0 1px 6px rgba(59,130,196,.10),0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:0 4px 20px rgba(59,130,196,.16);
+  /* nav gradient */
+  --nav-bg:linear-gradient(135deg,#daeefa 0%,#f0f8ff 100%);
+}
+body.dark{
+  --bg:#0d1f2d;--white:#162535;
+  --blue:#6aafe8;--blue2:#5a9fd8;
+  --blue-light:rgba(106,175,232,.13);--blue-mid:rgba(106,175,232,.24);
+  --tx:#e0f0fa;--tx2:#7aaac8;--tx3:#4a7090;
+  --bdr:#1e3a50;--bdr2:#2a4d68;
+  --grn:#3dd68c;--red:#f07080;--amb:#f0a84a;
+  --shadow:0 1px 4px rgba(0,0,0,.35),0 1px 2px rgba(0,0,0,.2);
+  --shadow-md:0 4px 20px rgba(0,0,0,.45);
+  --nav-bg:linear-gradient(135deg,#0d1f2d 0%,#162535 100%);
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-body{background:var(--bg);color:var(--tx);font-family:'Barlow',sans-serif;min-height:100vh;padding-bottom:70px}
-body::before{content:'';position:fixed;inset:0;background:
-  radial-gradient(ellipse 60% 40% at 50% 0%,rgba(0,80,140,.15) 0%,transparent 70%),
-  repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(0,212,255,.03) 39px,rgba(0,212,255,.03) 40px),
-  repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(0,212,255,.03) 39px,rgba(0,212,255,.03) 40px);
-  pointer-events:none;z-index:0}
-.app{position:relative;z-index:1;max-width:480px;margin:0 auto}
+html,body{height:100%;overflow-x:hidden}
+body{background:var(--bg);color:var(--tx);font-family:'Inter',sans-serif;font-size:14px;
+  padding-bottom:80px;-webkit-font-smoothing:antialiased}
 
-/* ── HEADER ── */
-header{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 0}
-.logo{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:4px;color:var(--acc)}
-.logo small{display:block;font-size:10px;font-family:'Barlow Condensed',sans-serif;font-weight:600;letter-spacing:2px;color:var(--tx2);margin-top:-4px}
-.clock .t{font-family:'Share Tech Mono',monospace;font-size:20px;color:var(--acc);letter-spacing:2px;text-align:right}
-.clock .d{font-size:10px;color:var(--tx2);letter-spacing:1px;text-align:right;text-transform:uppercase}
-.clock .tz{font-size:9px;color:var(--tx3);letter-spacing:.8px;text-align:right;margin-top:2px;font-family:'Barlow Condensed',sans-serif;font-weight:600}
-.clock .tz span{color:var(--tx2)}
+/* ── TOP NAV ── */
+.top-nav{position:sticky;top:0;z-index:50;
+  background:var(--nav-bg,var(--white));
+  border-bottom:1px solid var(--bdr);
+  display:flex;align-items:center;justify-content:center;
+  padding:14px 20px 12px;position:relative;
+  box-shadow:0 2px 8px rgba(59,130,196,.10)}
+.nav-title{text-align:center;cursor:pointer;user-select:none}
+.nav-title:hover h1{color:var(--blue)}
+.nav-title h1{
+  font-size:22px;font-weight:800;letter-spacing:4px;
+  color:var(--tx);transition:color .2s;
+  text-transform:uppercase;line-height:1}
+.nav-title p{font-size:9px;color:var(--tx3);letter-spacing:2px;margin-top:3px;text-transform:uppercase}
+.nav-bell{position:absolute;right:16px;top:50%;transform:translateY(-50%);
+  width:36px;height:36px;border-radius:50%;border:none;background:transparent;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--tx);
+  transition:background .2s;position:absolute}
+.nav-bell:hover{background:var(--blue-light)}
+.nav-bell .badge{position:absolute;top:5px;right:5px;width:7px;height:7px;
+  background:var(--red);border-radius:50%;border:2px solid var(--white);display:none}
+.nav-bell .badge.show{display:block}
 
-/* ── TABS ── */
-.tabs{display:flex;padding:14px 20px 0}
-.tab{flex:1;padding:9px 4px;border:1px solid var(--bdr2);background:var(--surf);color:var(--tx3);
-  font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:.8px;
-  cursor:pointer;text-align:center;transition:all .18s;text-transform:uppercase;position:relative;outline:none}
-.tab:first-child{border-radius:8px 0 0 8px;border-right:none}
-.tab:nth-child(2){border-right:none}
-.tab:last-child{border-radius:0 8px 8px 0}
-/* active tab: full bright border all sides + glow */
-.tab.active{
-  background:rgba(0,212,255,.1);
-  border-color:var(--acc) !important;
-  color:var(--acc);
-  box-shadow:0 0 0 1px var(--acc), inset 0 0 12px rgba(0,212,255,.06);
-  z-index:2;
-}
-.tab:not(.active):hover{color:var(--tx2);background:rgba(255,255,255,.03)}
+/* ── PAGE TABS ── */
+.page-tabs{display:flex;background:var(--nav-bg,var(--white));border-bottom:1px solid var(--bdr);
+  -ms-overflow-style:none;scrollbar-width:none}
+.page-tabs::-webkit-scrollbar{display:none}
+.ptab{flex:1;padding:11px 8px;border:none;background:transparent;
+  color:var(--tx2);font-size:12px;font-weight:500;cursor:pointer;
+  white-space:nowrap;transition:color .18s;border-bottom:2px solid transparent;font-family:'Inter',sans-serif}
+.ptab.active{color:var(--blue);border-bottom-color:var(--blue);font-weight:600}
 
-.panel{display:none}
-.panel.show{display:block}
+/* ── PANELS ── */
+.panel{display:none}.panel.show{display:block}
+.sec{padding:14px 14px 0}
 
-/* ── CARD ── */
-.card{margin:12px 20px 0;background:var(--surf);border:1px solid var(--bdr);border-radius:12px;overflow:hidden}
-.ch{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--bdr);background:rgba(0,0,0,.2)}
-.ch .ico{width:24px;height:24px;border-radius:6px;background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.2);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
-.ch .lbl{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:2px;color:var(--tx2);text-transform:uppercase;flex:1}
-.ch .cnt{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--acc)}
+/* ── CALENDAR ── */
+.cal-card{background:var(--white);border-radius:14px;box-shadow:var(--shadow);margin:12px 14px 0;overflow:hidden}
+.cal-nav{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 6px}
+.cal-nav-btn{width:30px;height:30px;border:none;background:var(--blue-light);border-radius:8px;
+  color:var(--blue);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s}
+.cal-nav-btn:hover{background:var(--blue-mid)}
+.cal-month{font-size:14px;font-weight:600;color:var(--tx)}
+.cal-dow-row{display:grid;grid-template-columns:repeat(7,1fr);padding:0 6px 2px}
+.cal-dow-cell{text-align:center;font-size:10px;font-weight:600;color:var(--tx3);padding:3px 0;letter-spacing:.3px}
+.cal-dow-cell:first-child{color:var(--red)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);padding:0 6px 10px}
+/* Fixed mobile cell size */
+.cal-day{height:40px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  cursor:pointer;transition:background .15s;border-radius:8px;position:relative}
+.cal-day:hover{background:var(--blue-light)}
+.cal-day.other-month .cal-day-num{opacity:.3}
+.cal-day-num{width:28px;height:28px;display:flex;align-items:center;justify-content:center;
+  border-radius:50%;font-size:13px;font-weight:500;color:var(--tx)}
+.cal-day.today .cal-day-num{background:var(--blue);color:#fff;font-weight:700}
+.cal-day.selected:not(.today) .cal-day-num{background:var(--blue-light);color:var(--blue);font-weight:600}
+.cal-day:nth-child(7n+1) .cal-day-num{color:var(--red)}
+.cal-day.today .cal-day-num{color:#fff !important}
+.cal-dots{display:flex;gap:2px;justify-content:center;margin-top:1px;position:absolute;bottom:3px}
+.cal-dot{width:3px;height:3px;border-radius:50%}
+.cal-dot.b{background:var(--blue)}.cal-dot.g{background:var(--grn)}
+.cal-day.today .cal-dot{background:rgba(255,255,255,.8)}
 
-/* ── UPLOAD ── */
-.upz{padding:20px 16px;text-align:center;cursor:pointer;transition:background .2s;position:relative}
-.upz:hover{background:rgba(0,212,255,.03)}
+/* ── DAY CARD ── */
+.day-card{background:var(--white);border-radius:14px;box-shadow:var(--shadow);margin:10px 14px 0}
+.day-header{display:flex;align-items:center;justify-content:space-between;padding:12px 14px 0}
+.day-title{font-size:13px;font-weight:700;color:var(--blue)}
+.day-subtitle{font-size:10px;color:var(--tx2);margin-top:1px}
+.day-more{font-size:11px;color:var(--blue);font-weight:600;cursor:pointer}
+.day-flights{padding:8px 6px 10px}
+.dfr{display:flex;align-items:center;gap:10px;padding:8px 8px;border-radius:8px;transition:background .15s;cursor:pointer}
+.dfr:hover{background:var(--blue-light)}
+.dfr-time{font-size:14px;font-weight:700;color:var(--blue);width:42px;flex-shrink:0;font-family:'Share Tech Mono',monospace}
+.dfr-info{flex:1}
+.dfr-route{font-size:13px;font-weight:600;color:var(--tx)}
+.dfr-sub{font-size:10px;color:var(--tx2);margin-top:1px}
+.dfr-fnum{font-size:10px;color:var(--tx3);text-align:right;flex-shrink:0;font-weight:600}
+.dfr-sep{height:1px;background:var(--bdr);margin:0 14px}
+.empty-state{padding:20px;text-align:center;color:var(--tx3);font-size:12px}
+
+/* ── UPLOAD PANEL ── */
+.upload-panel{background:var(--white);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
+.upload-tabs{display:flex;border-bottom:1px solid var(--bdr)}
+.utab{flex:1;padding:10px;border:none;background:transparent;font-family:'Inter',sans-serif;
+  font-size:12px;font-weight:500;color:var(--tx2);cursor:pointer;border-bottom:2px solid transparent;transition:all .18s}
+.utab.active{color:var(--blue);border-bottom-color:var(--blue);font-weight:600;background:var(--blue-light)}
+.upload-body{padding:16px}
+.upz{text-align:center;cursor:pointer;transition:background .2s;position:relative;border-radius:10px;
+  border:2px dashed var(--bdr2);padding:20px 16px;background:transparent}
+.upz:hover{border-color:var(--blue);background:var(--blue-light)}
 .upz input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
-.up-ico{width:48px;height:48px;border:2px dashed var(--bdr2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;margin:0 auto 8px;color:var(--tx3);transition:all .2s}
-.upz:hover .up-ico{border-color:var(--acc);color:var(--acc)}
-.up-t{font-size:13px;font-weight:500;color:var(--tx2)}
-.up-s{font-size:10px;color:var(--tx3);margin-top:3px}
-#prevImg{width:100%;max-height:150px;object-fit:contain;border-radius:8px;margin-bottom:8px;display:none}
-.btn-az{display:none;width:calc(100% - 28px);margin:0 14px 14px;padding:11px;
-  background:linear-gradient(135deg,#0066aa,#00aad4);border:none;border-radius:9px;
-  color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:2.5px;cursor:pointer;transition:all .2s}
-.btn-az:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(0,170,212,.4)}
-.btn-az:disabled{opacity:.6;pointer-events:none}
-.prog{display:none;padding:4px 14px 14px}
+.up-ico{width:44px;height:44px;border-radius:10px;background:var(--blue-light);
+  display:flex;align-items:center;justify-content:center;margin:0 auto 8px;color:var(--blue)}
+.up-t{font-size:13px;font-weight:600;color:var(--tx)}
+.up-s{font-size:11px;color:var(--tx2);margin-top:3px}
+#prevImg{width:100%;max-height:130px;object-fit:contain;border-radius:8px;margin-bottom:8px;display:none}
+.ocr-info{background:var(--blue-light);border:1px solid rgba(79,110,247,.2);border-radius:8px;
+  padding:10px 12px;margin-top:10px;font-size:11px;color:var(--tx2);line-height:1.5}
+.ocr-info strong{color:var(--blue);display:block;margin-bottom:2px;font-size:12px}
+.btn-az{display:none;width:100%;padding:12px;background:var(--blue);border:none;border-radius:10px;
+  color:#fff;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;margin-top:10px;font-family:'Inter',sans-serif}
+.btn-az:hover{background:var(--blue2);box-shadow:0 4px 16px rgba(79,110,247,.35)}
+.btn-az:disabled{opacity:.5;pointer-events:none}
+.prog{display:none;margin-top:10px}
 .prog-t{height:3px;background:var(--bdr);border-radius:2px;overflow:hidden}
-.prog-f{height:100%;background:linear-gradient(90deg,var(--acc),#0066aa);border-radius:2px;animation:sc 1.4s ease-in-out infinite}
+.prog-f{height:100%;background:var(--blue);border-radius:2px;animation:sc 1.4s ease-in-out infinite}
 @keyframes sc{0%{width:0;margin-left:0}50%{width:55%}100%{width:0;margin-left:100%}}
-.prog-l{font-size:9px;color:var(--acc);text-align:center;margin-top:5px;letter-spacing:1px;font-family:'Share Tech Mono',monospace}
+.prog-l{font-size:10px;color:var(--blue);text-align:center;margin-top:5px;font-weight:500}
+/* OCR mode indicator */
+.ocr-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;
+  font-size:10px;font-weight:600;letter-spacing:.5px;margin-left:8px}
+.ocr-badge.online{background:rgba(34,197,94,.12);color:var(--grn)}
+.ocr-badge.offline{background:rgba(251,146,60,.12);color:var(--amb)}
 
-/* ── FLIGHT ITEMS ── */
-.fal-list{padding:8px 12px 10px}
+/* ── FLIGHT LIST ── */
+.fal-list{display:flex;flex-direction:column;gap:8px}
+.home-section-hdr{display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:10px;padding-top:4px}
+.home-section-hdr h2{font-size:13px;font-weight:700;color:var(--tx);letter-spacing:.2px}
+.home-section-hdr .upload-link{font-size:11px;color:var(--blue);font-weight:600;cursor:pointer;
+  display:flex;align-items:center;gap:3px}
 
-.fal-item{border-radius:10px;border:1px solid var(--bdr);background:var(--surf2);margin-bottom:8px;overflow:hidden;transition:opacity .2s}
-.fal-item.today{border-color:rgba(0,212,255,.35)}
-.fal-item.past{opacity:.32;pointer-events:none}
+/* Card base */
+.fal-item{background:var(--white);border-radius:14px;overflow:hidden;
+  border:1.5px solid var(--bdr);transition:all .2s;
+  box-shadow:0 1px 3px rgba(0,0,0,.05)}
 
-.fal-header{display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;user-select:none}
-.fal-dot{width:7px;height:7px;border-radius:50%;background:var(--bdr2);flex-shrink:0}
-.fal-item.today .fal-dot{background:var(--acc);box-shadow:0 0 6px var(--acc)}
-.fal-item.future .fal-dot{background:var(--grn)}
-.fal-item.past .fal-dot{background:var(--tx3)}
+/* Upcoming: normal */
+.fal-item.future{border-color:var(--bdr)}
+
+/* Today: highlighted */
+.fal-item.today{
+  border-color:var(--blue);
+  box-shadow:0 2px 12px rgba(79,110,247,.15),0 1px 3px rgba(79,110,247,.1);
+  background:linear-gradient(135deg,var(--white) 80%,rgba(79,110,247,.03))}
+
+/* Next flight: extra prominent */
+.fal-item.next-flight{
+  border-color:var(--blue);border-width:2px;
+  box-shadow:0 4px 20px rgba(79,110,247,.2)}
+
+/* Past: muted, no interaction */
+.fal-item.past{
+  opacity:.35;
+  box-shadow:none;
+  border-color:var(--bdr);
+  filter:saturate(.3)}
+
+/* ── CARD HEADER ── */
+.fal-header{display:flex;align-items:center;gap:10px;padding:12px 14px 10px;cursor:pointer;user-select:none}
+
+/* Left accent bar */
+.fal-accent{width:3px;border-radius:2px;align-self:stretch;flex-shrink:0;min-height:36px;background:var(--bdr2)}
+.fal-item.today .fal-accent{background:var(--blue)}
+.fal-item.next-flight .fal-accent{background:var(--blue)}
+.fal-item.future .fal-accent{background:var(--grn)}
+.fal-item.past .fal-accent{background:var(--bdr2)}
+
+/* Date + flight info block */
 .fal-info{flex:1;min-width:0}
+.fal-date-row{display:flex;align-items:center;gap:6px;margin-bottom:3px}
+.fal-dow{font-size:15px;font-weight:800;color:var(--tx);letter-spacing:.2px}
+.fal-item.today .fal-dow,.fal-item.next-flight .fal-dow{color:var(--blue)}
+.fal-date{font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--tx2);font-weight:500}
+.fal-badge{font-size:8px;font-weight:800;padding:2px 6px;border-radius:4px;letter-spacing:.8px;text-transform:uppercase}
+.fal-badge.today-badge{background:var(--blue);color:#fff}
+.fal-badge.next-badge{background:rgba(79,110,247,.12);color:var(--blue);border:1px solid rgba(79,110,247,.3)}
 
-/* 날짜 행: 요일 크게, 날짜 명확하게 */
-.fal-date-row{display:flex;align-items:baseline;gap:6px;margin-bottom:2px}
-.fal-dow{font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:2px;color:var(--tx2)}
-.fal-item.today .fal-dow{color:var(--acc);text-shadow:0 0 8px rgba(0,212,255,.4)}
-.fal-item.future .fal-dow{color:var(--tx)}
-.fal-date{font-family:'Share Tech Mono',monospace;font-size:13px;font-weight:700;color:var(--tx);letter-spacing:1px}
-.fal-item.today .fal-date{color:var(--acc)}
-.fal-today-badge{font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:1.5px;
-  background:var(--acc);color:#000;border-radius:3px;padding:1px 5px;vertical-align:middle}
-.fal-flight{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--tx2);margin-top:0}
-.fal-deptime{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;color:var(--tx);flex-shrink:0}
-.fal-item.past .fal-deptime{color:var(--tx3);font-size:16px}
-.fal-type{padding:2px 6px;border-radius:4px;font-size:9px;font-weight:700;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;flex-shrink:0}
-.fal-type.base{background:rgba(0,212,255,.12);color:var(--acc);border:1px solid rgba(0,212,255,.25)}
-.fal-type.intl{background:rgba(255,184,0,.12);color:var(--amb);border:1px solid rgba(255,184,0,.25)}
-.fal-chevron{font-size:10px;color:var(--tx3);flex-shrink:0;transition:transform .2s}
-.fal-item.open .fal-chevron{transform:rotate(180deg)}
+/* Route row */
+.fal-route-row{display:flex;align-items:center;gap:6px}
+.fal-fnum{font-size:11px;font-weight:700;color:var(--tx2);font-family:'Share Tech Mono',monospace}
+.fal-route{font-size:12px;font-weight:600;color:var(--tx);display:flex;align-items:center;gap:4px}
+.fal-route .apt{font-family:'Share Tech Mono',monospace;font-size:13px;font-weight:700}
+.fal-route .apt.dep{color:var(--blue)}
+.fal-item.past .fal-route .apt.dep{color:var(--tx2)}
+.fal-arrow{color:var(--tx3);font-size:11px}
 
-/* dropdown alarm list */
-.fal-alarms{display:none;padding:0 12px 10px;flex-direction:column;gap:4px}
+/* Right side: time + controls */
+.fal-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0}
+.fal-deptime{font-family:'Share Tech Mono',monospace;font-size:22px;font-weight:700;color:var(--tx);line-height:1}
+.fal-item.today .fal-deptime,.fal-item.next-flight .fal-deptime{color:var(--blue)}
+.fal-item.past .fal-deptime{font-size:18px;color:var(--tx3)}
+.fal-controls{display:flex;align-items:center;gap:6px}
+
+/* Alarm master toggle */
+.fal-alarm-tog{width:34px;height:19px;border-radius:10px;background:var(--bdr2);border:none;
+  cursor:pointer;position:relative;transition:all .2s;flex-shrink:0;outline:none}
+.fal-alarm-tog::after{content:'';position:absolute;left:2px;top:2px;width:15px;height:15px;
+  border-radius:50%;background:#fff;transition:all .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.fal-alarm-tog.on{background:var(--blue)}
+.fal-alarm-tog.on::after{left:17px}
+.fal-alarm-tog.on-intl{background:var(--amb)}
+.fal-alarm-tog.on-intl::after{left:17px}
+
+/* Dropdown chevron button */
+.fal-drop-btn{width:26px;height:26px;border-radius:7px;border:1.5px solid var(--bdr);
+  background:var(--bg);cursor:pointer;display:flex;align-items:center;justify-content:center;
+  color:var(--tx3);transition:all .2s;flex-shrink:0}
+.fal-drop-btn:hover{border-color:var(--blue);color:var(--blue)}
+.fal-item.open .fal-drop-btn{border-color:var(--blue);background:var(--blue-light);color:var(--blue)}
+.fal-drop-btn svg{transition:transform .2s}
+.fal-item.open .fal-drop-btn svg{transform:rotate(180deg)}
+
+/* Register / done badge */
+.fal-reg-btn{padding:3px 8px;border-radius:6px;font-size:9px;font-weight:700;cursor:pointer;
+  flex-shrink:0;transition:all .18s;border:1px solid;font-family:'Inter',sans-serif;line-height:1.4}
+.fal-reg-btn.idle{background:transparent;border-color:var(--blue);color:var(--blue)}
+.fal-reg-btn.idle:active{background:var(--blue);color:#fff}
+.fal-reg-btn.done{background:rgba(34,197,94,.1);border-color:var(--grn);color:var(--grn);pointer-events:none}
+
+/* Type badge */
+.fal-type{padding:2px 6px;border-radius:4px;font-size:9px;font-weight:700;letter-spacing:.5px}
+.fal-type.base{background:var(--blue-light);color:var(--blue)}
+.fal-type.intl{background:rgba(251,146,60,.1);color:var(--amb)}
+.fal-type.ics{background:rgba(34,197,94,.1);color:var(--grn)}
+
+/* ── DROPDOWN ALARM LIST ── */
+.fal-alarms{display:none;border-top:1px solid var(--bdr);padding:8px 14px 12px;flex-direction:column;gap:5px;background:var(--bg)}
 .fal-item.open .fal-alarms{display:flex}
-.fal-atog{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:6px;background:rgba(0,0,0,.2);border:1px solid var(--bdr);transition:all .15s}
-.fal-atog.on-base{border-color:rgba(0,212,255,.2);background:rgba(0,212,255,.04)}
-.fal-atog.on-intl{border-color:rgba(255,184,0,.2);background:rgba(255,184,0,.04)}
-.atog-lbl{flex:1;font-size:11px;color:var(--tx2)}
-.fal-atog.on-base .atog-lbl,.fal-atog.on-intl .atog-lbl{color:var(--tx)}
-.atog-time{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--tx3)}
-.fal-atog.on-base .atog-time{color:var(--acc)}
+.fal-alarms-hdr{font-size:9px;font-weight:700;color:var(--tx3);text-transform:uppercase;
+  letter-spacing:.8px;margin-bottom:4px}
+.fal-atog{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:9px;
+  background:var(--white);border:1px solid var(--bdr);transition:all .15s}
+.fal-atog.on-base{border-color:rgba(79,110,247,.3);background:var(--blue-light)}
+.fal-atog.on-intl{border-color:rgba(251,146,60,.3);background:rgba(251,146,60,.06)}
+.atog-lbl{flex:1;font-size:11px;color:var(--tx2);font-weight:500}
+.fal-atog.on-base .atog-lbl,.fal-atog.on-intl .atog-lbl{color:var(--tx);font-weight:600}
+.atog-right{display:flex;flex-direction:column;align-items:flex-end;gap:1px;flex-shrink:0}
+.atog-time{font-family:'Share Tech Mono',monospace;font-size:11px;font-weight:600;color:var(--tx3);line-height:1}
+.atog-offset{font-size:9px;color:var(--tx3);opacity:.8;line-height:1;white-space:nowrap}
+.fal-atog.on-base .atog-time{color:var(--blue)}
+.fal-atog.on-base .atog-offset{color:var(--blue);opacity:.7}
 .fal-atog.on-intl .atog-time{color:var(--amb)}
+.fal-atog.on-intl .atog-offset{color:var(--amb);opacity:.7}
 
-/* past section toggle */
-.past-bar{padding:4px 12px 10px}
-.past-toggle-btn{width:100%;padding:7px;background:transparent;border:1px dashed var(--bdr2);border-radius:7px;
-  color:var(--tx3);font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;
-  letter-spacing:1.5px;cursor:pointer;transition:all .2s;text-align:center}
-.past-toggle-btn:hover{border-color:var(--tx2);color:var(--tx2)}
-#pastSection{display:none}
+/* ── PAST SECTION ── */
+.past-section-hdr{margin-top:14px;margin-bottom:8px}
+.past-toggle-btn{width:100%;padding:9px 14px;background:var(--white);
+  border:1.5px dashed var(--bdr2);border-radius:10px;color:var(--tx3);
+  font-size:11px;font-weight:600;cursor:pointer;transition:all .2s;
+  font-family:'Inter',sans-serif;display:flex;align-items:center;gap:6px}
+.past-toggle-btn:hover{border-color:var(--blue);color:var(--blue)}
+.past-toggle-btn svg{transition:transform .2s;flex-shrink:0}
+.past-toggle-btn.open svg{transform:rotate(90deg)}
+#homePastSection{display:none}
 
-/* SET ALL */
-/* per-flight register button */
-.fal-reg-btn{
-  padding:4px 9px;border-radius:5px;font-family:'Barlow Condensed',sans-serif;
-  font-size:11px;font-weight:700;letter-spacing:1px;cursor:pointer;
-  flex-shrink:0;transition:all .18s;white-space:nowrap;border:1px solid;
-}
-.fal-reg-btn.idle{
-  background:rgba(0,212,255,.1);border-color:rgba(0,212,255,.35);color:var(--acc);
-}
-.fal-reg-btn.idle:hover{background:rgba(0,212,255,.2);}
-.fal-reg-btn.done{
-  background:rgba(0,230,118,.08);border-color:rgba(0,230,118,.3);color:var(--grn);
-  pointer-events:none;
-}
+/* ── TOGGLE ── */
+.tog{width:36px;height:20px;border-radius:10px;background:var(--bdr2);border:none;cursor:pointer;
+  position:relative;transition:all .2s;flex-shrink:0;outline:none}
+.tog::after{content:'';position:absolute;left:3px;top:3px;width:14px;height:14px;border-radius:50%;
+  background:#fff;transition:all .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.tog.on{background:var(--blue)}.tog.on::after{left:19px}
+.tog.on-amb{background:var(--amb)}.tog.on-amb::after{left:19px}
 
-/* toggle */
-.tog{width:32px;height:18px;border-radius:9px;background:var(--bdr2);border:none;cursor:pointer;
-  position:relative;transition:all .2s;flex-shrink:0;outline:none;-webkit-appearance:none}
-.tog::after{content:'';position:absolute;left:3px;top:3px;width:12px;height:12px;border-radius:50%;background:var(--tx3);transition:all .2s}
-.tog.on{background:rgba(0,212,255,.25);border:1px solid var(--acc)}
-.tog.on::after{left:16px;background:var(--acc)}
-.tog.on-amb{background:rgba(255,184,0,.25);border:1px solid var(--amb)}
-.tog.on-amb::after{left:16px;background:var(--amb)}
+/* ── BOTTOM FAB + UPLOAD SHEET ── */
+.fab{position:fixed;bottom:24px;right:20px;width:52px;height:52px;border-radius:50%;
+  background:var(--blue);border:none;color:#fff;font-size:24px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 20px rgba(59,130,196,.45);z-index:60;transition:all .2s}
+.fab:hover{background:var(--blue2);transform:scale(1.06)}
+.sheet-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:70;display:none;backdrop-filter:blur(4px)}
+.sheet-overlay.show{display:block}
+.sheet{position:fixed;bottom:0;left:0;right:0;background:var(--white);border-radius:20px 20px 0 0;
+  z-index:71;transform:translateY(100%);transition:transform .32s cubic-bezier(.32,0,.67,0);
+  max-height:90vh;overflow-y:auto;padding-bottom:env(safe-area-inset-bottom,16px)}
+.sheet.open{transform:translateY(0);transition:transform .32s cubic-bezier(.33,1,.68,1)}
+.sheet-handle{width:36px;height:4px;background:var(--bdr2);border-radius:2px;margin:12px auto 16px}
+.sheet-title{font-size:15px;font-weight:700;color:var(--tx);padding:0 20px 12px;border-bottom:1px solid var(--bdr)}
+.sheet-body{padding:16px 20px}
+
+/* ── ALARM SECTION (inside alarm tab) ── */
+.alarm-card{background:var(--white);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
+.alarm-card-head{padding:14px 16px;border-bottom:1px solid var(--bdr);
+  display:flex;align-items:center;gap:8px}
+.alarm-card-head .ach-ico{width:28px;height:28px;border-radius:8px;background:var(--blue-light);
+  display:flex;align-items:center;justify-content:center;color:var(--blue);flex-shrink:0}
+.alarm-card-head .ach-lbl{font-size:13px;font-weight:700;color:var(--tx);flex:1}
+.alarm-card-body{padding:14px 16px 16px}
 
 /* ── DRUM PICKER ── */
-.drum-wrap{padding:12px 16px 14px}
-.drum-lbl-row{margin-bottom:10px}
-.drum-lbl-row label{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--tx3);display:block;margin-bottom:4px;font-family:'Barlow Condensed',sans-serif;font-weight:600}
-input[type=text].lf{width:100%;padding:9px 12px;background:var(--surf2);border:1px solid var(--bdr2);border-radius:8px;color:var(--tx);font-family:'Barlow',sans-serif;font-size:13px;outline:none}
-input[type=text].lf:focus{border-color:var(--acc)}
-
-.drum-row{display:flex;gap:8px;align-items:center;justify-content:center;margin-bottom:14px}
-.drum-col{display:flex;flex-direction:column;align-items:center;gap:6px}
-.drum-col .dc-label{font-size:9px;letter-spacing:1.5px;color:var(--tx3);font-family:'Barlow Condensed',sans-serif;font-weight:600;text-transform:uppercase}
-.drum{width:72px;height:130px;overflow:hidden;position:relative;border-radius:10px;border:1px solid var(--bdr2);background:var(--surf2);cursor:grab;user-select:none;-webkit-user-select:none}
+.drum-row{display:flex;gap:6px;align-items:center;justify-content:center;margin:12px 0}
+.drum-col{display:flex;flex-direction:column;align-items:center;gap:4px}
+.dc-label{font-size:9px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:1px}
+.drum{width:52px;height:78px;overflow:hidden;position:relative;border-radius:10px;
+  border:1.5px solid var(--bdr);background:var(--bg);cursor:grab;user-select:none;
+  -webkit-user-select:none;touch-action:none}
 .drum:active{cursor:grabbing}
-.drum-inner{position:absolute;width:100%;transition:transform .15s cubic-bezier(.25,.46,.45,.94)}
-.drum-item{height:44px;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;color:var(--tx3);transition:color .1s,font-size .1s}
-.drum-item.sel{color:var(--acc);font-size:32px}
-/* fade top/bottom */
-.drum::before,.drum::after{content:'';position:absolute;left:0;right:0;height:43px;z-index:2;pointer-events:none}
-.drum::before{top:0;background:linear-gradient(to bottom,var(--surf2),transparent)}
-.drum::after{bottom:0;background:linear-gradient(to top,var(--surf2),transparent)}
-/* center line */
-.drum-line{position:absolute;left:0;right:0;top:43px;height:44px;border-top:1px solid rgba(0,212,255,.2);border-bottom:1px solid rgba(0,212,255,.2);z-index:1;pointer-events:none;background:rgba(0,212,255,.04)}
-.drum-sep{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--tx2);padding-top:20px;line-height:1}
-
-.drum-date-row{display:flex;gap:8px;align-items:center;margin-bottom:14px}
-.drum-date-row .ig{flex:1}
-.drum-date-row label{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--tx3);display:block;margin-bottom:4px;font-family:'Barlow Condensed',sans-serif;font-weight:600}
-input[type=date]{width:100%;padding:9px 10px;background:var(--surf2);border:1px solid var(--bdr2);border-radius:8px;color:var(--tx);font-family:'Share Tech Mono',monospace;font-size:14px;outline:none;-webkit-appearance:none;color-scheme:dark}
-input[type=date]:focus{border-color:var(--acc)}
-
-.btn-da{width:100%;padding:12px;background:linear-gradient(135deg,#004d73,#007a99);border:1px solid rgba(0,212,255,.3);border-radius:9px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:3px;cursor:pointer;transition:all .2s}
-.btn-da:hover{box-shadow:0 6px 20px rgba(0,120,160,.4);transform:translateY(-1px)}
-
-/* ── SETTINGS ── */
-.sset{padding:12px 14px 14px}
-.srow{margin-bottom:10px}
-.srow label{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--tx3);display:block;margin-bottom:5px;font-family:'Barlow Condensed',sans-serif;font-weight:600}
-.sinp{width:100%;padding:9px 12px;background:var(--surf2);border:1px solid var(--bdr2);border-radius:8px;color:var(--tx);font-family:'Share Tech Mono',monospace;font-size:15px;letter-spacing:2px;text-transform:uppercase;outline:none}
-.sinp:focus{border-color:var(--acc)}
-.sinp::placeholder{color:var(--tx3);text-transform:none;letter-spacing:0}
-
-.pgroup{padding:10px 14px 12px}
-.orow{display:flex;align-items:center;gap:7px;padding:7px 8px;border-radius:7px;border:1px solid var(--bdr);background:var(--surf2);margin-bottom:6px}
-.olbl{flex:1;min-width:0}
-.lbl-inp{background:transparent;border:none;outline:none;color:var(--tx);font-size:12px;font-weight:500;font-family:'Barlow',sans-serif;width:100%}
-.lbl-inp:focus{color:var(--acc)}
-.olbl-s{font-size:9px;color:var(--tx3);margin-top:1px}
-.oedit{display:flex;gap:3px;align-items:center;flex-shrink:0}
-.ni{width:38px;padding:4px 3px;background:var(--bg);border:1px solid var(--bdr2);border-radius:5px;color:var(--tx);font-family:'Share Tech Mono',monospace;font-size:12px;text-align:center;outline:none;-webkit-appearance:none;-moz-appearance:textfield}
-.ni::-webkit-inner-spin-button{-webkit-appearance:none}
-.ni:focus{border-color:var(--acc)}
-.ul{font-size:9px;color:var(--tx3)}
-.db{width:22px;height:22px;border-radius:5px;background:rgba(255,59,92,.1);border:1px solid rgba(255,59,92,.25);color:var(--red);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:11px;transition:background .2s;flex-shrink:0}
-.db:hover{background:rgba(255,59,92,.2)}
-.add-btn{width:100%;padding:7px;background:transparent;border:1px dashed var(--bdr2);border-radius:7px;color:var(--tx3);font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:1.5px;cursor:pointer;transition:all .2s;margin-top:4px}
-.add-btn:hover{border-color:var(--acc);color:var(--acc)}
-.add-btn.amb:hover{border-color:var(--amb);color:var(--amb)}
-.btn-save{width:100%;padding:10px;background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.25);border-radius:8px;color:var(--acc);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:600;letter-spacing:2px;cursor:pointer;margin-top:10px;transition:all .2s}
-.btn-save:hover{background:rgba(0,212,255,.14)}
-
-/* ── FLIGHT LIST EMPTY ── */
-.empty{padding:20px;text-align:center;font-size:10px;color:var(--tx3);font-family:'Share Tech Mono',monospace;letter-spacing:1px}
+.drum-inner{position:absolute;width:100%;will-change:transform}
+.drum-item{height:26px;display:flex;align-items:center;justify-content:center;
+  font-size:15px;font-weight:500;color:var(--tx3);font-family:'Inter',sans-serif;
+  transition:color .06s,font-size .06s}
+.drum-item.sel{color:var(--blue);font-size:18px;font-weight:700}
+.drum::before,.drum::after{content:'';position:absolute;left:0;right:0;height:26px;z-index:2;pointer-events:none}
+.drum::before{top:0;background:linear-gradient(to bottom,var(--bg) 30%,transparent)}
+.drum::after{bottom:0;background:linear-gradient(to top,var(--bg) 30%,transparent)}
+.drum-line{position:absolute;left:4px;right:4px;top:26px;height:26px;
+  border-top:1.5px solid var(--blue);border-bottom:1.5px solid var(--blue);
+  z-index:1;pointer-events:none;background:var(--blue-light);border-radius:6px}
+.drum-sep{font-size:18px;font-weight:600;color:var(--tx2);padding-top:10px;font-family:'Inter',sans-serif}
+.dl-row{margin-bottom:12px}
+.dl-row label{font-size:11px;font-weight:600;color:var(--tx2);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px}
+.dl-inp{width:100%;padding:10px 12px;background:var(--bg);border:1.5px solid var(--bdr);
+  border-radius:9px;color:var(--tx);font-family:'Inter',sans-serif;font-size:13px;outline:none;transition:border-color .2s}
+.dl-inp:focus{border-color:var(--blue)}
+.dl-inp[type=date]{color-scheme:light}
+body.dark .dl-inp[type=date]{color-scheme:dark}
+.btn-da{width:100%;padding:12px;background:var(--blue);border:none;border-radius:10px;
+  color:#fff;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;font-family:'Inter',sans-serif}
+.btn-da:hover{background:var(--blue2);box-shadow:0 4px 16px rgba(79,110,247,.35)}
 
 /* ── DIRECT ALARM LIST ── */
-.dal-list{padding:6px 12px 12px;display:flex;flex-direction:column;gap:6px}
-.dal-item{display:flex;align-items:center;gap:10px;padding:10px 12px;
-  border-radius:9px;border:1px solid rgba(0,230,118,.25);background:rgba(0,230,118,.04);
-  animation:dalfin .25s ease}
+.dal-wrap{display:flex;flex-direction:column;gap:6px;margin-top:12px}
+.dal-item{display:flex;align-items:center;gap:8px;padding:10px 12px;
+  border-radius:10px;border:1.5px solid rgba(79,110,247,.15);background:var(--blue-light);animation:dalfin .22s ease}
 @keyframes dalfin{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
-.dal-item.ring-now{border-color:var(--amb);animation:pring2 .5s ease-in-out infinite alternate}
-@keyframes pring2{from{box-shadow:0 0 0 rgba(255,184,0,0)}to{box-shadow:0 0 14px rgba(255,184,0,.3)}}
-.dal-dot{width:7px;height:7px;border-radius:50%;background:var(--grn);box-shadow:0 0 5px var(--grn);flex-shrink:0}
-.dal-item.ring-now .dal-dot{background:var(--amb);box-shadow:0 0 5px var(--amb);animation:blk2 .4s infinite}
+.dal-item.ring-now{border-color:var(--amb);background:rgba(251,146,60,.08);animation:pring2 .5s ease-in-out infinite alternate}
+@keyframes pring2{from{box-shadow:none}to{box-shadow:0 0 12px rgba(251,146,60,.3)}}
+.dal-dot{width:7px;height:7px;border-radius:50%;background:var(--blue);flex-shrink:0}
+.dal-item.ring-now .dal-dot{background:var(--amb);animation:blk2 .4s infinite}
 @keyframes blk2{50%{opacity:0}}
 .dal-info{flex:1;min-width:0}
-.dal-date-row{display:flex;align-items:baseline;gap:5px;margin-bottom:1px}
-.dal-dow{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:var(--tx)}
-.dal-date{font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--tx);letter-spacing:1px}
-.dal-today{font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:1.5px;
-  background:var(--acc);color:#000;border-radius:3px;padding:1px 5px}
-.dal-lbl{font-size:10px;color:var(--tx2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.dal-cd{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--grn);margin-top:2px}
+.dal-date-row{display:flex;align-items:center;gap:4px;margin-bottom:1px}
+.dal-dow{font-size:13px;font-weight:700;color:var(--tx)}
+.dal-date{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--tx2)}
+.dal-today{background:var(--blue);color:#fff;font-size:8px;font-weight:700;padding:1px 5px;border-radius:3px}
+.dal-lbl{font-size:10px;color:var(--tx2);font-weight:500}
+.dal-cd{font-size:9px;color:var(--blue);margin-top:1px;font-family:'Share Tech Mono',monospace;font-weight:600}
 .dal-item.ring-now .dal-cd{color:var(--amb)}
-.dal-time{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;color:var(--grn);flex-shrink:0}
+.dal-time{font-family:'Share Tech Mono',monospace;font-size:22px;font-weight:700;color:var(--blue);flex-shrink:0}
 .dal-item.ring-now .dal-time{color:var(--amb)}
-.dal-del{width:24px;height:24px;border-radius:5px;background:rgba(255,59,92,.08);
-  border:1px solid rgba(255,59,92,.2);color:var(--red);cursor:pointer;
-  display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;transition:background .2s}
-.dal-del:hover{background:rgba(255,59,92,.18)}
-.dal-dis{padding:4px 9px;background:rgba(255,184,0,.12);border:1px solid rgba(255,184,0,.4);
-  border-radius:5px;color:var(--amb);font-size:10px;font-weight:700;
-  font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;cursor:pointer;white-space:nowrap;flex-shrink:0}
+.dal-del{width:26px;height:26px;border-radius:7px;background:rgba(244,63,94,.08);
+  border:1px solid rgba(244,63,94,.2);color:var(--red);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
+.dal-del:hover{background:rgba(244,63,94,.18)}
+.dal-dis{padding:4px 8px;background:rgba(251,146,60,.12);border:1.5px solid var(--amb);
+  border-radius:6px;color:var(--amb);font-size:10px;font-weight:700;cursor:pointer;flex-shrink:0}
+
+/* ── SETTINGS ── */
+.settings-section{background:var(--white);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
+.settings-row{padding:13px 16px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:12px}
+.settings-row:last-child{border-bottom:none}
+.settings-row label{font-size:11px;font-weight:600;color:var(--tx2);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px}
+.settings-inp{width:100%;padding:9px 12px;background:var(--bg);border:1.5px solid var(--bdr);
+  border-radius:9px;color:var(--tx);font-family:'Share Tech Mono',monospace;font-size:15px;
+  letter-spacing:2px;text-transform:uppercase;outline:none;transition:border-color .2s}
+.settings-inp:focus{border-color:var(--blue)}
+.settings-inp::placeholder{font-size:12px;letter-spacing:0;text-transform:none;color:var(--tx3)}
+.preset-card{background:var(--white);border-radius:14px;box-shadow:var(--shadow);margin-top:10px;overflow:hidden}
+.preset-head{padding:12px 16px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:8px}
+.ph-icon{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ph-lbl{font-size:11px;font-weight:700;color:var(--tx);text-transform:uppercase;letter-spacing:.5px;flex:1}
+.ph-tag{font-size:9px;font-weight:700;padding:2px 7px;border-radius:5px}
+.preset-body{padding:8px 12px 10px}
+.orow{display:flex;align-items:center;gap:7px;padding:7px 8px;border-radius:8px;border:1px solid var(--bdr);background:var(--bg);margin-bottom:5px}
+.olbl{flex:1;min-width:0}
+.lbl-inp{background:transparent;border:none;outline:none;color:var(--tx);font-size:12px;font-weight:500;font-family:'Inter',sans-serif;width:100%}
+.lbl-inp:focus{color:var(--blue)}
+.olbl-s{font-size:9px;color:var(--tx3);margin-top:1px}
+.oedit{display:flex;gap:3px;align-items:center;flex-shrink:0}
+.ni{width:36px;padding:4px 3px;background:var(--white);border:1.5px solid var(--bdr);border-radius:6px;
+  color:var(--tx);font-family:'Share Tech Mono',monospace;font-size:12px;text-align:center;
+  outline:none;-webkit-appearance:none;-moz-appearance:textfield}
+.ni::-webkit-inner-spin-button{-webkit-appearance:none}
+.ni:focus{border-color:var(--blue)}
+.ul{font-size:9px;color:var(--tx3)}
+.db{width:22px;height:22px;border-radius:6px;background:rgba(244,63,94,.08);border:1px solid rgba(244,63,94,.2);
+  color:var(--red);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0}
+.db:hover{background:rgba(244,63,94,.18)}
+.add-btn{width:100%;padding:8px;background:transparent;border:1.5px dashed var(--bdr2);
+  border-radius:8px;color:var(--tx2);font-size:11px;font-weight:600;cursor:pointer;
+  transition:all .2s;margin-top:4px;font-family:'Inter',sans-serif}
+.add-btn:hover{border-color:var(--blue);color:var(--blue)}
+.add-btn.amb:hover{border-color:var(--amb);color:var(--amb)}
+.btn-save{width:100%;padding:12px;background:var(--blue);border:none;border-radius:10px;
+  color:#fff;font-size:13px;font-weight:700;cursor:pointer;margin-top:12px;transition:all .2s;font-family:'Inter',sans-serif}
+.btn-save:hover{background:var(--blue2);box-shadow:0 4px 16px rgba(79,110,247,.35)}
 
 /* ── RING OVERLAY ── */
-.ro{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:200;display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px;backdrop-filter:blur(10px)}
+.ro{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;display:none;
+  align-items:center;justify-content:center;flex-direction:column;gap:16px;backdrop-filter:blur(8px)}
 .ro.show{display:flex}
-.rp{width:100px;height:100px;border-radius:50%;background:rgba(255,184,0,.1);border:2px solid var(--amb);display:flex;align-items:center;justify-content:center;font-size:38px;animation:rpulse 1s ease-in-out infinite}
-@keyframes rpulse{0%,100%{box-shadow:0 0 0 0 rgba(255,184,0,.4)}50%{box-shadow:0 0 0 24px rgba(255,184,0,0)}}
-.rt{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:4px;color:var(--amb);text-align:center;padding:0 24px}
-.rd{font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--tx2);text-align:center;padding:0 24px}
-.rb{padding:12px 32px;background:var(--amb);border:none;border-radius:26px;color:#000;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:3px;cursor:pointer}
-
-/* ── STATUS BAR ── */
-.sb{position:fixed;bottom:0;left:0;right:0;background:rgba(10,12,16,.95);border-top:1px solid var(--bdr);backdrop-filter:blur(20px);padding:9px 20px;display:flex;align-items:center;justify-content:space-between;z-index:100}
-.si .sl{font-size:9px;letter-spacing:1.5px;color:var(--tx3);text-transform:uppercase;font-family:'Barlow Condensed',sans-serif;font-weight:600;text-align:center}
-.si .sv{font-family:'Share Tech Mono',monospace;font-size:13px;color:var(--tx2);margin-top:1px;text-align:center}
-.si .sv.ok{color:var(--grn)}
+.ro-card{background:var(--white);border-radius:22px;padding:28px 24px;text-align:center;
+  width:calc(100% - 48px);max-width:340px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.ro-icon{width:72px;height:72px;border-radius:50%;background:rgba(251,146,60,.12);
+  border:2px solid var(--amb);display:flex;align-items:center;justify-content:center;
+  margin:0 auto 14px;animation:rpulse 1s ease-in-out infinite;color:var(--amb)}
+@keyframes rpulse{0%,100%{box-shadow:0 0 0 0 rgba(251,146,60,.4)}50%{box-shadow:0 0 0 18px rgba(251,146,60,0)}}
+.ro-title{font-size:20px;font-weight:700;color:var(--tx);margin-bottom:5px}
+.ro-detail{font-size:12px;color:var(--tx2);margin-bottom:20px}
+.ro-btn{width:100%;padding:13px;background:var(--amb);border:none;border-radius:10px;
+  color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif}
 
 /* ── TOAST ── */
-.toast{position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(-60px);background:var(--surf);border:1px solid var(--bdr2);border-radius:9px;padding:8px 16px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:600;letter-spacing:1px;z-index:999;transition:all .3s cubic-bezier(.34,1.56,.64,1);white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+.toast{position:fixed;top:18px;left:50%;transform:translateX(-50%) translateY(-60px);
+  background:var(--tx);color:#fff;border-radius:10px;padding:9px 16px;font-size:12px;
+  font-weight:600;z-index:999;transition:all .3s cubic-bezier(.34,1.56,.64,1);
+  white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.2)}
 .toast.show{transform:translateX(-50%) translateY(0)}
-.toast.ok{border-color:var(--grn);color:var(--grn)}
-.toast.er{border-color:var(--red);color:var(--red)}
-.toast.in{border-color:var(--acc);color:var(--acc)}
+.toast.ok{background:var(--grn)}.toast.er{background:var(--red)}.toast.in{background:var(--blue)}
+
+/* ICS event row */
+.ics-event{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;
+  background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.2);margin-bottom:5px}
+.ics-event .ie-time{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--grn);font-weight:700;width:38px}
+.ics-event .ie-lbl{flex:1;font-size:11px;color:var(--tx);font-weight:500}
 </style>
 </head>
 <body>
-<div class="app">
 
-<header>
-  <div class="logo">CrewClock<small>FLIGHT ALARM SYSTEM</small></div>
-  <div class="clock">
-    <div class="t" id="clk">--:--:--</div>
-    <div class="d" id="clkd">---</div>
-    <div class="tz" id="clktz">---</div>
+<nav class="top-nav">
+  <div class="nav-title" onclick="switchTab('calendar',null)" title="Go to Home">
+    <h1>CREW CLOCK</h1><p>FLIGHT ALARM SYSTEM</p>
   </div>
-</header>
+  <button class="nav-bell" onclick="switchTab('alarm',null)">
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+    <span class="badge" id="bellBadge"></span>
+  </button>
+</nav>
 
-<div class="tabs">
-  <button class="tab active" id="tab-schedule" onclick="switchTab('schedule',this)">📋 스케줄</button>
-  <button class="tab" id="tab-direct"   onclick="switchTab('direct',this)">⏰ 직접설정</button>
-  <button class="tab" id="tab-settings" onclick="switchTab('settings',this)">⚙ 환경설정</button>
+<div class="page-tabs">
+  <button class="ptab active" id="ptab-calendar" onclick="switchTab('calendar',this)">Calendar</button>
+  <button class="ptab" id="ptab-alarm" onclick="switchTab('alarm',this)">Alarm</button>
+  <button class="ptab" id="ptab-settings" onclick="switchTab('settings',this)">Settings</button>
 </div>
 
-<!-- ══ SCHEDULE ══ -->
-<div class="panel show" id="panel-schedule">
-  <div class="card">
-    <div class="ch"><div class="ico">📋</div><div class="lbl">스케줄 이미지 AI 분석</div></div>
-    <div class="upz" id="upz">
-      <input type="file" accept="image/*" id="imgIn" onchange="handleImg(event)">
-      <img id="prevImg" alt="">
-      <div class="up-ico" id="upIco">📷</div>
-      <div class="up-t" id="upT">스케줄 이미지 업로드</div>
-      <div class="up-s" id="upS">탭하여 갤러리 / 카메라 선택</div>
+<!-- CALENDAR PANEL -->
+<div class="panel show" id="panel-calendar">
+  <div class="cal-card">
+    <div class="cal-nav">
+      <button class="cal-nav-btn" onclick="calMove(-1)">&#8249;</button>
+      <div class="cal-month" id="calMonthLbl">May 2026</div>
+      <button class="cal-nav-btn" onclick="calMove(1)">&#8250;</button>
     </div>
-    <div class="prog" id="prog">
-      <div class="prog-t"><div class="prog-f"></div></div>
-      <div class="prog-l" id="progL">AI SCANNING SCHEDULE...</div>
+    <div class="cal-dow-row">
+      <div class="cal-dow-cell">S</div><div class="cal-dow-cell">M</div><div class="cal-dow-cell">T</div>
+      <div class="cal-dow-cell">W</div><div class="cal-dow-cell">T</div><div class="cal-dow-cell">F</div>
+      <div class="cal-dow-cell" style="color:var(--tx3)">S</div>
     </div>
-    <button class="btn-az" id="azBtn" onclick="analyze()">🔍 &nbsp;AI 출발 편 인식</button>
+    <div class="cal-grid" id="calGrid"></div>
   </div>
-
-  <div class="card" id="flightCard" style="display:none">
-    <div class="ch">
-      <div class="ico">✈️</div><div class="lbl">인식된 출발 편</div>
-      <span class="cnt" id="flightCnt">0</span>
+  <div class="day-card">
+    <div class="day-header">
+      <div><div class="day-title" id="dayTitle">---</div><div class="day-subtitle">Schedule</div></div>
+      <div class="day-more" onclick="openUploadSheet()">+ Upload ›</div>
     </div>
-    <div class="fal-list" id="falList"></div>
+    <div class="day-flights" id="dayFlights"><div class="empty-state">Upload a schedule to see flights here</div></div>
   </div>
-
+  <!-- Full flight list on home screen -->
+  <div id="homeFlightList" style="padding:0 14px 20px"></div>
 </div>
 
-<!-- ══ DIRECT ══ -->
-<div class="panel" id="panel-direct">
-  <div class="card" style="margin-top:12px">
-    <div class="ch"><div class="ico">⏰</div><div class="lbl">알람 직접 추가</div></div>
-    <div class="drum-wrap">
-      <div class="drum-lbl-row">
-        <label>알람 이름</label>
-        <input type="text" class="lf" id="dLabel" placeholder="예: 기상, 출근 준비, 공항 출발...">
+<!-- ALARM PANEL -->
+<div class="panel" id="panel-alarm">
+  <div class="sec">
+    <div class="alarm-card">
+      <div class="alarm-card-head">
+        <div class="ach-ico"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M5 3 2 6M22 6l-3-3"/></svg></div>
+        <div class="ach-lbl">Add Alarm</div>
       </div>
-      <div class="drum-date-row">
-        <div class="ig"><label>날짜</label><input type="date" id="dDate"></div>
-      </div>
-      <div class="drum-lbl-row"><label>시간 선택 (스크롤)</label></div>
-      <div class="drum-row">
-        <div class="drum-col">
-          <div class="dc-label">시</div>
-          <div class="drum" id="drumH">
-            <div class="drum-line"></div>
-            <div class="drum-inner" id="drumH-inner"></div>
+      <div class="alarm-card-body">
+        <div class="dl-row"><label>Label</label>
+          <input type="text" class="dl-inp" id="dLabel" placeholder="e.g. Wake up, Depart airport...">
+        </div>
+        <div class="dl-row"><label>Date</label>
+          <input type="date" class="dl-inp" id="dDate">
+        </div>
+        <div class="dl-row" style="margin-bottom:0">
+          <label>Time</label>
+          <div class="drum-row">
+            <div class="drum-col">
+              <div class="dc-label">HR</div>
+              <div class="drum" id="drumH"><div class="drum-line"></div><div class="drum-inner" id="drumH-inner"></div></div>
+            </div>
+            <div class="drum-sep">:</div>
+            <div class="drum-col">
+              <div class="dc-label">MIN</div>
+              <div class="drum" id="drumM"><div class="drum-line"></div><div class="drum-inner" id="drumM-inner"></div></div>
+            </div>
           </div>
         </div>
-        <div class="drum-sep">:</div>
-        <div class="drum-col">
-          <div class="dc-label">분</div>
-          <div class="drum" id="drumM">
-            <div class="drum-line"></div>
-            <div class="drum-inner" id="drumM-inner"></div>
-          </div>
-        </div>
+        <button class="btn-da" onclick="addDirectAlarm()">Add Alarm</button>
       </div>
-      <button class="btn-da" onclick="addDirectAlarm()">⏰ &nbsp;알람 추가</button>
     </div>
-  </div>
-
-  <!-- 직접 설정 알람 목록 -->
-  <div class="card" id="dalCard" style="margin-top:12px;display:none">
-    <div class="ch">
-      <div class="ico" style="background:rgba(0,230,118,.1);border-color:rgba(0,230,118,.2)">🔔</div>
-      <div class="lbl">직접 설정 알람</div>
-      <span class="cnt" id="dalCnt" style="color:var(--grn)">0</span>
-    </div>
-    <div class="dal-list" id="dalList"></div>
+    <div id="dalCardWrap"></div>
   </div>
 </div>
 
-<!-- ══ SETTINGS ══ -->
+<!-- SETTINGS PANEL -->
 <div class="panel" id="panel-settings">
-  <div class="card" style="margin-top:12px">
-    <div class="ch"><div class="ico">🏠</div><div class="lbl">베이스 공항 설정</div></div>
-    <div class="sset">
-      <div class="srow">
-        <label>베이스 공항 IATA 코드</label>
-        <input type="text" class="sinp" id="baseAptInput" maxlength="3" placeholder="예: ICN">
+  <div class="sec">
+    <div class="settings-section">
+      <div class="settings-row"><div style="flex:1">
+        <label>Home Base Airport (IATA)</label>
+        <input type="text" class="settings-inp" id="baseAptInput" maxlength="3" placeholder="e.g. ICN">
+      </div></div>
+      <div class="settings-row" style="justify-content:space-between">
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--tx)">Dark Mode</div>
+          <div style="font-size:11px;color:var(--tx3);margin-top:2px">Switch to dark background</div>
+        </div>
+        <button class="tog" id="darkTogBtn" onclick="toggleDark(this)"></button>
       </div>
     </div>
-  </div>
-  <div class="card" style="margin-top:12px">
-    <div class="ch">
-      <div class="ico" style="background:rgba(0,212,255,.1);border-color:rgba(0,212,255,.2)">🏠</div>
-      <div class="lbl">베이스 출발 프리셋</div>
-      <span class="cnt" style="color:var(--acc)">BASE</span>
+    <div class="preset-card">
+      <div class="preset-head">
+        <div class="ph-icon" style="background:var(--blue-light);color:var(--blue)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+        <div class="ph-lbl">Home Base Presets</div>
+        <span class="ph-tag" style="background:var(--blue-light);color:var(--blue)">BASE</span>
+      </div>
+      <div class="preset-body" id="basePresets"></div>
     </div>
-    <div class="pgroup" id="basePresets"></div>
-  </div>
-  <div class="card" style="margin-top:12px">
-    <div class="ch">
-      <div class="ico" style="background:rgba(255,184,0,.1);border-color:rgba(255,184,0,.2)">🌏</div>
-      <div class="lbl">해외 스테이션 프리셋</div>
-      <span class="cnt" style="color:var(--amb)">INTL</span>
+    <div class="preset-card">
+      <div class="preset-head">
+        <div class="ph-icon" style="background:rgba(251,146,60,.1);color:var(--amb)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>
+        <div class="ph-lbl">International Presets</div>
+        <span class="ph-tag" style="background:rgba(251,146,60,.1);color:var(--amb)">INTL</span>
+      </div>
+      <div class="preset-body" id="intlPresets"></div>
     </div>
-    <div class="pgroup" id="intlPresets"></div>
+    <button class="btn-save" onclick="saveSettingsUI()">Save Settings</button>
   </div>
 </div>
 
-</div><!-- /app -->
+<!-- FAB: Upload Schedule -->
+<button class="fab" onclick="openUploadSheet()" title="Upload Schedule">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+</button>
 
-<div class="sb">
-  <div class="si"><div class="sl">베이스</div><div class="sv" id="sb-apt">---</div></div>
-  <div class="si"><div class="sl">다음출발</div><div class="sv" id="sb-dep">--:--</div></div>
-  <div class="si"><div class="sl" id="sb-clk-l">현재시각</div><div class="sv" id="sb-now">--:--</div></div>
+<!-- UPLOAD SHEET -->
+<div class="sheet-overlay" id="sheetOverlay" onclick="closeUploadSheet()"></div>
+<div class="sheet" id="uploadSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title">Upload Schedule
+    <span id="ocrModeBadge" class="ocr-badge online" style="vertical-align:middle"></span>
+  </div>
+  <div class="sheet-body">
+    <div class="upload-panel">
+      <div class="upload-tabs">
+        <button class="utab active" id="utab-img" onclick="switchUploadTab('img',this)">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-2px;margin-right:4px"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          Image / Photo
+        </button>
+        <button class="utab" id="utab-ics" onclick="switchUploadTab('ics',this)">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-2px;margin-right:4px"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          ICS Calendar
+        </button>
+      </div>
+      <div class="upload-body">
+        <!-- IMAGE TAB -->
+        <div id="upload-img-panel">
+          <div class="upz" id="upz">
+            <input type="file" accept="image/*" id="imgIn" onchange="handleImg(event)">
+            <img id="prevImg" alt="">
+            <div class="up-ico" id="upIco"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
+            <div class="up-t" id="upT">Upload Schedule Image</div>
+            <div class="up-s" id="upS">Tap to select from gallery or camera</div>
+          </div>
+          <div class="ocr-info">
+            <strong id="ocrModeTitle">AI Analysis (Online)</strong>
+            <span id="ocrModeDesc">Uses Claude AI for high-accuracy schedule parsing. Requires internet connection.</span>
+          </div>
+          <button class="btn-az" id="azBtn" onclick="event.stopPropagation();analyze()">Scan with AI</button>
+          <div class="prog" id="prog"><div class="prog-t"><div class="prog-f"></div></div>
+            <div class="prog-l" id="progL">Analyzing schedule...</div>
+          </div>
+        </div>
+        <!-- ICS TAB -->
+        <div id="upload-ics-panel" style="display:none">
+          <div class="upz" id="icsUpz">
+            <input type="file" accept=".ics,.ical,text/calendar" id="icsIn" onchange="handleICS(event)">
+            <div class="up-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="16" y1="14" x2="16" y2="14"/></svg></div>
+            <div class="up-t">Upload ICS / iCal File</div>
+            <div class="up-s">Tap to select .ics calendar file</div>
+          </div>
+          <div class="ocr-info" style="margin-top:10px">
+            <strong>Offline ICS Parsing</strong>
+            Works without internet. Supports standard iCalendar (.ics) format exported from airline apps, Jeppesen, or calendar apps.
+          </div>
+          <div id="icsResultWrap" style="margin-top:10px"></div>
+        </div>
+      </div>
+    </div>
+    <div id="sheetFalWrap"></div>
+  </div>
 </div>
 
+<!-- Ring overlay -->
 <div class="ro" id="ro">
-  <div class="rp">🔔</div>
-  <div class="rt" id="rtt">알람</div>
-  <div class="rd" id="rdt"></div>
-  <button class="rb" onclick="dismissOv()">확인 · DISMISS</button>
+  <div class="ro-card">
+    <div class="ro-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div>
+    <div class="ro-title" id="rtt">ALARM</div>
+    <div class="ro-detail" id="rdt"></div>
+    <button class="ro-btn" onclick="dismissOv()">DISMISS</button>
+  </div>
 </div>
 <div class="toast" id="toast"></div>
 
 <script>
-/* ════════════════════════════════════
-   DEFAULTS & STATE
-════════════════════════════════════ */
-var DEF_BASE=[
-  {id:'b1',h:3,m:0,lbl:'기상'},
-  {id:'b2',h:2,m:30,lbl:'출근 준비'},
-  {id:'b3',h:1,m:30,lbl:'공항 출발'},
-  {id:'b4',h:0,m:40,lbl:'탑승 게이트 마감'}
-];
-var DEF_INTL=[
-  {id:'i1',h:2,m:0,lbl:'기상 (해외)'},
-  {id:'i2',h:1,m:30,lbl:'호텔 체크아웃'},
-  {id:'i3',h:1,m:0,lbl:'공항 이동'},
-  {id:'i4',h:0,m:40,lbl:'탑승 게이트 마감'}
-];
+/* ═══ DEFAULTS ═══ */
+var DEF_BASE=[{id:'b1',h:3,m:0,lbl:'Wake Up'},{id:'b2',h:2,m:30,lbl:'Prepare for Duty'},{id:'b3',h:1,m:30,lbl:'Depart for Airport'},{id:'b4',h:0,m:40,lbl:'Gate Closing'}];
+var DEF_INTL=[{id:'i1',h:2,m:0,lbl:'Wake Up (Overseas)'},{id:'i2',h:1,m:30,lbl:'Hotel Checkout'},{id:'i3',h:1,m:0,lbl:'Transfer to Airport'},{id:'i4',h:0,m:40,lbl:'Gate Closing'}];
 
-var baseApt='ICN';
-var baseOffs=[],intlOffs=[];
-var baseOn={},intlOn={};
-var bOc=100,iOc=200;
+/* ═══ STATE ═══ */
+var baseApt='ICN',baseOffs=[],intlOffs=[],baseOn={},intlOn={},bOc=100,iOc=200;
+var alms=[],detectedFlights=[],flightToggles={},openFlights={},registeredFlights={};
+var curImg=null,aCtx=null,oscs=[];
+var drumH_val=6,drumM_val=0;
+var calYear,calMonth,calSelDate;
+var ITEM_H=26;
+var isOnline=navigator.onLine;
 
-var alms=[];
-var detectedFlights=[];
-var flightToggles={};  // [idx][offId] = bool
-var openFlights={};    // [idx] = bool (dropdown open)
-
-var curImg=null;
-var aCtx=null,oscs=[];
-var registeredFlights={};  // [idx] = true when registered
-
-/* drum picker state */
-var drumH_val=6, drumM_val=0;
-
-/* ════════════════════════════════════
-   UTILS
-════════════════════════════════════ */
+/* ═══ UTILS ═══ */
 function p2(n){return String(n).padStart(2,'0');}
 function fmt(dt){return p2(dt.getHours())+':'+p2(dt.getMinutes());}
 function uid(){return String(Date.now())+String(Math.random()).slice(2,6);}
 function dc(o){return JSON.parse(JSON.stringify(o));}
 function escQ(s){return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
+function todayStr(){var n=new Date();return n.getFullYear()+'-'+p2(n.getMonth()+1)+'-'+p2(n.getDate());}
+function buildDate(ds,h,m){if(ds){var dp=ds.split('-');return new Date(+dp[0],+dp[1]-1,+dp[2],h,m,0,0);}var d=new Date();d.setHours(h,m,0,0);return d;}
+function parseFlightDate(f){if(!f.date)return new Date(9999,0,1);var dp=f.date.split('-');var tp=(f.depTime||'00:00').split(':');return new Date(+dp[0],+dp[1]-1,+dp[2],+tp[0],+tp[1],0,0);}
 
-function todayStr(){
-  var n=new Date();
-  return n.getFullYear()+'-'+p2(n.getMonth()+1)+'-'+p2(n.getDate());
-}
-function buildDate(ds,h,m){
-  if(ds){
-    var dp=ds.split('-');
-    return new Date(+dp[0],+dp[1]-1,+dp[2],h,m,0,0);
+/* ═══ ONLINE DETECTION ═══ */
+window.addEventListener('online', function(){isOnline=true;updateOcrModeUI();});
+window.addEventListener('offline', function(){isOnline=false;updateOcrModeUI();});
+function updateOcrModeUI(){
+  var badge=document.getElementById('ocrModeBadge');
+  var title=document.getElementById('ocrModeTitle');
+  var desc=document.getElementById('ocrModeDesc');
+  if(!badge)return;
+  if(isOnline){
+    badge.className='ocr-badge online';badge.textContent='● Online';
+    if(title)title.textContent='AI Analysis (Online)';
+    if(desc)desc.textContent='Uses Claude AI for high-accuracy schedule parsing.';
+  }else{
+    badge.className='ocr-badge offline';badge.textContent='● Offline';
+    if(title)title.textContent='Offline OCR Mode';
+    if(desc)desc.textContent='Basic OCR using on-device text extraction. Upload clear, high-contrast images.';
   }
-  var d=new Date(); d.setHours(h,m,0,0); return d;
-}
-function parseFlightDate(f){
-  if(!f.date) return new Date(9999,0,1);
-  var dp=f.date.split('-');
-  var tp=(f.depTime||'00:00').split(':');
-  return new Date(+dp[0],+dp[1]-1,+dp[2],+tp[0],+tp[1],0,0);
 }
 
-/* ════════════════════════════════════
-   LOAD / SAVE
-════════════════════════════════════ */
+/* ═══ LOAD / SAVE ═══ */
 function loadSettings(){
-  try{
-    var s=localStorage.getItem('crewclock_v2');
-    if(s){
-      var d=JSON.parse(s);
-      baseApt=(d.baseApt||'ICN').toUpperCase();
-      baseOffs=d.baseOffs||dc(DEF_BASE);
-      intlOffs=d.intlOffs||dc(DEF_INTL);
-      baseOn=d.baseOn||{};
-      intlOn=d.intlOn||{};
-    }else{resetDef();}
-  }catch(e){resetDef();}
+  try{var s=localStorage.getItem('crewclock_v4');if(s){var d=JSON.parse(s);baseApt=(d.baseApt||'ICN').toUpperCase();baseOffs=d.baseOffs||dc(DEF_BASE);intlOffs=d.intlOffs||dc(DEF_INTL);baseOn=d.baseOn||{};intlOn=d.intlOn||{};}else resetDef();}catch(e){resetDef();}
   baseOffs.forEach(function(o){if(baseOn[o.id]===undefined)baseOn[o.id]=true;});
   intlOffs.forEach(function(o){if(intlOn[o.id]===undefined)intlOn[o.id]=true;});
 }
-function saveSettings(){
-  try{
-    syncAllPresets();
-    localStorage.setItem('crewclock_v2',JSON.stringify({
-      baseApt:baseApt,baseOffs:baseOffs,intlOffs:intlOffs,baseOn:baseOn,intlOn:intlOn
-    }));
-  }catch(e){}
-}
-function resetDef(){
-  baseOffs=dc(DEF_BASE);intlOffs=dc(DEF_INTL);
-  baseOn={};intlOn={};
-  baseOffs.forEach(function(o){baseOn[o.id]=true;});
-  intlOffs.forEach(function(o){intlOn[o.id]=true;});
-}
+function saveSettings(){try{syncAllPresets();localStorage.setItem('crewclock_v4',JSON.stringify({baseApt:baseApt,baseOffs:baseOffs,intlOffs:intlOffs,baseOn:baseOn,intlOn:intlOn}));}catch(e){}}
+function resetDef(){baseOffs=dc(DEF_BASE);intlOffs=dc(DEF_INTL);baseOn={};intlOn={};baseOffs.forEach(function(o){baseOn[o.id]=true;});intlOffs.forEach(function(o){intlOn[o.id]=true;});}
 
-/* ════════════════════════════════════
-   INIT
-════════════════════════════════════ */
+/* ═══ INIT ═══ */
 function init(){
   loadSettings();
+  var now=new Date();calYear=now.getFullYear();calMonth=now.getMonth();calSelDate=todayStr();
   document.getElementById('dDate').value=todayStr();
   document.getElementById('baseAptInput').value=baseApt;
-  renderBasePresets();
-  renderIntlPresets();
-  initDrums();
-  updateSB();
-  tickClock();
-  setInterval(tickClock,1000);
-  setInterval(checkAlarms,1000);
+  var dark=localStorage.getItem('crewclock_dark')==='1';
+  if(dark){document.body.classList.add('dark');var b=document.getElementById('darkTogBtn');if(b)b.classList.add('on');}
+  renderCal();renderBasePresets();renderIntlPresets();initDrums();updateOcrModeUI();
+  tickClock();setInterval(tickClock,1000);setInterval(checkAlarms,1000);
 }
 
-/* ════════════════════════════════════
-   CLOCK
-════════════════════════════════════ */
-/* 타임존 → 도시명 캐시 */
-var _tzCity=null;
-function getTzCity(){
-  if(_tzCity) return _tzCity;
-  try{
-    var tz=Intl.DateTimeFormat().resolvedOptions().timeZone||'';
-    // "Asia/Seoul" → "Seoul", "America/New_York" → "New York"
-    var city=tz.split('/').pop().replace(/_/g,' ');
-    // UTC 오프셋
-    var off=-(new Date().getTimezoneOffset());
-    var sign=off>=0?'+':'-';
-    var absOff=Math.abs(off);
-    var offStr='UTC'+sign+Math.floor(absOff/60)+(absOff%60?':'+p2(absOff%60):'');
-    _tzCity=city+' ('+offStr+')';
-  }catch(e){_tzCity='Local';}
-  return _tzCity;
-}
-
-function tickClock(){
-  var n=new Date();
-  document.getElementById('clk').textContent=p2(n.getHours())+':'+p2(n.getMinutes())+':'+p2(n.getSeconds());
-  var D=['SUN','MON','TUE','WED','THU','FRI','SAT'];
-  document.getElementById('clkd').textContent=D[n.getDay()]+' '+n.getFullYear()+'.'+p2(n.getMonth()+1)+'.'+p2(n.getDate());
-  var tzEl=document.getElementById('clktz');
-  if(tzEl) tzEl.innerHTML='<span>'+getTzCity()+'</span>';
-  var sbNow=document.getElementById('sb-now');
-  if(sbNow) sbNow.textContent=p2(n.getHours())+':'+p2(n.getMinutes());
-  updateDirectCDs();
-}
-
-function updateDirectCDs(){
-  var now=new Date();
-  var D=['SUN','MON','TUE','WED','THU','FRI','SAT'];
-  alms.filter(function(a){return a.type==='direct'&&!a.dism;}).forEach(function(a){
-    var el=document.getElementById('dcd-'+a.id); if(!el)return;
-    if(a.ring){el.textContent='▶ RINGING';return;}
-    var diff=a.time-now;
-    if(diff<=0){el.textContent='PASSED';return;}
-    var s2=Math.floor(diff/1000);
-    var hh=Math.floor(s2/3600),mm=Math.floor((s2%3600)/60),ss=s2%60;
-    el.textContent='T-'+(hh?hh+'H ':'')+mm+'M '+ss+'S';
-  });
-}
-
-/* ════════════════════════════════════
-   TABS
-════════════════════════════════════ */
+/* ═══ TABS ═══ */
 function switchTab(name,btn){
-  document.querySelectorAll('.tab').forEach(function(b){b.classList.remove('active');});
-  btn.classList.add('active');
+  document.querySelectorAll('.ptab').forEach(function(b){b.classList.remove('active');});
+  var pt=document.getElementById('ptab-'+name);if(pt)pt.classList.add('active');
   document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('show');});
   document.getElementById('panel-'+name).classList.add('show');
-  if(name==='settings'){
-    document.getElementById('baseAptInput').value=baseApt;
-    renderBasePresets();renderIntlPresets();
-  }
+  if(name==='settings'){document.getElementById('baseAptInput').value=baseApt;renderBasePresets();renderIntlPresets();}
+  if(name==='calendar'){renderDaySchedule(calSelDate);renderHomeFlightList();}
 }
 
-/* ════════════════════════════════════
-   SETTINGS PRESETS
-════════════════════════════════════ */
-function saveSettingsUI(){
-  var v=(document.getElementById('baseAptInput').value||'').trim().toUpperCase().slice(0,3);
-  if(v.length<2){toast('공항 코드를 입력하세요','er');return;}
-  syncAllPresets();
-  baseApt=v;
-  saveSettings();
-  document.getElementById('sb-apt').textContent=baseApt;
-  toast('설정 저장됨','ok');
+/* ═══ UPLOAD SHEET ═══ */
+function openUploadSheet(){
+  document.getElementById('sheetOverlay').classList.add('show');
+  document.getElementById('uploadSheet').classList.add('open');
+  updateOcrModeUI();
 }
-function syncAllPresets(){
-  baseOffs.forEach(function(o){
-    var h=document.getElementById('boh-'+o.id),m=document.getElementById('bom-'+o.id),l=document.getElementById('bolbl-'+o.id);
-    if(h)o.h=Math.max(0,+h.value||0);
-    if(m)o.m=Math.max(0,Math.min(59,+m.value||0));
-    if(l)o.lbl=l.value||'알람';
+function closeUploadSheet(){
+  document.getElementById('sheetOverlay').classList.remove('show');
+  document.getElementById('uploadSheet').classList.remove('open');
+  // 스캔 결과가 있으면 홈 화면으로 이동
+  if(detectedFlights.length){
+    switchTab('calendar',null);
+  }
+}
+function switchUploadTab(name,btn){
+  document.querySelectorAll('.utab').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  document.getElementById('upload-img-panel').style.display=name==='img'?'':'none';
+  document.getElementById('upload-ics-panel').style.display=name==='ics'?'':'none';
+}
+
+/* ═══ CALENDAR ═══ */
+function calMove(d){calMonth+=d;if(calMonth>11){calMonth=0;calYear++;}if(calMonth<0){calMonth=11;calYear--;}renderCal();}
+function renderCal(){
+  var M=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  document.getElementById('calMonthLbl').textContent=M[calMonth]+' '+calYear;
+  var grid=document.getElementById('calGrid');
+  var today=new Date();today.setHours(0,0,0,0);
+  var first=new Date(calYear,calMonth,1);
+  var startDow=first.getDay();
+  var dim=new Date(calYear,calMonth+1,0).getDate();
+  var dimP=new Date(calYear,calMonth,0).getDate();
+  var fDates={};detectedFlights.forEach(function(f){if(f.date)fDates[f.date]=(fDates[f.date]||0)+1;});
+  var aDates={};alms.filter(function(a){return !a.dism;}).forEach(function(a){var dk=a.time.getFullYear()+'-'+p2(a.time.getMonth()+1)+'-'+p2(a.time.getDate());aDates[dk]=(aDates[dk]||0)+1;});
+  var cells='';var total=Math.ceil((startDow+dim)/7)*7;
+  for(var i=0;i<total;i++){
+    var day,mo,yr,isOther=false;
+    if(i<startDow){day=dimP-startDow+i+1;mo=calMonth===0?11:calMonth-1;yr=calMonth===0?calYear-1:calYear;isOther=true;}
+    else if(i>=startDow+dim){day=i-startDow-dim+1;mo=calMonth===11?0:calMonth+1;yr=calMonth===11?calYear+1:calYear;isOther=true;}
+    else{day=i-startDow+1;mo=calMonth;yr=calYear;}
+    var dk=yr+'-'+p2(mo+1)+'-'+p2(day);
+    var d=new Date(yr,mo,day);d.setHours(0,0,0,0);
+    var isTod=d.getTime()===today.getTime();var isSel=dk===calSelDate;
+    var cls='cal-day'+(isOther?' other-month':'')+(isTod?' today':'')+(isSel&&!isTod?' selected':'');
+    var dots='';
+    var fc=Math.min(fDates[dk]||0,3);var ac=Math.min(aDates[dk]||0,2);
+    for(var di=0;di<fc;di++)dots+='<div class="cal-dot b"></div>';
+    for(var ai=0;ai<ac;ai++)dots+='<div class="cal-dot g"></div>';
+    cells+='<div class="'+cls+'" onclick="calSelectDay(\''+dk+'\')">'
+      +'<div class="cal-day-num">'+day+'</div>'
+      +(dots?'<div class="cal-dots">'+dots+'</div>':'')+'</div>';
+  }
+  grid.innerHTML=cells;
+}
+function calSelectDay(dk){calSelDate=dk;var dp=dk.split('-');calYear=+dp[0];calMonth=+dp[1]-1;renderCal();renderDaySchedule(dk);}
+
+function renderDaySchedule(dk){
+  var D=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  var dp=dk.split('-');var d=new Date(+dp[0],+dp[1]-1,+dp[2]);
+  document.getElementById('dayTitle').textContent=dk+' ('+D[d.getDay()]+')';
+  var flights=detectedFlights.filter(function(f){return f.date===dk;});
+  var dayAlms=alms.filter(function(a){
+    if(a.dism)return false;
+    var adk=a.time.getFullYear()+'-'+p2(a.time.getMonth()+1)+'-'+p2(a.time.getDate());
+    return adk===dk;
   });
-  intlOffs.forEach(function(o){
-    var h=document.getElementById('ioh-'+o.id),m=document.getElementById('iom-'+o.id),l=document.getElementById('iolbl-'+o.id);
-    if(h)o.h=Math.max(0,+h.value||0);
-    if(m)o.m=Math.max(0,Math.min(59,+m.value||0));
-    if(l)o.lbl=l.value||'알람';
-  });
-}
-
-function presetRow(o,on,px,type){
-  var tc='tog'+(on?(type==='base'?' on':' on-amb'):'');
-  return '<div class="orow" id="'+px+'orow-'+o.id+'">'
-    +'<button class="'+tc+'" onclick="togPre(\''+px+'\',\''+o.id+'\',this)"></button>'
-    +'<div class="olbl">'
-    +'<input class="lbl-inp" type="text" value="'+escQ(o.lbl)+'" id="'+px+'olbl-'+o.id+'">'
-    +'<div class="olbl-s" id="'+px+'os-'+o.id+'">출발 '+o.h+'H '+o.m+'M 전</div>'
-    +'</div>'
-    +'<div class="oedit">'
-    +'<input type="number" class="ni" value="'+o.h+'" min="0" max="48" id="'+px+'oh-'+o.id+'" oninput="syncPR(\''+px+'\',\''+o.id+'\')">&thinsp;<span class="ul">H</span>&nbsp;'
-    +'<input type="number" class="ni" value="'+o.m+'" min="0" max="59" id="'+px+'om-'+o.id+'" oninput="syncPR(\''+px+'\',\''+o.id+'\')">&thinsp;<span class="ul">M</span>&nbsp;'
-    +'<button class="db" onclick="delPre(\''+px+'\',\''+o.id+'\')">&#x2715;</button>'
-    +'</div></div>';
-}
-function renderBasePresets(){
-  var c=document.getElementById('basePresets');
-  c.innerHTML=baseOffs.map(function(o){return presetRow(o,!!baseOn[o.id],'b','base');}).join('')
-    +'<button class="add-btn" onclick="addBaseOff()">+ BASE 알람 추가</button>'
-    +'<button class="btn-save" onclick="saveSettingsUI()">설정 저장</button>';
-}
-function renderIntlPresets(){
-  var c=document.getElementById('intlPresets');
-  c.innerHTML=intlOffs.map(function(o){return presetRow(o,!!intlOn[o.id],'i','intl');}).join('')
-    +'<button class="add-btn amb" onclick="addIntlOff()">+ INTL 알람 추가</button>';
-}
-function togPre(px,id,btn){
-  if(px==='b'){baseOn[id]=!baseOn[id];btn.className='tog'+(baseOn[id]?' on':'');}
-  else{intlOn[id]=!intlOn[id];btn.className='tog'+(intlOn[id]?' on-amb':'');}
-}
-function syncPR(px,id){
-  var arr=px==='b'?baseOffs:intlOffs;
-  var o=arr.find(function(x){return x.id===id;}); if(!o)return;
-  var h=document.getElementById(px+'oh-'+id),m=document.getElementById(px+'om-'+id),l=document.getElementById(px+'olbl-'+id);
-  if(h)o.h=Math.max(0,+h.value||0);
-  if(m)o.m=Math.max(0,Math.min(59,+m.value||0));
-  if(l)o.lbl=l.value||'알람';
-  var s=document.getElementById(px+'os-'+id);
-  if(s)s.textContent='출발 '+o.h+'H '+o.m+'M 전';
-}
-function delPre(px,id){
-  if(px==='b'){baseOffs=baseOffs.filter(function(x){return x.id!==id;});delete baseOn[id];renderBasePresets();}
-  else{intlOffs=intlOffs.filter(function(x){return x.id!==id;});delete intlOn[id];renderIntlPresets();}
-}
-function addBaseOff(){var id='b'+(bOc++);baseOffs.push({id:id,h:1,m:0,lbl:'알람'});baseOn[id]=true;renderBasePresets();}
-function addIntlOff(){var id='i'+(iOc++);intlOffs.push({id:id,h:1,m:0,lbl:'알람'});intlOn[id]=true;renderIntlPresets();}
-
-/* ════════════════════════════════════
-   DRUM PICKER
-════════════════════════════════════ */
-function initDrums(){
-  buildDrum('drumH',24,drumH_val);
-  buildDrum('drumM',60,drumM_val);
-}
-
-function buildDrum(id,count,initVal){
-  var inner=document.getElementById(id+'-inner');
-  var items='';
-  // prepend/append padding items for wrap feel
-  var pad=3;
-  for(var i=-pad;i<count+pad;i++){
-    var v=((i%count)+count)%count;
-    items+='<div class="drum-item" data-v="'+v+'">'+p2(v)+'</div>';
-  }
-  inner.innerHTML=items;
-  setDrum(id,initVal,false);
-  attachDrumEvents(id,count);
-}
-
-function setDrum(id,val,animate){
-  var drum=document.getElementById(id);
-  var inner=document.getElementById(id+'-inner');
-  var itemH=44;
-  var pad=3;
-  // find index of val in items
-  var items=inner.querySelectorAll('.drum-item');
-  var target=pad+val; // index
-  var y=-(target*itemH)+(43); // center the selected item (43 = top offset to center in 130px drum)
-  inner.style.transition=animate?'transform .2s cubic-bezier(.25,.46,.45,.94)':'none';
-  inner.style.transform='translateY('+y+'px)';
-  // highlight
-  items.forEach(function(el,i){
-    el.classList.toggle('sel',+el.dataset.v===val);
-  });
-  if(id==='drumH') drumH_val=val;
-  else drumM_val=val;
-}
-
-function attachDrumEvents(id,count){
-  var drum=document.getElementById(id);
-  var startY,startTime,lastY,velocity;
-  var itemH=44;
-
-  function getVal(){return id==='drumH'?drumH_val:drumM_val;}
-
-  function onStart(y){
-    startY=y; lastY=y; startTime=Date.now(); velocity=0;
-    drum.dataset.dragging='1';
-  }
-  function onMove(y){
-    if(!drum.dataset.dragging)return;
-    var dy=lastY-y;
-    velocity=dy;
-    lastY=y;
-    var cur=getVal();
-    if(Math.abs(dy)>=itemH/2){
-      var dir=dy>0?1:-1;
-      var next=((cur+dir)%count+count)%count;
-      setDrum(id,next,true);
-    }
-  }
-  function onEnd(){
-    drum.dataset.dragging='';
-    // momentum
-    var steps=Math.round(velocity/8);
-    if(steps!==0){
-      var cur=getVal();
-      var next=((cur+steps)%count+count)%count;
-      setDrum(id,next,true);
-    }
-  }
-
-  // touch
-  drum.addEventListener('touchstart',function(e){onStart(e.touches[0].clientY);},{passive:true});
-  drum.addEventListener('touchmove',function(e){e.preventDefault();onMove(e.touches[0].clientY);},{passive:false});
-  drum.addEventListener('touchend',function(){onEnd();});
-
-  // mouse
-  drum.addEventListener('mousedown',function(e){onStart(e.clientY);e.preventDefault();});
-  document.addEventListener('mousemove',function(e){if(drum.dataset.dragging)onMove(e.clientY);});
-  document.addEventListener('mouseup',function(){if(drum.dataset.dragging)onEnd();});
-
-  // wheel
-  drum.addEventListener('wheel',function(e){
-    e.preventDefault();
-    var dir=e.deltaY>0?1:-1;
-    var cur=getVal();
-    var next=((cur+dir)%count+count)%count;
-    setDrum(id,next,true);
-  },{passive:false});
-}
-
-/* ════════════════════════════════════
-   IMAGE UPLOAD
-════════════════════════════════════ */
-function handleImg(e){
-  var f=e.target.files[0]; if(!f)return;
-  curImg=f;
-  var r=new FileReader();
-  r.onload=function(ev){
-    var img=document.getElementById('prevImg');
-    img.src=ev.target.result; img.style.display='block';
-    document.getElementById('upIco').style.display='none';
-    document.getElementById('upT').textContent=f.name;
-    document.getElementById('upS').textContent='탭하여 다시 선택';
-    document.getElementById('azBtn').style.display='block';
-    var fc=document.getElementById('flightCard');
-    if(fc) fc.style.display='none';
-  };
-  r.readAsDataURL(f);
-}
-
-/* ════════════════════════════════════
-   AI ANALYZE — key fix: use anthropic-dangerous-direct-browser-access header
-════════════════════════════════════ */
-function analyze(){
-  if(!curImg)return;
-  syncAllPresets();
-  // reset state for new analysis
-  detectedFlights=[];
-  flightToggles={};
-  openFlights={};
-  registeredFlights={};
-  var btn=document.getElementById('azBtn');
-  var pg=document.getElementById('prog');
-  btn.disabled=true; btn.style.display='none'; pg.style.display='block';
-  document.getElementById('progL').textContent='이미지 읽는 중...';
-
-  var reader=new FileReader();
-  reader.onload=function(ev){
-    var b64=ev.target.result.split(',')[1];
-    var mt=curImg.type||'image/jpeg';
-    var today=new Date();
-    var todayIso=today.getFullYear()+'-'+p2(today.getMonth()+1)+'-'+p2(today.getDate());
-
-    document.getElementById('progL').textContent='AI 분석 중...';
-
-    var prompt='You are an airline crew schedule parser. Home base airport: '+baseApt+'. Today: '+todayIso+'.\n\n'
-      +'Parse ALL flight legs from this monthly crew schedule image.\n\n'
-      +'Flight leg format examples:\n'
-      +'"KE 913 ICN 09:55 - MAD 18:00"  →  depApt=ICN, depTime=09:55, arrApt=MAD\n'
-      +'"KE 041 ICN 16:40 - SEA 10:40"  →  depApt=ICN, depTime=16:40, arrApt=SEA\n'
-      +'"KE 914 MAD 20:00 - ICN"         →  depApt=MAD, depTime=20:00, arrApt=ICN\n'
-      +'"KE 042 SEA - ICN 16:40"         →  SKIP (no departure time shown)\n'
-      +'"KE 401 ICN - SYD 06:20"         →  SKIP (no departure time shown)\n\n'
-      +'RULES:\n'
-      +'1. Only include legs where BOTH departure airport AND departure time are clearly shown\n'
-      +'2. Determine the date from the calendar cell. Month/year is in the image title.\n'
-      +'3. type="base" if depApt==="'+baseApt+'", else type="intl"\n'
-      +'4. Include past dates too\n\n'
-      +'Output ONLY minified JSON, no markdown:\n'
-      +'{"flights":[{"date":"2026-05-03","flight":"KE913","depApt":"ICN","depTime":"09:55","arrApt":"MAD","type":"base"},{"date":"2026-05-05","flight":"KE914","depApt":"MAD","depTime":"20:00","arrApt":"ICN","type":"intl"}]}\n'
-      +'Empty: {"flights":[]}';
-
-    fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{
-        'Content-Type':'application/json',
-        'anthropic-dangerous-direct-browser-access':'true'
-      },
-      body:JSON.stringify({
-        model:'claude-sonnet-4-20250514',
-        max_tokens:2000,
-        messages:[{role:'user',content:[
-          {type:'image',source:{type:'base64',media_type:mt,data:b64}},
-          {type:'text',text:prompt}
-        ]}]
-      })
-    })
-    .then(function(res){
-      if(!res.ok) throw new Error('HTTP '+res.status);
-      return res.json();
-    })
-    .then(function(data){
-      if(data.error){throw new Error(data.error.message||'API error');}
-      var txt=(data.content||[]).map(function(i){return i.text||'';}).join('');
-      var parsed;
-      try{
-        // JSON 블록 추출 (```json ... ``` 또는 { ... } 직접 추출)
-        var clean=txt.replace(/```json/g,'').replace(/```/g,'').trim();
-        var m=clean.match(/\{[\s\S]*\}/);
-        parsed=JSON.parse(m?m[0]:clean);
-      }catch(e){
-        console.warn('Parse error, raw response:', txt);
-        parsed={flights:[]};
-      }
-      pg.style.display='none';
-      detectedFlights=parsed.flights||[];
-      flightToggles={};openFlights={};
-      renderFlightList();
-    })
-    .catch(function(err){
-      pg.style.display='none';
-      btn.disabled=false; btn.style.display='block';
-      var msg=err.message||String(err);
-      toast('오류: '+msg,'er');
-      console.error('[CrewClock] API error:', err);
-    });
-  };
-  reader.onerror=function(){
-    pg.style.display='none'; btn.disabled=false; btn.style.display='block';
-    toast('이미지 읽기 실패','er');
-  };
-  reader.readAsDataURL(curImg);
-}
-
-/* ════════════════════════════════════
-   RENDER FLIGHT LIST
-════════════════════════════════════ */
-function renderFlightList(){
-  var card=document.getElementById('flightCard');
-  var list=document.getElementById('falList');
-  var cnt=document.getElementById('flightCnt');
-
-  if(!detectedFlights.length){
-    card.style.display='block';
-    cnt.textContent='0';
-    list.innerHTML='<div class="empty">인식된 출발 편 없음<br>직접 설정 탭을 이용하세요</div>';
+  if(!flights.length&&!dayAlms.length){
+    document.getElementById('dayFlights').innerHTML='<div class="empty-state">No schedule for this day</div>';
     return;
   }
+  var rows=[];
+  flights.forEach(function(f){
+    var subLbl=f.type==='base'?'Home Departure':'Intl Departure';
+    var h='<div class="dfr">'
+      +'<div class="dfr-time">'+f.depTime+'</div>'
+      +'<div class="dfr-info">'
+      +'<div class="dfr-route">'+f.depApt+' &#8594; '+(f.arrApt||'---')+'</div>'
+      +'<div class="dfr-sub">'+subLbl+'</div>'
+      +'</div>'
+      +'<div class="dfr-fnum">'+escQ(f.flight||'')+'</div>'
+      +'</div>';
+    rows.push({s:+(f.depTime||'0000').replace(':',''), html:h});
+  });
+  dayAlms.forEach(function(a){
+    var h='<div class="dfr">'
+      +'<div class="dfr-time">'+fmt(a.time)+'</div>'
+      +'<div class="dfr-info"><div class="dfr-route">'+escQ(a.lbl)+'</div></div>'
+      +'</div>';
+    rows.push({s:+fmt(a.time).replace(':',''), html:h});
+  });
+  rows.sort(function(a,b){return a.s-b.s;});
+  document.getElementById('dayFlights').innerHTML=rows.map(function(r){return r.html;}).join('<div class="dfr-sep"></div>');
+}
+
+function renderCalFalWrap(dk){
+  // no-op: kept for compatibility, home list shows all flights
+  renderHomeFlightList();
+}
+
+function renderHomeFlightList(){
+  var wrap=document.getElementById('homeFlightList');if(!wrap)return;
+  if(!detectedFlights.length){wrap.innerHTML='';return;}
 
   var now=new Date();
-
-  detectedFlights.sort(function(a,b){return parseFlightDate(a)-parseFlightDate(b);});
-
-  // init toggles
-  detectedFlights.forEach(function(f,idx){
-    if(!flightToggles[idx]) flightToggles[idx]={};
-    var offs=f.type==='base'?baseOffs:intlOffs;
-    var onMap=f.type==='base'?baseOn:intlOn;
-    offs.forEach(function(o){
-      if(flightToggles[idx][o.id]===undefined) flightToggles[idx][o.id]=!!onMap[o.id];
-    });
-  });
+  var sorted=detectedFlights.slice().sort(function(a,b){return parseFlightDate(a)-parseFlightDate(b);});
 
   var upcoming=[],past=[];
-  detectedFlights.forEach(function(f,idx){
+  sorted.forEach(function(f){
+    var idx=detectedFlights.indexOf(f);
     if(parseFlightDate(f)<now) past.push({f:f,idx:idx});
     else upcoming.push({f:f,idx:idx});
   });
 
-  var html=upcoming.map(function(x){return renderFalItem(x.f,x.idx);}).join('');
+  // Mark the very next flight
+  var nextIdx=upcoming.length>0?upcoming[0].idx:-1;
 
-  if(past.length){
-    html+='<div class="past-bar">'
-      +'<button class="past-toggle-btn" id="pastBtn" onclick="togglePast(this)">'
-      +'▸ &nbsp;지난 스케줄 '+past.length+'편 보기'
-      +'</button></div>'
-      +'<div id="pastSection" style="display:none">'+past.map(function(x){return renderFalItemPast(x.f,x.idx);}).join('')+'</div>';
+  var html='<div class="home-section-hdr">'
+    +'<h2>Flight Schedule &nbsp;<span style="font-size:10px;font-weight:500;color:var(--tx3)">'+detectedFlights.length+' flights</span></h2>'
+    +'<div class="upload-link" onclick="openUploadSheet()">'
+    +'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>'
+    +'Upload</div></div>';
+
+  if(upcoming.length){
+    html+='<div class="fal-list">'+upcoming.map(function(x){
+      var extra=x.idx===nextIdx?'next-flight':'';
+      return renderFalItem(x.f,x.idx,extra);
+    }).join('')+'</div>';
+  }else{
+    html+='<div class="empty-state" style="padding:14px">No upcoming flights</div>';
   }
 
-  cnt.textContent=String(detectedFlights.length);
-  card.style.display='block';
-  list.innerHTML=html;
+  if(past.length){
+    html+='<div class="past-section-hdr">'
+      +'<button class="past-toggle-btn" id="homePastBtn" onclick="toggleHomePast(this)">'
+      +'<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>'
+      +past.length+' past flight'+(past.length>1?'s':'')
+      +'</button></div>'
+      +'<div id="homePastSection" style="display:none">'
+      +'<div class="fal-list">'+past.map(function(x){return renderFalItem(x.f,x.idx,'past');}).join('')+'</div>'
+      +'</div>';
+  }
 
-  toast(upcoming.length+'편 예정 / '+past.length+'편 지남','ok');
+  wrap.innerHTML=html;
 }
 
-function togglePast(btn){
-  var sec=document.getElementById('pastSection');
-  if(!sec)return;
+function toggleHomePast(btn){
+  var sec=document.getElementById('homePastSection');if(!sec)return;
   var open=sec.style.display==='block';
   sec.style.display=open?'none':'block';
-  btn.textContent=open?'▸  지난 스케줄 보기':'▴  지난 스케줄 접기';
+  btn.classList.toggle('open',!open);
 }
 
-function renderFalItem(f,idx){
-  var now=new Date();
-  var fdt=parseFlightDate(f);
-  var todayMid=new Date(); todayMid.setHours(0,0,0,0);
-  var fdtMid=new Date(fdt); fdtMid.setHours(0,0,0,0);
-  var isTod=fdtMid.getTime()===todayMid.getTime();
-  var cls='fal-item'+(isTod?' today':(fdt>now?' future':''));
-  var dayLabel=isTod?' · TODAY':'';
-  var dp=(f.date||'').split('-');
-  var dateStr=dp[1]+'/'+dp[2];
-  var D=['SUN','MON','TUE','WED','THU','FRI','SAT'];
-  var dow=D[fdt.getDay()]||'';
-  var tl=f.type==='base'?'BASE':'INTL';
-  var tc=f.type==='base'?'base':'intl';
-  var offs=f.type==='base'?baseOffs:intlOffs;
-  var isOpen=!!openFlights[idx];
+function toggleHomePast(btn){
+  var sec=document.getElementById('homePastSection');if(!sec)return;
+  var open=sec.style.display==='block';
+  sec.style.display=open?'none':'block';
+  btn.innerHTML=open
+    ?'&#9656; &nbsp;'+btn.innerHTML.replace(/.*?(\d+)/,'$1').trim().split(' ')[0]+' past flight(s)'
+    :'&#9662; &nbsp;Hide past flights';
+}
 
+/* ═══ IMAGE UPLOAD ═══ */
+function handleImg(e){
+  var f=e.target.files[0];if(!f)return;curImg=f;
+  var r=new FileReader();
+  r.onload=function(ev){
+    var img=document.getElementById('prevImg');img.src=ev.target.result;img.style.display='block';
+    document.getElementById('upIco').style.display='none';
+    document.getElementById('upT').textContent=f.name;
+    document.getElementById('upS').textContent='Tap to change';
+    document.getElementById('azBtn').style.display='block';
+  };r.readAsDataURL(f);
+}
+
+/* ═══ AI ANALYZE (online) ═══ */
+function analyze(){
+  if(!curImg)return;
+  syncAllPresets();
+  detectedFlights=[];flightToggles={};openFlights={};registeredFlights={};
+  var btn=document.getElementById('azBtn');var pg=document.getElementById('prog');
+  btn.disabled=true;btn.style.display='none';pg.style.display='block';
+  document.getElementById('progL').textContent='Analyzing schedule...';
+  var reader=new FileReader();
+  reader.onload=function(ev){
+    var b64=ev.target.result.split(',')[1];var mt=curImg.type||'image/jpeg';
+    var today=new Date();var todayIso=today.getFullYear()+'-'+p2(today.getMonth()+1)+'-'+p2(today.getDate());
+    var prompt='You are an airline crew schedule parser. Home base: '+baseApt+'. Today: '+todayIso+'.\n'
+      +'Parse ALL flight legs with both departure airport AND departure time visible.\n'
+      +'Examples: "KE 913 ICN 09:55 - MAD 18:00" -> {depApt:ICN,depTime:09:55,arrApt:MAD}\n'
+      +'"KE 914 MAD 20:00 - ICN" -> {depApt:MAD,depTime:20:00,arrApt:ICN}\n'
+      +'type="base" if depApt==='+baseApt+' else type="intl". Include past dates.\n'
+      +'Output ONLY minified JSON: {"flights":[{"date":"2026-05-03","flight":"KE913","depApt":"ICN","depTime":"09:55","arrApt":"MAD","type":"base"}]}\n'
+      +'Empty: {"flights":[]}';
+    fetch('https://api.anthropic.com/v1/messages',{method:'POST',
+      headers:{'Content-Type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2000,
+        messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:mt,data:b64}},{type:'text',text:prompt}]}]})
+    })
+    .then(function(res){if(!res.ok)throw new Error('HTTP '+res.status);return res.json();})
+    .then(function(data){
+      if(data.error)throw new Error(data.error.message||'API error');
+      var txt=(data.content||[]).map(function(i){return i.text||'';}).join('');
+      var parsed;try{var m=txt.replace(/```json|```/g,'').trim().match(/\{[\s\S]*\}/);parsed=JSON.parse(m?m[0]:txt);}catch(e){parsed={flights:[]};}
+      pg.style.display='none';btn.disabled=false;btn.style.display='block';
+      detectedFlights=parsed.flights||[];
+      initFlightToggles();renderHomeFlightList();renderSheetFalWrap();renderCal();renderDaySchedule(calSelDate);
+      closeUploadSheet();
+      toast(detectedFlights.length+' flights detected','ok');
+    })
+    .catch(function(err){
+      pg.style.display='none';btn.disabled=false;btn.style.display='block';
+      toast('Error: '+(err.message||err),'er');
+    });
+  };
+  reader.onerror=function(){pg.style.display='none';btn.disabled=false;btn.style.display='block';toast('Failed to read image','er');};
+  reader.readAsDataURL(curImg);
+}
+
+/* ═══ OFFLINE OCR ═══ */
+// Uses canvas + simple pattern matching for offline fallback
+function analyzeOffline(){
+  if(!curImg){toast('Please select an image first','er');return;}
+  syncAllPresets();
+  var btn=document.getElementById('azBtn');var pg=document.getElementById('prog');
+  btn.disabled=true;btn.style.display='none';pg.style.display='block';
+  document.getElementById('progL').textContent='Running offline OCR...';
+  var img=new Image();
+  var url=URL.createObjectURL(curImg);
+  img.onload=function(){
+    var canvas=document.createElement('canvas');
+    canvas.width=img.width;canvas.height=img.height;
+    var ctx=canvas.getContext('2d');ctx.drawImage(img,0,0);
+    URL.revokeObjectURL(url);
+    // Extract text via canvas (basic: we do pattern matching on filename + EXIF metadata approach)
+    // For real offline OCR we use Tesseract if available, else fallback pattern
+    if(typeof Tesseract!=='undefined'){
+      document.getElementById('progL').textContent='Running Tesseract OCR...';
+      Tesseract.recognize(canvas,'eng',{logger:function(m){if(m.status==='recognizing text')document.getElementById('progL').textContent='OCR: '+Math.round(m.progress*100)+'%';}})
+        .then(function(result){
+          pg.style.display='none';btn.disabled=false;btn.style.display='block';
+          var text=result.data.text;
+          var flights=parseScheduleText(text);
+          detectedFlights=flights;initFlightToggles();renderHomeFlightList();renderSheetFalWrap();renderCal();renderDaySchedule(calSelDate);
+          closeUploadSheet();
+          toast(flights.length+' flights detected (OCR)','ok');
+        }).catch(function(err){
+          pg.style.display='none';btn.disabled=false;btn.style.display='block';
+          toast('OCR error: '+err.message,'er');
+        });
+    }else{
+      // Tesseract not loaded — try to load it dynamically
+      pg.style.display='none';btn.disabled=false;btn.style.display='block';
+      toast('Offline OCR requires network to load Tesseract','er');
+    }
+  };
+  img.onerror=function(){pg.style.display='none';btn.disabled=false;btn.style.display='block';toast('Failed to load image','er');};
+  img.src=url;
+}
+
+// Auto-select online vs offline based on connection
+document.getElementById('azBtn').addEventListener('click',function(e){
+  e.stopPropagation();
+  if(isOnline){analyze();}else{analyzeOffline();}
+},true);
+// Remove inline onclick to prevent double-fire — handled by listener above
+document.getElementById('azBtn').removeAttribute('onclick');
+
+/* ═══ OFFLINE TEXT PARSER ═══ */
+function parseScheduleText(text){
+  var lines=text.split('\n');
+  var flights=[];
+  var today=new Date();
+  var curYear=today.getFullYear();
+  // Detect month from text
+  var months={jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
+  var curMo=today.getMonth();
+  var moMatch=text.match(/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\w*\s+(\d{4})\b/i);
+  if(moMatch){curMo=months[moMatch[1].toLowerCase().slice(0,3)];curYear=parseInt(moMatch[2]);}
+  // Find date cells: "May 03" or "03" patterns
+  var curDay=null;
+  // Flight pattern: KE 913 ICN 09:55, KE041 ICN 16:40, etc.
+  var flightRe=/\b([A-Z]{2}\d{2,4})\s+([A-Z]{3})\s+(\d{1,2}:\d{2})/g;
+  var dateRe=/\b(\d{1,2})\s*\n/g;
+  var fullDateRe=/\b(?:May|Jun|Jul|Aug|Sep|Oct|Nov|Dec|Jan|Feb|Mar|Apr)\s+(\d{1,2})/gi;
+  // Build day->date map
+  var dayMap={};
+  var fdm;
+  while((fdm=fullDateRe.exec(text))!==null){
+    var dayNum=parseInt(fdm[1]);
+    var moKey=fdm[0].trim().toLowerCase().slice(0,3);
+    var mo=months[moKey];
+    if(mo!==undefined)dayMap[dayNum]={y:curYear,m:mo,d:dayNum};
+  }
+  // Match flights
+  var fm;var re2=/\b([A-Z]{2}\s?\d{2,4})\s+([A-Z]{3})\s+(\d{1,2}:\d{2})\s*[-–]\s*([A-Z]{3})/g;
+  var nearbyDayRe=/(\d{1,2})\s*\n?[^\n]*?([A-Z]{2}\s?\d{2,4})\s+([A-Z]{3})\s+(\d{1,2}:\d{2})/;
+  // Simplified: scan each line
+  lines.forEach(function(line){
+    var m2=line.match(/([A-Z]{2}\s?\d{2,4})\s+([A-Z]{3})\s+(\d{1,2}:\d{2})\s*[-–]\s*([A-Z]{3})/);
+    if(m2){
+      var fnum=m2[1].replace(/\s/,'');
+      var dep=m2[2];var depT=m2[3];var arr=m2[4];
+      var type=dep===baseApt?'base':'intl';
+      // Try to find date from context
+      var dateKey=Object.keys(dayMap)[0];
+      // Use today as fallback
+      var dt=dayMap[Object.keys(dayMap).find(function(k){return true;})||''];
+      var dateStr=dt?dt.y+'-'+p2(dt.m+1)+'-'+p2(dt.d):todayStr();
+      flights.push({date:dateStr,flight:fnum,depApt:dep,depTime:depT,arrApt:arr,type:type});
+    }
+  });
+  return flights;
+}
+
+/* ═══ ICS PARSER ═══ */
+function handleICS(e){
+  var f=e.target.files[0];if(!f)return;
+  var r=new FileReader();
+  r.onload=function(ev){
+    try{
+      var flights=parseICS(ev.target.result);
+      if(!flights.length){document.getElementById('icsResultWrap').innerHTML='<div class="empty-state">No flight events found in this ICS file.</div>';return;}
+      detectedFlights=flights;initFlightToggles();renderICSResult(flights);renderHomeFlightList();renderCal();renderDaySchedule(calSelDate);
+      toast(flights.length+' events imported from ICS','ok');
+    }catch(err){toast('ICS parse error: '+err.message,'er');console.error(err);}
+  };
+  r.readAsText(f,'UTF-8');
+}
+
+function parseICS(text){
+  var events=[];var cur=null;
+  var lines=text.replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n');
+  // Unfold lines
+  var unfolded=[];
+  lines.forEach(function(l){
+    if(l.startsWith(' ')||l.startsWith('\t')){if(unfolded.length)unfolded[unfolded.length-1]+=l.trim();}
+    else unfolded.push(l);
+  });
+  unfolded.forEach(function(line){
+    if(line.trim()==='BEGIN:VEVENT'){cur={raw:{}};}
+    else if(line.trim()==='END:VEVENT'&&cur){events.push(cur);cur=null;}
+    else if(cur){
+      var ci=line.indexOf(':');if(ci<0)return;
+      var key=line.slice(0,ci).split(';')[0].trim();
+      var val=line.slice(ci+1).trim();
+      cur.raw[key]=val;
+    }
+  });
+  // Parse into flight-like objects
+  var flights=[];
+  events.forEach(function(ev){
+    var r=ev.raw;
+    var summary=r['SUMMARY']||'';
+    var dtstart=r['DTSTART']||r['DTSTART;TZID']||'';
+    var dtend=r['DTEND']||r['DTEND;TZID']||'';
+    var location=r['LOCATION']||'';
+    var desc=r['DESCRIPTION']||'';
+    // Parse datetime
+    var dt=parseICSDate(dtstart);if(!dt)return;
+    var dateStr=dt.getFullYear()+'-'+p2(dt.getMonth()+1)+'-'+p2(dt.getDate());
+    var depTime=p2(dt.getHours())+':'+p2(dt.getMinutes());
+    // Try to extract flight info from summary
+    // Patterns: "KE081 ICN-JFK", "KE 081 ICN→JFK", "Flight KE081"
+    var fnum='',depApt='',arrApt='';
+    var fm=summary.match(/\b([A-Z]{2}\s?\d{2,4})\b/);if(fm)fnum=fm[1].replace(/\s/,'');
+    var rm=summary.match(/\b([A-Z]{3})\s*[-→>]\s*([A-Z]{3})\b/);
+    if(rm){depApt=rm[1];arrApt=rm[2];}
+    if(!depApt&&location){var lm=location.match(/\b([A-Z]{3})\b/g);if(lm&&lm.length>=1)depApt=lm[0];if(lm&&lm.length>=2)arrApt=lm[lm.length-1];}
+    if(!depApt){depApt=summary.slice(0,3).toUpperCase().replace(/[^A-Z]/g,'');}
+    var type=depApt===baseApt?'base':(depApt?'intl':'ics');
+    flights.push({date:dateStr,flight:fnum||summary.slice(0,10),depApt:depApt||'???',depTime:depTime,arrApt:arrApt||'???',type:type,summary:summary});
+  });
+  flights.sort(function(a,b){return parseFlightDate(a)-parseFlightDate(b);});
+  return flights;
+}
+
+function parseICSDate(s){
+  if(!s)return null;
+  s=s.replace(/;[^:]*:/,':').replace(/.*:/,'');
+  // Handle TZID in value part
+  if(s.includes('T')){
+    // 20260503T093000Z or 20260503T093000
+    var m=s.match(/(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})(Z?)/);
+    if(m){
+      var d=new Date(+m[1],+m[2]-1,+m[3],+m[4],+m[5],+m[6]);
+      if(m[7]==='Z')d=new Date(d.getTime()+d.getTimezoneOffset()*60000);
+      return d;
+    }
+  }else{
+    var m2=s.match(/(\d{4})(\d{2})(\d{2})/);
+    if(m2)return new Date(+m2[1],+m2[2]-1,+m2[3],0,0,0);
+  }
+  return null;
+}
+
+function renderICSResult(flights){
+  var wrap=document.getElementById('icsResultWrap');
+  if(!flights.length){wrap.innerHTML='';return;}
+  var now=new Date();
+  var html='<div style="font-size:11px;font-weight:600;color:var(--tx2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">'+flights.length+' Events Imported</div>';
+  var shown=flights.slice(0,8);
+  shown.forEach(function(f){
+    var past=parseFlightDate(f)<now;
+    html+='<div class="ics-event" style="opacity:'+(past?.4:1)+'">'
+      +'<div class="ie-time">'+f.depTime+'</div>'
+      +'<div class="ie-lbl">'+escQ(f.summary||f.flight)+' <span style="color:var(--tx3);font-size:9px">'+f.date+'</span></div>'
+      +'<div class="fal-type ics" style="font-size:8px">'+(f.type==='base'?'HOME':(f.type==='intl'?'INTL':'ICS'))+'</div>'
+      +'</div>';
+  });
+  if(flights.length>8)html+='<div class="empty-state" style="padding:8px">...and '+(flights.length-8)+' more</div>';
+  wrap.innerHTML=html;
+}
+
+/* ═══ FLIGHT TOGGLES ═══ */
+function initFlightToggles(){
+  detectedFlights.forEach(function(f,idx){
+    if(!flightToggles[idx])flightToggles[idx]={};
+    var offs=f.type==='base'?baseOffs:intlOffs;
+    var onMap=f.type==='base'?baseOn:intlOn;
+    offs.forEach(function(o){if(flightToggles[idx][o.id]===undefined)flightToggles[idx][o.id]=!!onMap[o.id];});
+  });
+}
+
+/* ═══ FLIGHT LIST RENDER ═══ */
+function renderSheetFalWrap(){
+  var wrap=document.getElementById('sheetFalWrap');if(!wrap)return;
+  if(!detectedFlights.length){wrap.innerHTML='';return;}
+  var now=new Date();
+  detectedFlights.sort(function(a,b){return parseFlightDate(a)-parseFlightDate(b);});
+  var up=[],past=[];
+  detectedFlights.forEach(function(f,idx){if(parseFlightDate(f)<now)past.push({f:f,idx:idx});else up.push({f:f,idx:idx});});
+  var html='<div style="margin-top:14px"><div style="font-size:11px;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Detected Flights</div>';
+  html+='<div class="fal-list">'+up.map(function(x){return renderFalItem(x.f,x.idx);}).join('')+'</div>';
+  if(past.length){html+='<div class="past-bar"><button class="past-toggle-btn" id="pastBtn" onclick="togglePast(this)">▸ &nbsp;'+past.length+' past flights</button></div><div id="pastSection" style="display:none"><div class="fal-list" style="margin-top:6px">'+past.map(function(x){return renderFalItemPast(x.f,x.idx);}).join('')+'</div></div>';}
+  html+='</div>';
+  wrap.innerHTML=html;
+}
+
+function renderFalItem(f,idx,extraCls){
+  var now=new Date();var fdt=parseFlightDate(f);
+  var todayMid=new Date();todayMid.setHours(0,0,0,0);
+  var fdtMid=new Date(fdt);fdtMid.setHours(0,0,0,0);
+  var isTod=fdtMid.getTime()===todayMid.getTime();
+  var isPast=(extraCls||'').indexOf('past')>=0;
+  var isNext=(extraCls||'').indexOf('next-flight')>=0;
+  var cls='fal-item';
+  if(isPast) cls+=' past';
+  else if(isTod) cls+=' today';
+  else if(isNext) cls+=' next-flight';
+  else cls+=' future';
+
+  var dp=(f.date||'').split('-');
+  var dateStr=(dp[1]||'')+'/'+(dp[2]||'');
+  var D=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  var dow=D[fdt.getDay()]||'';
+  var tl=f.type==='base'?'HOME':(f.type==='intl'?'INTL':'ICS');
+  var tc=f.type==='base'?'base':(f.type==='intl'?'intl':'ics');
+  var offs=f.type==='intl'?intlOffs:baseOffs;
+  var isOpen=!!openFlights[idx];
+  var regDone=!!registeredFlights[idx];
+
+  // Alarm master toggle state: on if any offset is toggled on
+  var anyOn=offs.some(function(o){return !!(flightToggles[idx]&&flightToggles[idx][o.id]);});
+  var mastTogCls='fal-alarm-tog'+(anyOn?(f.type==='intl'?' on-intl':' on'):'');
+
+  // Badge
+  var badge='';
+  if(isTod) badge='<span class="fal-badge today-badge">TODAY</span>';
+  else if(isNext) badge='<span class="fal-badge next-badge">NEXT</span>';
+
+  // Dropdown alarm rows
   var togsHtml=offs.map(function(o){
-    var on=!!flightToggles[idx][o.id];
+    var on=!!(flightToggles[idx]&&flightToggles[idx][o.id]);
     var at=new Date(fdt.getTime()-(o.h*60+o.m)*60000);
-    var ac=on?(f.type==='base'?' on-base':' on-intl'):'';
-    var tc2='tog'+(on?(f.type==='base'?' on':' on-amb'):'');
-    return '<div class="fal-atog'+ac+'" id="fatog-'+idx+'-'+o.id+'">'
-      +'<button class="'+tc2+'" onclick="togFA('+idx+',\''+o.id+'\')"></button>'
+    var ac=on?(f.type==='intl'?' on-intl':' on-base'):'';
+    var togCls='tog'+(on?(f.type==='intl'?' on-amb':' on'):'');
+    // Offset label: "2h 30m before" or "40m before"
+    var offTxt='';
+    if(o.h>0&&o.m>0) offTxt='('+o.h+'h '+o.m+'m before)';
+    else if(o.h>0)   offTxt='('+o.h+'h before)';
+    else              offTxt='('+o.m+'m before)';
+    return '<div class="fal-atog'+ac+'">'
+      +'<button class="'+togCls+'" onclick="togFA('+idx+',\''+o.id+'\')" ></button>'
       +'<span class="atog-lbl">'+escQ(o.lbl)+'</span>'
+      +'<div class="atog-right">'
       +'<span class="atog-time">'+fmt(at)+'</span>'
+      +'<span class="atog-offset">'+offTxt+'</span>'
+      +'</div>'
       +'</div>';
   }).join('');
 
-  var regDone=!!registeredFlights[idx];
   var regBtn='<button class="fal-reg-btn '+(regDone?'done':'idle')+'" '
-    +(regDone?'':'onclick="event.stopPropagation();registerFlight('+idx+')"')+'>'
-    +(regDone?'✓ 등록됨':'+ 등록')
+    +(regDone?'':'onclick="event.stopPropagation();registerFlight('+idx+')"')
+    +'>'+(regDone?'&#10003;':'Set')+'</button>';
+
+  var dropBtn='<button class="fal-drop-btn" onclick="event.stopPropagation();toggleFlight('+idx+')">'
+    +'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>'
     +'</button>';
 
   return '<div class="'+cls+(isOpen?' open':'')+'" id="fali-'+idx+'">'
+    // Header
     +'<div class="fal-header" onclick="toggleFlight('+idx+')">'
-    +'<div class="fal-dot"></div>'
+    +'<div class="fal-accent"></div>'
     +'<div class="fal-info">'
+    // Date row
     +'<div class="fal-date-row">'
     +'<span class="fal-dow">'+dow+'</span>'
     +'<span class="fal-date">'+dateStr+'</span>'
-    +(isTod?'<span class="fal-today-badge">TODAY</span>':'')
+    +badge
     +'</div>'
-    +'<div class="fal-flight">'+escQ(f.flight)+' &nbsp;'+f.depApt+' &rarr; '+(f.arrApt||'---')+'</div>'
+    // Route row
+    +'<div class="fal-route-row">'
+    +'<span class="fal-fnum">'+escQ(f.flight||'')+'</span>'
+    +'<span class="fal-route">'
+    +'<span class="apt dep">'+f.depApt+'</span>'
+    +'<span class="fal-arrow">&#8594;</span>'
+    +'<span class="apt">'+( f.arrApt||'---')+'</span>'
+    +'</span>'
+    +'<span class="fal-type '+tc+'">'+tl+'</span>'
     +'</div>'
+    +'</div>'
+    // Right: time + controls
+    +'<div class="fal-right">'
     +'<div class="fal-deptime">'+f.depTime+'</div>'
-    +'<div class="fal-type '+tc+'">'+tl+'</div>'
-    +regBtn
-    +'<span class="fal-chevron">▾</span>'
+    +'<div class="fal-controls">'
+    +(isPast?'':(regBtn+'<button class="'+mastTogCls+'" onclick="event.stopPropagation();toggleMasterAlarm('+idx+')" title="Toggle all alarms"></button>'))
+    +dropBtn
+    +'</div></div>'
     +'</div>'
-    +'<div class="fal-alarms">'+togsHtml+'</div>'
+    // Alarm dropdown
+    +'<div class="fal-alarms">'
+    +'<div class="fal-alarms-hdr">Preset Alarms</div>'
+    +togsHtml
+    +'</div>'
     +'</div>';
 }
 
 function renderFalItemPast(f,idx){
-  var fdt=parseFlightDate(f);
-  var dp=(f.date||'').split('-');
-  var dateStr=dp[1]+'/'+dp[2];
-  var D=['SUN','MON','TUE','WED','THU','FRI','SAT'];
-  var dow=D[fdt.getDay()]||'';
-  var tl=f.type==='base'?'BASE':'INTL';
-  var tc=f.type==='base'?'base':'intl';
-  return '<div class="fal-item past" id="fali-'+idx+'" style="margin-bottom:4px">'
-    +'<div class="fal-header" style="padding:5px 12px;cursor:default">'
-    +'<div class="fal-dot"></div>'
-    +'<div class="fal-info">'
-    +'<div class="fal-date-row">'
-    +'<span class="fal-dow" style="font-size:14px">'+dow+'</span>'
-    +'<span class="fal-date" style="font-size:11px;color:var(--tx3)">'+dateStr+'</span>'
-    +'</div>'
-    +'<div class="fal-flight">'+escQ(f.flight)+' &nbsp;'+f.depApt+' &rarr; '+(f.arrApt||'---')+'</div>'
-    +'</div>'
-    +'<div class="fal-deptime">'+f.depTime+'</div>'
-    +'<div class="fal-type '+tc+'" style="opacity:.45">'+tl+'</div>'
-    +'</div></div>';
+  var fdt=parseFlightDate(f);var dp=(f.date||'').split('-');
+  var D=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];var dow=D[fdt.getDay()]||'';
+  var tl=f.type==='base'?'HOME':(f.type==='intl'?'INTL':'ICS');var tc=f.type==='base'?'base':(f.type==='intl'?'intl':'ics');
+  return '<div class="fal-item past" id="fali-'+idx+'"><div class="fal-header" style="cursor:default;padding:8px 12px"><div class="fal-dot"></div><div class="fal-info"><div class="fal-date-row"><span class="fal-dow" style="font-size:12px">'+dow+'</span><span class="fal-date" style="font-size:10px">'+dp[1]+'/'+dp[2]+'</span></div><div class="fal-flight">'+escQ(f.flight||'')+' &nbsp;'+f.depApt+' \u2192 '+(f.arrApt||'---')+'</div></div><div class="fal-deptime" style="font-size:15px">'+f.depTime+'</div><div class="fal-type '+tc+'">'+tl+'</div></div></div>';
 }
 
-function toggleFlight(idx){
-  openFlights[idx]=!openFlights[idx];
-  var f=detectedFlights[idx]; if(!f)return;
-  var el=document.getElementById('fali-'+idx); if(!el)return;
-  var tmp=document.createElement('div');
-  tmp.innerHTML=renderFalItem(f,idx);
-  el.parentNode.replaceChild(tmp.firstChild,el);
-}
-
-function togFA(idx,offId){
-  if(!flightToggles[idx])flightToggles[idx]={};
-  flightToggles[idx][offId]=!flightToggles[idx][offId];
-  var f=detectedFlights[idx]; if(!f)return;
-  var el=document.getElementById('fali-'+idx); if(!el)return;
-  var tmp=document.createElement('div');
-  tmp.innerHTML=renderFalItem(f,idx);
-  el.parentNode.replaceChild(tmp.firstChild,el);
-}
-
-/* ════════════════════════════════════
-   REGISTER SINGLE FLIGHT
-════════════════════════════════════ */
-function registerFlight(idx){
-  syncAllPresets();
-  var f=detectedFlights[idx]; if(!f)return;
-  var depDt=parseFlightDate(f);
+function toggleFlight(idx){openFlights[idx]=!openFlights[idx];rerenderFlight(idx);}
+function togFA(idx,offId){if(!flightToggles[idx])flightToggles[idx]={};flightToggles[idx][offId]=!flightToggles[idx][offId];rerenderFlight(idx);}
+function rerenderFlight(idx){
+  var f=detectedFlights[idx];if(!f)return;
+  var el=document.getElementById('fali-'+idx);if(!el)return;
   var now=new Date();
+  var sorted=detectedFlights.slice().sort(function(a,b){return parseFlightDate(a)-parseFlightDate(b);});
+  var upcoming=sorted.filter(function(ff){return parseFlightDate(ff)>=now;});
+  var nextFlight=upcoming.length>0?upcoming[0]:null;
+  var isPast=parseFlightDate(f)<now;
+  var isNext=!isPast&&nextFlight&&detectedFlights.indexOf(nextFlight)===idx;
+  var extraCls=isPast?'past':(isNext?'next-flight':'');
+  var tmp=document.createElement('div');tmp.innerHTML=renderFalItem(f,idx,extraCls);
+  el.parentNode.replaceChild(tmp.firstChild,el);
+}
+function toggleMasterAlarm(idx){
+  if(!flightToggles[idx])flightToggles[idx]={};
+  var f=detectedFlights[idx];if(!f)return;
+  var offs=f.type==='intl'?intlOffs:baseOffs;
+  var anyOn=offs.some(function(o){return !!flightToggles[idx][o.id];});
+  // if any on → turn all off; if all off → turn all on
+  offs.forEach(function(o){flightToggles[idx][o.id]=!anyOn;});
+  rerenderFlight(idx);
+}
 
-  // 모든 토글 ON으로 설정
+function togglePast(btn){var sec=document.getElementById('pastSection');if(!sec)return;var open=sec.style.display==='block';sec.style.display=open?'none':'block';btn.textContent=open?'▸ \u00a0past flights':'▴ \u00a0hide past flights';}
+
+function registerFlight(idx){
+  syncAllPresets();var f=detectedFlights[idx];if(!f)return;
+  var depDt=parseFlightDate(f);var now=new Date();
   var offs=f.type==='base'?baseOffs:intlOffs;
-  if(!flightToggles[idx]) flightToggles[idx]={};
-  offs.forEach(function(o){ flightToggles[idx][o.id]=true; });
-
+  if(!flightToggles[idx])flightToggles[idx]={};
+  offs.forEach(function(o){flightToggles[idx][o.id]=true;});
   var added=0;
   offs.forEach(function(o){
     var at=new Date(depDt.getTime()-(o.h*60+o.m)*60000);
     if(at<=now)return;
-    var dup=alms.find(function(a){return !a.dism&&Math.abs(a.time-at)<2000;});
-    if(dup)return;
+    if(alms.find(function(a){return !a.dism&&Math.abs(a.time-at)<2000;}))return;
     alms.push({id:uid(),time:at,dep:new Date(depDt),lbl:o.lbl+' ('+f.flight+')',type:f.type,armed:true,ring:false,dism:false});
     added++;
   });
-
-  // 등록됨 표시
-  registeredFlights[idx]=true;
-
-  // 해당 카드만 re-render
-  var el=document.getElementById('fali-'+idx);
-  if(el){
-    var tmp=document.createElement('div');
-    tmp.innerHTML=renderFalItem(f,idx);
-    el.parentNode.replaceChild(tmp.firstChild,el);
-  }
-
-  if(!added){toast(f.flight+' — 등록할 알람 없음 (이미 지났거나 중복)','er');return;}
+  registeredFlights[idx]=true;rerenderFlight(idx);
+  if(!added){toast(f.flight+' — expired or duplicate','er');return;}
   alms.sort(function(a,b){return a.time-b.time;});
-  renderAlms();updateSB();
-  toast(f.flight+' &nbsp;'+added+'개 알람 등록됨','ok');
+  renderCal();renderDaySchedule(calSelDate);renderHomeFlightList();
+  toast(f.flight+' — '+added+' alarms set','ok');
 }
 
-/* ════════════════════════════════════
-   DIRECT ALARM
-════════════════════════════════════ */
+/* ═══ DIRECT ALARM ═══ */
 function addDirectAlarm(){
   var dv=document.getElementById('dDate').value;
-  var lbl=(document.getElementById('dLabel').value||'알람').trim();
-  var h=drumH_val, m=drumM_val;
-  var at=buildDate(dv,h,m);
-  var now=new Date();
-  if(at<=now){toast('이미 지난 시간입니다','er');return;}
-  var dup=alms.find(function(a){return !a.dism&&Math.abs(a.time-at)<2000;});
-  if(dup){toast('같은 시간 알람이 이미 있습니다','er');return;}
+  var lbl=(document.getElementById('dLabel').value||'Alarm').trim();
+  var h=drumH_val,m=drumM_val;
+  var at=buildDate(dv,h,m);var now=new Date();
+  if(at<=now){toast('This time has already passed','er');return;}
+  if(alms.find(function(a){return !a.dism&&Math.abs(a.time-at)<2000;})){toast('An alarm already exists at this time','er');return;}
   alms.push({id:uid(),time:at,dep:null,lbl:lbl,type:'direct',armed:true,ring:false,dism:false});
   alms.sort(function(a,b){return a.time-b.time;});
-  renderDirectAlarms();
-  updateSB();
-  toast('"'+lbl+'" '+p2(h)+':'+p2(m)+' 등록 완료','ok');
+  renderDirectAlarms();renderCal();renderDaySchedule(calSelDate);
+  toast('"'+lbl+'" '+p2(h)+':'+p2(m),'ok');
   document.getElementById('dLabel').value='';
 }
 
-/* ════════════════════════════════════
-   DIRECT ALARM LIST RENDER
-════════════════════════════════════ */
 function renderDirectAlarms(){
-  var card=document.getElementById('dalCard');
-  var list=document.getElementById('dalList');
-  var cnt=document.getElementById('dalCnt');
-  if(!card||!list)return;
-
+  var wrap=document.getElementById('dalCardWrap');if(!wrap)return;
   var directs=alms.filter(function(a){return a.type==='direct'&&!a.dism;});
-  if(!directs.length){card.style.display='none';return;}
-
-  card.style.display='block';
-  if(cnt)cnt.textContent=String(directs.length);
-
-  var D=['SUN','MON','TUE','WED','THU','FRI','SAT'];
-  var now=new Date();
-  var todayMid=new Date(); todayMid.setHours(0,0,0,0);
-
-  list.innerHTML=directs.map(function(a){
-    var t=a.time;
-    var dow=D[t.getDay()];
-    var tMid=new Date(t); tMid.setHours(0,0,0,0);
-    var isToday=tMid.getTime()===todayMid.getTime();
+  if(!directs.length){wrap.innerHTML='';return;}
+  var D=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  var now=new Date();var todayMid=new Date();todayMid.setHours(0,0,0,0);
+  wrap.innerHTML='<div class="dal-wrap">'+directs.map(function(a){
+    var t=a.time;var dow=D[t.getDay()];var tMid=new Date(t);tMid.setHours(0,0,0,0);
+    var isTod=tMid.getTime()===todayMid.getTime();
     var dateStr=p2(t.getMonth()+1)+'/'+p2(t.getDate());
     var timeStr=p2(t.getHours())+':'+p2(t.getMinutes());
-    var isRing=a.ring;
-    var cls='dal-item'+(isRing?' ring-now':'');
-
-    // countdown
-    var cdTxt='';
-    var diff=t-now;
-    if(isRing){cdTxt='▶ RINGING';}
-    else if(diff>0){
-      var s2=Math.floor(diff/1000);
-      var hh=Math.floor(s2/3600),mm=Math.floor((s2%3600)/60),ss=s2%60;
-      cdTxt='T-'+(hh?hh+'H ':'')+mm+'M '+ss+'S';
-    }else{cdTxt='PASSED';}
-
-    var act=isRing
-      ?'<button class="dal-dis" onclick="dismissDirectAlarm(\'+a.id+\')">DISMISS</button>'
-      :'<button class="dal-del" onclick="delDirectAlarm(\'+a.id+\')">&#x2715;</button>';
-
-    return '<div class="'+cls+'" id="dal-'+a.id+'">'
-      +'<div class="dal-dot"></div>'
-      +'<div class="dal-info">'
-      +'<div class="dal-date-row">'
-      +'<span class="dal-dow">'+dow+'</span>'
-      +'<span class="dal-date">'+dateStr+'</span>'
-      +(isToday?'<span class="dal-today">TODAY</span>':'')
-      +'</div>'
+    var isRing=a.ring;var diff=t-now;var cdTxt='';
+    if(isRing)cdTxt='▶ RINGING';
+    else if(diff>0){var s2=Math.floor(diff/1000);var hh=Math.floor(s2/3600),mm=Math.floor((s2%3600)/60),ss=s2%60;cdTxt='T-'+(hh?hh+'H ':'')+mm+'M '+ss+'S';}
+    else cdTxt='PASSED';
+    var act=isRing?'<button class="dal-dis" onclick="dismissDirectAlarm(\''+a.id+'\')">DISMISS</button>':'<button class="dal-del" onclick="delDirectAlarm(\''+a.id+'\')">✕</button>';
+    return '<div class="dal-item'+(isRing?' ring-now':'')+'" id="dal-'+a.id+'">'
+      +'<div class="dal-dot"></div><div class="dal-info">'
+      +'<div class="dal-date-row"><span class="dal-dow">'+dow+'</span><span class="dal-date">'+dateStr+'</span>'+(isTod?'<span class="dal-today">TODAY</span>':'')+'</div>'
       +'<div class="dal-lbl">'+escQ(a.lbl)+'</div>'
-      +'<div class="dal-cd" id="dcd-'+a.id+'">'+cdTxt+'</div>'
-      +'</div>'
-      +'<div class="dal-time">'+timeStr+'</div>'
-      +act
-      +'</div>';
-  }).join('');
+      +'<div class="dal-cd" id="dcd-'+a.id+'">'+cdTxt+'</div></div>'
+      +'<div class="dal-time">'+timeStr+'</div>'+act+'</div>';
+  }).join('')+'</div>';
 }
 
-function delDirectAlarm(id){
-  alms=alms.filter(function(a){return a.id!==id;});
-  renderDirectAlarms();updateSB();
-}
-function dismissDirectAlarm(id){
-  var a=alms.find(function(x){return x.id===id;});
-  if(a){a.dism=true;a.ring=false;}
-  if(!alms.some(function(x){return x.ring;})){stopSnd();document.getElementById('ro').classList.remove('show');}
-  renderDirectAlarms();updateSB();
-}
+function delDirectAlarm(id){alms=alms.filter(function(a){return a.id!==id;});renderDirectAlarms();renderCal();}
+function dismissDirectAlarm(id){var a=alms.find(function(x){return x.id===id;});if(a){a.dism=true;a.ring=false;}if(!alms.some(function(x){return x.ring;})){stopSnd();document.getElementById('ro').classList.remove('show');}renderDirectAlarms();}
 
-/* ════════════════════════════════════
-   RENDER ACTIVE ALARMS
-════════════════════════════════════ */
-function renderAlms(){
-  var c=document.getElementById('aal');
-  var cnt=document.getElementById('acnt');
-  if(!c)return; // 등록된 알람 UI 없음
-  if(!alms.length){if(cnt)cnt.textContent='0';c.innerHTML='<div class="empty">// NO ALARMS ARMED //</div>';return;}
-  if(cnt)cnt.textContent=String(alms.length);
-  c.innerHTML=alms.map(function(a){
-    var ts=fmt(a.time);
-    var cls='ac'+(a.ring?' ring':a.dism?' past':a.armed?' armed':'');
-    var badge=a.type==='base'?'<span style="font-size:8px;color:var(--acc)">[B]</span>':
-              a.type==='intl'?'<span style="font-size:8px;color:var(--amb)">[I]</span>':'';
-    var meta=a.dep?(a.lbl+' · DEP '+fmt(a.dep)):a.lbl;
-    var act=a.ring
-      ?'<button class="dis-btn" onclick="dismissA(\''+a.id+'\')">DISMISS</button>'
-      :'<button class="adl" onclick="delA(\''+a.id+'\')">&#x2715;</button>';
-    return '<div class="'+cls+'" id="ac-'+a.id+'">'
-      +'<div class="adot"></div>'
-      +'<div class="ai"><div class="at">'+ts+' '+badge+'</div>'
-      +'<div class="am">'+escQ(meta)+'</div>'
-      +'<div class="acd" id="cd-'+a.id+'"></div></div>'
-      +act+'</div>';
-  }).join('');
-}
-function delA(id){alms=alms.filter(function(a){return a.id!==id;});renderAlms();updateSB();}
-function dismissA(id){
-  var a=alms.find(function(x){return x.id===id;});
-  if(a){a.dism=true;a.ring=false;}
-  if(!alms.some(function(x){return x.ring;})){stopSnd();document.getElementById('ro').classList.remove('show');}
-  renderAlms();updateSB();
-}
-function dismissOv(){
-  alms.forEach(function(a){if(a.ring){a.dism=true;a.ring=false;}});
-  stopSnd();document.getElementById('ro').classList.remove('show');
-  renderAlms();updateSB();
-}
-
-/* ════════════════════════════════════
-   COUNTDOWNS
-════════════════════════════════════ */
-function updateCDs(){
+function updateDirectCDs(){
   var now=new Date();
-  alms.forEach(function(a){
-    var el=document.getElementById('cd-'+a.id); if(!el)return;
+  alms.filter(function(a){return a.type==='direct'&&!a.dism;}).forEach(function(a){
+    var el=document.getElementById('dcd-'+a.id);if(!el)return;
     if(a.ring){el.textContent='▶ RINGING';return;}
-    if(a.dism){el.textContent='✓ DISMISSED';return;}
-    var diff=a.time-now;
-    if(diff<=0){el.textContent='PASSED';return;}
-    var s=Math.floor(diff/1000);
-    var h=Math.floor(s/3600),mm=Math.floor((s%3600)/60),ss=s%60;
-    el.textContent='T-'+(h?h+'H ':'')+mm+'M '+ss+'S';
+    var diff=a.time-now;if(diff<=0){el.textContent='PASSED';return;}
+    var s2=Math.floor(diff/1000);var hh=Math.floor(s2/3600),mm=Math.floor((s2%3600)/60),ss=s2%60;
+    el.textContent='T-'+(hh?hh+'H ':'')+mm+'M '+ss+'S';
   });
 }
 
-/* ════════════════════════════════════
-   CHECK ALARMS
-════════════════════════════════════ */
+/* ═══ CLOCK / ALARMS ═══ */
+function tickClock(){
+  updateDirectCDs();
+  var badge=document.getElementById('bellBadge');
+  if(badge)badge.classList.toggle('show',alms.some(function(a){return a.ring;}));
+}
 function checkAlarms(){
-  var now=new Date(), needRender=false;
-  alms.forEach(function(a){
-    if(a.dism||a.ring)return;
-    var diff=now-a.time;
-    if(diff>=0&&diff<60000){a.ring=true;needRender=true;trigAlarm(a);}
-  });
-  alms.forEach(function(a){
-    if(a.ring&&(now-a.time)>=60000){
-      a.ring=false;a.dism=true;needRender=true;
-      if(!alms.some(function(x){return x.ring;})){stopSnd();document.getElementById('ro').classList.remove('show');}
-    }
-  });
-  if(needRender){renderAlms();renderDirectAlarms();}
-  var bl=alms.length;
-  alms=alms.filter(function(a){return !a.dism||(now-a.time<300000);});
-  if(alms.length!==bl){renderAlms();renderDirectAlarms();updateSB();}
+  var now=new Date(),needRender=false;
+  alms.forEach(function(a){if(a.dism||a.ring)return;var diff=now-a.time;if(diff>=0&&diff<60000){a.ring=true;needRender=true;trigAlarm(a);}});
+  alms.forEach(function(a){if(a.ring&&(now-a.time)>=60000){a.ring=false;a.dism=true;needRender=true;if(!alms.some(function(x){return x.ring;})){stopSnd();document.getElementById('ro').classList.remove('show');}}});
+  if(needRender)renderDirectAlarms();
+  var bl=alms.length;alms=alms.filter(function(a){return !a.dism||(now-a.time<300000);});
+  if(alms.length!==bl)renderDirectAlarms();
 }
-function trigAlarm(a){
-  document.getElementById('rtt').textContent='🔔 '+a.lbl;
-  document.getElementById('rdt').textContent=fmt(a.time)+(a.dep?' · 출발 '+fmt(a.dep):'');
-  document.getElementById('ro').classList.add('show');
-  playSnd();
-  if(navigator.vibrate)navigator.vibrate([400,150,400,150,400,150,400]);
+function trigAlarm(a){document.getElementById('rtt').textContent=a.lbl;document.getElementById('rdt').textContent=fmt(a.time)+(a.dep?' · DEP '+fmt(a.dep):'');document.getElementById('ro').classList.add('show');playSnd();if(navigator.vibrate)navigator.vibrate([400,150,400,150,400]);}
+function dismissOv(){alms.forEach(function(a){if(a.ring){a.dism=true;a.ring=false;}});stopSnd();document.getElementById('ro').classList.remove('show');renderDirectAlarms();}
+function dismissA(id){var a=alms.find(function(x){return x.id===id;});if(a){a.dism=true;a.ring=false;}if(!alms.some(function(x){return x.ring;})){stopSnd();document.getElementById('ro').classList.remove('show');}renderDirectAlarms();}
+
+/* ═══ SETTINGS ═══ */
+function toggleDark(btn){var d=document.body.classList.toggle('dark');btn.classList.toggle('on',d);localStorage.setItem('crewclock_dark',d?'1':'0');}
+function saveSettingsUI(){var v=(document.getElementById('baseAptInput').value||'').trim().toUpperCase().slice(0,3);if(v.length<2){toast('Please enter an airport code','er');return;}syncAllPresets();baseApt=v;saveSettings();toast('Settings saved','ok');}
+function syncAllPresets(){
+  baseOffs.forEach(function(o){var h=document.getElementById('boh-'+o.id),m=document.getElementById('bom-'+o.id),l=document.getElementById('bolbl-'+o.id);if(h)o.h=Math.max(0,+h.value||0);if(m)o.m=Math.max(0,Math.min(59,+m.value||0));if(l)o.lbl=l.value||'Alarm';});
+  intlOffs.forEach(function(o){var h=document.getElementById('ioh-'+o.id),m=document.getElementById('iom-'+o.id),l=document.getElementById('iolbl-'+o.id);if(h)o.h=Math.max(0,+h.value||0);if(m)o.m=Math.max(0,Math.min(59,+m.value||0));if(l)o.lbl=l.value||'Alarm';});
+}
+function presetRow(o,on,px,type){
+  var tc='tog'+(on?(type==='base'?' on':' on-amb'):'');
+  return '<div class="orow" id="'+px+'orow-'+o.id+'">'
+    +'<button class="'+tc+'" onclick="togPre(\''+px+'\',\''+o.id+'\',this)"></button>'
+    +'<div class="olbl"><input class="lbl-inp" type="text" value="'+escQ(o.lbl)+'" id="'+px+'olbl-'+o.id+'">'
+    +'<div class="olbl-s" id="'+px+'os-'+o.id+'">'+o.h+'H '+o.m+'M before dep.</div></div>'
+    +'<div class="oedit">'
+    +'<input type="number" class="ni" value="'+o.h+'" min="0" max="48" id="'+px+'oh-'+o.id+'" oninput="syncPR(\''+px+'\',\''+o.id+'\')">&thinsp;<span class="ul">H</span>&nbsp;'
+    +'<input type="number" class="ni" value="'+o.m+'" min="0" max="59" id="'+px+'om-'+o.id+'" oninput="syncPR(\''+px+'\',\''+o.id+'\')">&thinsp;<span class="ul">M</span>&nbsp;'
+    +'<button class="db" onclick="delPre(\''+px+'\',\''+o.id+'\')">✕</button></div></div>';
+}
+function renderBasePresets(){var c=document.getElementById('basePresets');c.innerHTML=baseOffs.map(function(o){return presetRow(o,!!baseOn[o.id],'b','base');}).join('')+'<button class="add-btn" onclick="addBaseOff()">+ Add BASE Alarm</button>';}
+function renderIntlPresets(){var c=document.getElementById('intlPresets');c.innerHTML=intlOffs.map(function(o){return presetRow(o,!!intlOn[o.id],'i','intl');}).join('')+'<button class="add-btn amb" onclick="addIntlOff()">+ Add INTL Alarm</button>';}
+function togPre(px,id,btn){if(px==='b'){baseOn[id]=!baseOn[id];btn.className='tog'+(baseOn[id]?' on':'');}else{intlOn[id]=!intlOn[id];btn.className='tog'+(intlOn[id]?' on-amb':'');}}
+function syncPR(px,id){var arr=px==='b'?baseOffs:intlOffs;var o=arr.find(function(x){return x.id===id;});if(!o)return;var h=document.getElementById(px+'oh-'+id),m=document.getElementById(px+'om-'+id),l=document.getElementById(px+'olbl-'+id);if(h)o.h=Math.max(0,+h.value||0);if(m)o.m=Math.max(0,Math.min(59,+m.value||0));if(l)o.lbl=l.value||'Alarm';var s=document.getElementById(px+'os-'+id);if(s)s.textContent=o.h+'H '+o.m+'M before dep.';}
+function delPre(px,id){if(px==='b'){baseOffs=baseOffs.filter(function(x){return x.id!==id;});delete baseOn[id];renderBasePresets();}else{intlOffs=intlOffs.filter(function(x){return x.id!==id;});delete intlOn[id];renderIntlPresets();}}
+function addBaseOff(){var id='b'+(bOc++);baseOffs.push({id:id,h:1,m:0,lbl:'Alarm'});baseOn[id]=true;renderBasePresets();}
+function addIntlOff(){var id='i'+(iOc++);intlOffs.push({id:id,h:1,m:0,lbl:'Alarm'});intlOn[id]=true;renderIntlPresets();}
+
+/* ═══ DRUM ═══ */
+function initDrums(){buildDrum('drumH',24,drumH_val);buildDrum('drumM',60,drumM_val);}
+function buildDrum(id,count,initVal){
+  var inner=document.getElementById(id+'-inner');var items='';var pad=5;
+  for(var i=-pad;i<count+pad;i++){var v=((i%count)+count)%count;items+='<div class="drum-item" data-v="'+v+'">'+p2(v)+'</div>';}
+  inner.innerHTML=items;setDrum(id,initVal,false);attachDrumEvents(id,count);
+}
+function setDrum(id,val,animate){
+  var inner=document.getElementById(id+'-inner');var pad=5;
+  var y=-(pad+val)*ITEM_H+ITEM_H;
+  inner.style.transition=animate?'transform .18s cubic-bezier(.25,.46,.45,.94)':'none';
+  inner.style.transform='translateY('+y+'px)';
+  inner.querySelectorAll('.drum-item').forEach(function(el){el.classList.toggle('sel',+el.dataset.v===val);});
+  if(id==='drumH')drumH_val=val;else drumM_val=val;
+}
+function attachDrumEvents(id,count){
+  var drum=document.getElementById(id);
+  var lastY,rafId=0,velocity=0,pixelOffset=0;
+  function getVal(){return id==='drumH'?drumH_val:drumM_val;}
+  function applyOffset(){
+    var pad=5;var baseY=-(pad+getVal())*ITEM_H+ITEM_H;
+    var inner=document.getElementById(id+'-inner');
+    inner.style.transition='none';inner.style.transform='translateY('+(baseY+pixelOffset)+'px)';
+  }
+  function snapToNearest(){
+    var steps=Math.round(-pixelOffset/ITEM_H);pixelOffset=0;
+    setDrum(id,((getVal()+steps)%count+count)%count,true);
+  }
+  function momentum(){
+    if(Math.abs(velocity)<0.4){snapToNearest();return;}
+    pixelOffset-=velocity;
+    if(Math.abs(pixelOffset)>ITEM_H*3){snapToNearest();velocity=0;return;}
+    applyOffset();velocity*=0.85;rafId=requestAnimationFrame(momentum);
+  }
+  function onStart(y){cancelAnimationFrame(rafId);pixelOffset=0;lastY=y;velocity=0;drum.dataset.drag='1';}
+  function onMove(y){
+    if(!drum.dataset.drag)return;
+    var dy=lastY-y;velocity=dy;lastY=y;pixelOffset-=dy;
+    while(pixelOffset<=-ITEM_H){pixelOffset+=ITEM_H;var nv=((getVal()+1)%count+count)%count;if(id==='drumH')drumH_val=nv;else drumM_val=nv;document.querySelectorAll('#'+id+'-inner .drum-item').forEach(function(el){el.classList.toggle('sel',+el.dataset.v===nv);});}
+    while(pixelOffset>=ITEM_H){pixelOffset-=ITEM_H;var nv=((getVal()-1)%count+count)%count;if(id==='drumH')drumH_val=nv;else drumM_val=nv;document.querySelectorAll('#'+id+'-inner .drum-item').forEach(function(el){el.classList.toggle('sel',+el.dataset.v===nv);});}
+    applyOffset();
+  }
+  function onEnd(){drum.dataset.drag='';rafId=requestAnimationFrame(momentum);}
+  drum.addEventListener('touchstart',function(e){onStart(e.touches[0].clientY);},{passive:true});
+  drum.addEventListener('touchmove',function(e){e.preventDefault();onMove(e.touches[0].clientY);},{passive:false});
+  drum.addEventListener('touchend',onEnd);
+  drum.addEventListener('mousedown',function(e){onStart(e.clientY);e.preventDefault();});
+  document.addEventListener('mousemove',function(e){if(drum.dataset.drag)onMove(e.clientY);});
+  document.addEventListener('mouseup',function(){if(drum.dataset.drag)onEnd();});
+  drum.addEventListener('wheel',function(e){e.preventDefault();setDrum(id,((getVal()+(e.deltaY>0?1:-1))%count+count)%count,true);},{passive:false});
 }
 
-/* ════════════════════════════════════
-   SOUND
-════════════════════════════════════ */
-function getACtx(){
-  if(!aCtx)aCtx=new(window.AudioContext||window.webkitAudioContext)();
-  if(aCtx.state==='suspended')aCtx.resume();
-  return aCtx;
-}
-function playSnd(){
-  try{
-    var ctx=getACtx(); stopSnd();
-    function beep(f,s,d){
-      var o=ctx.createOscillator(),g=ctx.createGain();
-      o.connect(g);g.connect(ctx.destination);
-      o.type='square';o.frequency.value=f;
-      var t0=ctx.currentTime+s;
-      g.gain.setValueAtTime(0,t0);g.gain.linearRampToValueAtTime(0.15,t0+.01);g.gain.linearRampToValueAtTime(0,t0+d-.01);
-      o.start(t0);o.stop(t0+d);oscs.push(o);
-    }
-    for(var i=0;i<20;i++){var b=i*2;beep(880,b,.12);beep(660,b+.18,.12);beep(880,b+.36,.12);}
-  }catch(e){}
-}
+/* ═══ SOUND ═══ */
+function getACtx(){if(!aCtx)aCtx=new(window.AudioContext||window.webkitAudioContext)();if(aCtx.state==='suspended')aCtx.resume();return aCtx;}
+function playSnd(){try{var ctx=getACtx();stopSnd();function beep(f,s,d){var o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.type='sine';o.frequency.value=f;var t0=ctx.currentTime+s;g.gain.setValueAtTime(0,t0);g.gain.linearRampToValueAtTime(0.25,t0+.02);g.gain.linearRampToValueAtTime(0,t0+d-.02);o.start(t0);o.stop(t0+d);oscs.push(o);}for(var i=0;i<20;i++){var b=i*2;beep(880,b,.15);beep(1100,b+.2,.15);beep(880,b+.4,.15);}}catch(e){}}
 function stopSnd(){oscs.forEach(function(o){try{o.stop();}catch(e){}});oscs=[];}
 
-/* ════════════════════════════════════
-   STATUS BAR
-════════════════════════════════════ */
-function updateSB(){
-  document.getElementById('sb-apt').textContent=baseApt;
-  // 다음 출발: detectedFlights 기준
-  var now=new Date();
-  var next=null;
-  detectedFlights.forEach(function(f){
-    var dt=parseFlightDate(f);
-    if(dt>now&&(!next||dt<next)) next=dt;
-  });
-  document.getElementById('sb-dep').textContent=next?fmt(next):'--:--';
-  // 현재시각 (tickClock에서 매초 갱신)
-  var n=new Date();
-  document.getElementById('sb-now').textContent=p2(n.getHours())+':'+p2(n.getMinutes());
-}
-
-/* ════════════════════════════════════
-   TOAST
-════════════════════════════════════ */
-function toast(msg,type){
-  var t=document.getElementById('toast');
-  t.textContent=msg;t.className='toast show '+(type||'in');
-  clearTimeout(t._tt);
-  t._tt=setTimeout(function(){t.classList.remove('show');},2600);
-}
+/* ═══ TOAST ═══ */
+function toast(msg,type){var t=document.getElementById('toast');t.textContent=msg;t.className='toast show '+(type||'in');clearTimeout(t._tt);t._tt=setTimeout(function(){t.classList.remove('show');},2600);}
 
 init();
 </script>
