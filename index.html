@@ -479,7 +479,7 @@ body.dark .dl-inp[type=date]{color-scheme:dark}
   <div class="day-card">
     <div class="day-header">
       <div><div class="day-title" id="dayTitle">---</div><div class="day-subtitle">Schedule</div></div>
-      <div class="day-more" onclick="openUploadSheet()">+ Upload ›</div>
+      <div class="day-more" onclick="openUploadSheet()">+ ICS ›</div>
     </div>
     <div class="day-flights" id="dayFlights"><div class="empty-state">Upload a schedule to see flights here</div></div>
   </div>
@@ -560,7 +560,7 @@ body.dark .dl-inp[type=date]{color-scheme:dark}
 </div>
 
 <!-- FAB: Upload Schedule -->
-<button class="fab" onclick="openUploadSheet()" title="Upload Schedule">
+<button class="fab" onclick="openUploadSheet()" title="Import ICS Schedule">
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
 </button>
 
@@ -568,56 +568,31 @@ body.dark .dl-inp[type=date]{color-scheme:dark}
 <div class="sheet-overlay" id="sheetOverlay" onclick="closeUploadSheet()"></div>
 <div class="sheet" id="uploadSheet">
   <div class="sheet-handle"></div>
-  <div class="sheet-title">Upload Schedule
-    <span class="ocr-badge offline" style="vertical-align:middle">● Offline OCR</span>
+  <div class="sheet-title" style="display:flex;align-items:center;justify-content:space-between">
+    <span>Import Schedule</span>
+    <button onclick="closeUploadSheet()" style="background:var(--blue-light);border:none;border-radius:8px;padding:5px 12px;font-size:12px;font-weight:600;color:var(--blue);cursor:pointer;font-family:Inter,sans-serif">Done</button>
   </div>
   <div class="sheet-body">
-    <div class="upload-panel">
-      <div class="upload-tabs">
-        <button class="utab active" id="utab-img" onclick="switchUploadTab('img',this)">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-2px;margin-right:4px"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-          Image / Photo
-        </button>
-        <button class="utab" id="utab-ics" onclick="switchUploadTab('ics',this)">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-2px;margin-right:4px"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          ICS Calendar
-        </button>
+    <!-- ICS ONLY upload zone -->
+    <div class="upz" id="icsUpz" style="border-radius:14px">
+      <input type="file" accept=".ics,.ical,text/calendar" id="icsIn" onchange="handleICS(event)">
+      <div class="up-ico" id="icsIco">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+          <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/>
+        </svg>
       </div>
-      <div class="upload-body">
-        <!-- IMAGE TAB -->
-        <div id="upload-img-panel">
-          <div class="upz" id="upz">
-            <input type="file" accept="image/*" id="imgIn" onchange="handleImg(event)">
-            <img id="prevImg" alt="">
-            <div class="up-ico" id="upIco"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
-            <div class="up-t" id="upT">Upload Schedule Image</div>
-            <div class="up-s" id="upS">Tap to select from gallery or camera</div>
-          </div>
-          <div class="ocr-info">
-            <strong id="ocrModeTitle">Offline OCR</strong>
-            <span id="ocrModeDesc">Reads schedule text on-device using Tesseract.js. No internet or API key required.</span>
-          </div>
-          <button class="btn-az" id="azBtn">Scan Schedule (OCR)</button>
-          <div class="prog" id="prog"><div class="prog-t"><div class="prog-f"></div></div>
-            <div class="prog-l" id="progL">Analyzing schedule...</div>
-          </div>
-        </div>
-        <!-- ICS TAB -->
-        <div id="upload-ics-panel" style="display:none">
-          <div class="upz" id="icsUpz">
-            <input type="file" accept=".ics,.ical,text/calendar" id="icsIn" onchange="handleICS(event)">
-            <div class="up-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="16" y1="14" x2="16" y2="14"/></svg></div>
-            <div class="up-t">Upload ICS / iCal File</div>
-            <div class="up-s">Tap to select .ics calendar file</div>
-          </div>
-          <div class="ocr-info" style="margin-top:10px">
-            <strong>Offline ICS Parsing</strong>
-            Works without internet. Supports standard iCalendar (.ics) format exported from airline apps, Jeppesen, or calendar apps.
-          </div>
-          <div id="icsResultWrap" style="margin-top:10px"></div>
-        </div>
-      </div>
+      <div class="up-t" id="icsUpT">Upload ICS / iCal File</div>
+      <div class="up-s" id="icsUpS">Tap to select .ics calendar file</div>
     </div>
+    <div class="ocr-info" style="margin-top:10px">
+      <strong>Offline — No internet required</strong>
+      Supports standard iCalendar (.ics) from airline apps, Jeppesen, crew portals, or any calendar app. RESERVE / OFF / STANDBY entries are automatically excluded.
+    </div>
+    <!-- Parse progress / result -->
+    <div id="icsResultWrap" style="margin-top:10px"></div>
     <div id="sheetFalWrap"></div>
   </div>
 </div>
@@ -719,12 +694,7 @@ function closeUploadSheet(){
     switchTab('calendar',null);
   }
 }
-function switchUploadTab(name,btn){
-  document.querySelectorAll('.utab').forEach(function(b){b.classList.remove('active');});
-  btn.classList.add('active');
-  document.getElementById('upload-img-panel').style.display=name==='img'?'':'none';
-  document.getElementById('upload-ics-panel').style.display=name==='ics'?'':'none';
-}
+// switchUploadTab removed (ICS only)
 
 /* ═══ CALENDAR ═══ */
 function calMove(d){calMonth+=d;if(calMonth>11){calMonth=0;calYear++;}if(calMonth<0){calMonth=11;calYear--;}renderCal();}
@@ -1146,14 +1116,55 @@ function parseScheduleText(rawText){
 /* ═══ ICS PARSER ═══ */
 function handleICS(e){
   var f=e.target.files[0];if(!f)return;
+
+  // Update UI to show file name
+  var upT=document.getElementById('icsUpT');
+  var upS=document.getElementById('icsUpS');
+  var ico=document.getElementById('icsIco');
+  if(upT)upT.textContent=f.name;
+  if(upS)upS.textContent='Parsing...';
+  if(ico)ico.style.color='var(--blue)';
+
+  var rw=document.getElementById('icsResultWrap');
+  if(rw)rw.innerHTML='<div style="text-align:center;padding:12px;font-size:12px;color:var(--tx2)">Reading file...</div>';
+
   var r=new FileReader();
   r.onload=function(ev){
     try{
       var flights=parseICS(ev.target.result);
-      if(!flights.length){document.getElementById('icsResultWrap').innerHTML='<div class="empty-state">No flight events found in this ICS file.</div>';return;}
-      detectedFlights=flights;initFlightToggles();renderICSResult(flights);renderHomeFlightList();renderCal();renderDaySchedule(calSelDate);
-      toast(flights.length+' events imported from ICS','ok');
-    }catch(err){toast('ICS parse error: '+err.message,'er');console.error(err);}
+
+      if(!flights.length){
+        if(rw)rw.innerHTML='<div class="empty-state">No flight events found.<br>Check that the file contains flight legs with departure times.</div>';
+        if(upS)upS.textContent='No flights found — try another file';
+        return;
+      }
+
+      // Success
+      if(upS)upS.textContent=flights.length+' flights found';
+      detectedFlights=flights;
+      initFlightToggles();
+      renderICSResult(flights);
+      renderHomeFlightList();
+      renderCal();
+      renderDaySchedule(calSelDate);
+      toast(flights.length+' flights imported','ok');
+
+      // Auto-close sheet after short delay and go to home
+      setTimeout(function(){
+        closeUploadSheet();
+        switchTab('calendar',null);
+      },900);
+
+    }catch(err){
+      if(rw)rw.innerHTML='<div class="empty-state" style="color:var(--red)">Parse error: '+escQ(err.message)+'</div>';
+      if(upS)upS.textContent='Failed to read file';
+      toast('ICS parse error','er');
+      console.error('[ICS]',err);
+    }
+  };
+  r.onerror=function(){
+    if(upS)upS.textContent='Failed to read file';
+    toast('Could not read file','er');
   };
   r.readAsText(f,'UTF-8');
 }
@@ -1239,19 +1250,17 @@ function parseICSDate(s){
 
 function renderICSResult(flights){
   var wrap=document.getElementById('icsResultWrap');
+  if(!wrap)return;
   if(!flights.length){wrap.innerHTML='';return;}
   var now=new Date();
-  var html='<div style="font-size:11px;font-weight:600;color:var(--tx2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">'+flights.length+' Events Imported</div>';
-  var shown=flights.slice(0,8);
-  shown.forEach(function(f){
-    var past=parseFlightDate(f)<now;
-    html+='<div class="ics-event" style="opacity:'+(past?.4:1)+'">'
-      +'<div class="ie-time">'+f.depTime+'</div>'
-      +'<div class="ie-lbl">'+escQ(f.summary||f.flight)+' <span style="color:var(--tx3);font-size:9px">'+f.date+'</span></div>'
-      +'<div class="fal-type ics" style="font-size:8px">'+(f.type==='base'?'HOME':(f.type==='intl'?'INTL':'ICS'))+'</div>'
-      +'</div>';
-  });
-  if(flights.length>8)html+='<div class="empty-state" style="padding:8px">...and '+(flights.length-8)+' more</div>';
+  var upcoming=flights.filter(function(f){return parseFlightDate(f)>=now;});
+  var past=flights.filter(function(f){return parseFlightDate(f)<now;});
+  var html='<div style="display:flex;align-items:center;gap:8px;padding:4px 0 8px">'
+    +'<div style="width:8px;height:8px;border-radius:50%;background:var(--grn)"></div>'
+    +'<div style="font-size:12px;font-weight:700;color:var(--tx)">'
+    +flights.length+' flights imported'
+    +'<span style="font-weight:400;color:var(--tx2);font-size:11px"> &nbsp;('+upcoming.length+' upcoming)</span>'
+    +'</div></div>';
   wrap.innerHTML=html;
 }
 
