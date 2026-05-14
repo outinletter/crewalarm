@@ -1,1523 +1,518 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>CREW CLOCK</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-<!-- Tesseract.js for offline OCR -->
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-<style>
-:root{
-  /* 연한 하늘색 파스텔 테마 */
-  --bg:#e8f4fd;
-  --white:#f4faff;
-  --blue:#3b82c4;--blue2:#2d6eac;
-  --blue-light:rgba(59,130,196,.10);--blue-mid:rgba(59,130,196,.20);
-  --tx:#1a2e42;--tx2:#4a6a85;--tx3:#8aaec8;
-  --bdr:#c8e0f0;--bdr2:#a8cce4;
-  --grn:#2eaa70;--red:#e0505a;--amb:#e8923a;
-  --shadow:0 1px 6px rgba(59,130,196,.10),0 1px 2px rgba(0,0,0,.04);
-  --shadow-md:0 4px 20px rgba(59,130,196,.16);
-  /* nav gradient */
-  --nav-bg:linear-gradient(135deg,#daeefa 0%,#f0f8ff 100%);
-}
-body.dark{
-  --bg:#0d1f2d;--white:#162535;
-  --blue:#6aafe8;--blue2:#5a9fd8;
-  --blue-light:rgba(106,175,232,.13);--blue-mid:rgba(106,175,232,.24);
-  --tx:#e0f0fa;--tx2:#7aaac8;--tx3:#4a7090;
-  --bdr:#1e3a50;--bdr2:#2a4d68;
-  --grn:#3dd68c;--red:#f07080;--amb:#f0a84a;
-  --shadow:0 1px 4px rgba(0,0,0,.35),0 1px 2px rgba(0,0,0,.2);
-  --shadow-md:0 4px 20px rgba(0,0,0,.45);
-  --nav-bg:linear-gradient(135deg,#0d1f2d 0%,#162535 100%);
-}
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;overflow-x:hidden}
-body{background:var(--bg);color:var(--tx);font-family:'Inter',sans-serif;font-size:14px;
-  padding-bottom:80px;-webkit-font-smoothing:antialiased}
+import React, { useState, useEffect, useRef } from 'react';
+import { 
+  ChevronLeft, 
+  ChevronRight, 
+  Plus, 
+  Menu, 
+  Bell, 
+  Trash2, 
+  Loader2,
+  Calendar as CalendarIcon,
+  Clock,
+  Settings as SettingsIcon,
+  CheckCircle2,
+  Info,
+  ShieldCheck,
+  ShieldAlert,
+  X,
+  Globe,
+  MapPin,
+  PlusCircle,
+  FileSearch
+} from 'lucide-react';
 
-/* ── TOP NAV ── */
-.top-nav{position:sticky;top:0;z-index:50;
-  background:var(--nav-bg,var(--white));
-  border-bottom:1px solid var(--bdr);
-  display:flex;align-items:center;justify-content:center;
-  padding:14px 20px 12px;position:relative;
-  box-shadow:0 2px 8px rgba(59,130,196,.10)}
-.nav-title{text-align:center;cursor:pointer;user-select:none}
-.nav-title:hover h1{color:var(--blue)}
-.nav-title h1{
-  font-size:22px;font-weight:800;letter-spacing:4px;
-  color:var(--tx);transition:color .2s;
-  text-transform:uppercase;line-height:1}
-.nav-title p{font-size:9px;color:var(--tx3);letter-spacing:2px;margin-top:3px;text-transform:uppercase}
-.nav-bell{position:absolute;right:16px;top:50%;transform:translateY(-50%);
-  width:36px;height:36px;border-radius:50%;border:none;background:transparent;
-  cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--tx);
-  transition:background .2s;position:absolute}
-.nav-bell:hover{background:var(--blue-light)}
-.nav-bell .badge{position:absolute;top:5px;right:5px;width:7px;height:7px;
-  background:var(--red);border-radius:50%;border:2px solid var(--white);display:none}
-.nav-bell .badge.show{display:block}
+/* 
+  VERSION: v1.8.2 (Enhanced Route Parser)
+  DESCRIPTION: Fixed JFK/SYD misidentification by improving Regex for destination codes.
+  DATE: 2026-05-14
+*/
 
-/* ── PAGE TABS ── */
-.page-tabs{display:flex;background:var(--nav-bg,var(--white));border-bottom:1px solid var(--bdr);
-  -ms-overflow-style:none;scrollbar-width:none}
-.page-tabs::-webkit-scrollbar{display:none}
-.ptab{flex:1;padding:11px 8px;border:none;background:transparent;
-  color:var(--tx2);font-size:12px;font-weight:500;cursor:pointer;
-  white-space:nowrap;transition:color .18s;border-bottom:2px solid transparent;font-family:'Inter',sans-serif}
-.ptab.active{color:var(--blue);border-bottom-color:var(--blue);font-weight:600}
+const MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const DAYS_SHORT = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
 
-/* ── PANELS ── */
-.panel{display:none}.panel.show{display:block}
-.sec{padding:14px 14px 0}
+const App = () => {
+  const [activeMenu, setActiveMenu] = useState('schedule');
+  const [currentDate, setCurrentDate] = useState(new Date(2026, 4, 14)); 
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisProgress, setAnalysisProgress] = useState(0);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [expandedMissionId, setExpandedMissionId] = useState(null);
+  const fileInputRef = useRef(null);
 
-/* ── CALENDAR ── */
-.cal-card{background:var(--white);border-radius:14px;box-shadow:var(--shadow);margin:12px 14px 0;overflow:hidden}
-.cal-nav{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 6px}
-.cal-nav-btn{width:30px;height:30px;border:none;background:var(--blue-light);border-radius:8px;
-  color:var(--blue);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s}
-.cal-nav-btn:hover{background:var(--blue-mid)}
-.cal-month{font-size:14px;font-weight:600;color:var(--tx)}
-.cal-dow-row{display:grid;grid-template-columns:repeat(7,1fr);padding:0 6px 2px}
-.cal-dow-cell{text-align:center;font-size:10px;font-weight:600;color:var(--tx3);padding:3px 0;letter-spacing:.3px}
-.cal-dow-cell:first-child{color:var(--red)}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);padding:0 6px 10px}
-/* Fixed mobile cell size */
-.cal-day{height:40px;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  cursor:pointer;transition:background .15s;border-radius:8px;position:relative}
-.cal-day:hover{background:var(--blue-light)}
-.cal-day.other-month .cal-day-num{opacity:.3}
-.cal-day-num{width:28px;height:28px;display:flex;align-items:center;justify-content:center;
-  border-radius:50%;font-size:13px;font-weight:500;color:var(--tx)}
-.cal-day.today .cal-day-num{background:var(--blue);color:#fff;font-weight:700}
-.cal-day.selected:not(.today) .cal-day-num{background:var(--blue-light);color:var(--blue);font-weight:600}
-.cal-day:nth-child(7n+1) .cal-day-num{color:var(--red)}
-.cal-day.today .cal-day-num{color:#fff !important}
-.cal-dots{display:flex;gap:2px;justify-content:center;margin-top:1px;position:absolute;bottom:3px}
-.cal-dot{width:3px;height:3px;border-radius:50%}
-.cal-dot.b{background:var(--blue)}.cal-dot.g{background:var(--grn)}
-.cal-day.today .cal-dot{background:rgba(255,255,255,.8)}
+  // Sync initial roster with actual image data (스크린샷 2026-05-13 134018_5.png)
+  const [roster, setRoster] = useState([
+    { id: 1, date: '2026-05-03', flightNo: 'KE913', origin: 'ICN', destination: 'MAD', reportTime: '09:55', type: 'flight', alarmsActive: false },
+    { id: 2, date: '2026-05-06', flightNo: 'KE914', origin: 'MAD', destination: 'ICN', reportTime: '20:00', type: 'flight', alarmsActive: false },
+    { id: 3, date: '2026-05-16', flightNo: 'KE401', origin: 'ICN', destination: 'SYD', reportTime: '19:10', type: 'flight', alarmsActive: true }
+  ]);
 
-/* ── DAY CARD ── */
-.day-card{background:var(--white);border-radius:14px;box-shadow:var(--shadow);margin:10px 14px 0}
-.day-header{display:flex;align-items:center;justify-content:space-between;padding:12px 14px 0}
-.day-title{font-size:13px;font-weight:700;color:var(--blue)}
-.day-subtitle{font-size:10px;color:var(--tx2);margin-top:1px}
-.day-more{font-size:11px;color:var(--blue);font-weight:600;cursor:pointer}
-.day-flights{padding:8px 6px 10px}
-.dfr{display:flex;align-items:center;gap:10px;padding:8px 8px;border-radius:8px;transition:background .15s;cursor:pointer}
-.dfr:hover{background:var(--blue-light)}
-.dfr-time{font-size:14px;font-weight:700;color:var(--blue);width:42px;flex-shrink:0;font-family:'Share Tech Mono',monospace}
-.dfr-info{flex:1}
-.dfr-route{font-size:13px;font-weight:600;color:var(--tx)}
-.dfr-sub{font-size:10px;color:var(--tx2);margin-top:1px}
-.dfr-fnum{font-size:10px;color:var(--tx3);text-align:right;flex-shrink:0;font-weight:600}
-.dfr-sep{height:1px;background:var(--bdr);margin:0 14px}
-.empty-state{padding:20px;text-align:center;color:var(--tx3);font-size:12px}
+  const [alarmCategories, setAlarmCategories] = useState([
+    {
+      id: 'intl',
+      name: '국제선',
+      icon: Globe,
+      items: [
+        { id: 102, title: '메이크업/준비', hours: 4, minutes: 30, enabled: true },
+        { id: 101, title: '리포트 알람', hours: 3, minutes: 30, enabled: true }
+      ]
+    },
+    {
+      id: 'station',
+      name: '해외스테이션',
+      icon: MapPin,
+      items: [
+        { id: 201, title: '픽업 알람', hours: 1, minutes: 30, enabled: false }
+      ]
+    }
+  ]);
 
-/* ── UPLOAD PANEL ── */
-.upload-panel{background:var(--white);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
-.upload-tabs{display:flex;border-bottom:1px solid var(--bdr)}
-.utab{flex:1;padding:10px;border:none;background:transparent;font-family:'Inter',sans-serif;
-  font-size:12px;font-weight:500;color:var(--tx2);cursor:pointer;border-bottom:2px solid transparent;transition:all .18s}
-.utab.active{color:var(--blue);border-bottom-color:var(--blue);font-weight:600;background:var(--blue-light)}
-.upload-body{padding:16px}
-.upz{text-align:center;cursor:pointer;transition:background .2s;position:relative;border-radius:10px;
-  border:2px dashed var(--bdr2);padding:20px 16px;background:transparent}
-.upz:hover{border-color:var(--blue);background:var(--blue-light)}
-.upz input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
-.up-ico{width:44px;height:44px;border-radius:10px;background:var(--blue-light);
-  display:flex;align-items:center;justify-content:center;margin:0 auto 8px;color:var(--blue)}
-.up-t{font-size:13px;font-weight:600;color:var(--tx)}
-.up-s{font-size:11px;color:var(--tx2);margin-top:3px}
-#prevImg{width:100%;max-height:130px;object-fit:contain;border-radius:8px;margin-bottom:8px;display:none}
-.ocr-info{background:var(--blue-light);border:1px solid rgba(79,110,247,.2);border-radius:8px;
-  padding:10px 12px;margin-top:10px;font-size:11px;color:var(--tx2);line-height:1.5}
-.ocr-info strong{color:var(--blue);display:block;margin-bottom:2px;font-size:12px}
-.btn-az{display:none;width:100%;padding:12px;background:var(--blue);border:none;border-radius:10px;
-  color:#fff;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;margin-top:10px;font-family:'Inter',sans-serif}
-.btn-az:hover{background:var(--blue2);box-shadow:0 4px 16px rgba(79,110,247,.35)}
-.btn-az:disabled{opacity:.5;pointer-events:none}
-.prog{display:none;margin-top:10px}
-.prog-t{height:3px;background:var(--bdr);border-radius:2px;overflow:hidden}
-.prog-f{height:100%;background:var(--blue);border-radius:2px;animation:sc 1.4s ease-in-out infinite}
-@keyframes sc{0%{width:0;margin-left:0}50%{width:55%}100%{width:0;margin-left:100%}}
-.prog-l{font-size:10px;color:var(--blue);text-align:center;margin-top:5px;font-weight:500}
-/* OCR mode indicator */
-.ocr-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;
-  font-size:10px;font-weight:600;letter-spacing:.5px;margin-left:8px}
-.ocr-badge.online{background:rgba(34,197,94,.12);color:var(--grn)}
-.ocr-badge.offline{background:rgba(251,146,60,.12);color:var(--amb)}
+  const calculateAlarmTime = (reportTime, hOffset, mOffset) => {
+    if (!reportTime) return "--:--";
+    const [hours, minutes] = reportTime.split(':').map(Number);
+    const totalOffsetMinutes = (parseInt(hOffset) * 60) + parseInt(mOffset);
+    let totalMinutes = hours * 60 - totalOffsetMinutes;
+    if (totalMinutes < 0) totalMinutes += 24 * 60;
+    
+    const h = Math.floor(totalMinutes / 60);
+    const m = totalMinutes % 60;
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+  };
 
-/* ── FLIGHT LIST ── */
-.fal-list{display:flex;flex-direction:column;gap:8px}
-.home-section-hdr{display:flex;align-items:center;justify-content:space-between;
-  margin-bottom:10px;padding-top:4px}
-.home-section-hdr h2{font-size:13px;font-weight:700;color:var(--tx);letter-spacing:.2px}
-.home-section-hdr .upload-link{font-size:11px;color:var(--blue);font-weight:600;cursor:pointer;
-  display:flex;align-items:center;gap:3px}
+  const addPresetItem = (categoryId, title, hours, minutes) => {
+    if (!title) return;
+    const newItem = { 
+      id: Date.now(), 
+      title, 
+      hours: parseInt(hours) || 0, 
+      minutes: parseInt(minutes) || 0, 
+      enabled: true 
+    };
 
-/* Card base */
-.fal-item{background:var(--white);border-radius:14px;overflow:hidden;
-  border:1.5px solid var(--bdr);transition:all .2s;
-  box-shadow:0 1px 3px rgba(0,0,0,.05)}
+    setAlarmCategories(prev => prev.map(cat => {
+      if (cat.id === categoryId) {
+        const updatedItems = [...cat.items, newItem].sort((a, b) => {
+          const totalA = a.hours * 60 + a.minutes;
+          const totalB = b.hours * 60 + b.minutes;
+          return totalB - totalA;
+        });
+        return { ...cat, items: updatedItems };
+      }
+      return cat;
+    }));
+  };
 
-/* Upcoming: normal */
-.fal-item.future{border-color:var(--bdr)}
+  const deletePresetItem = (categoryId, itemId) => {
+    setAlarmCategories(prev => prev.map(cat => {
+      if (cat.id === categoryId) {
+        return { ...cat, items: cat.items.filter(item => item.id !== itemId) };
+      }
+      return cat;
+    }));
+  };
 
-/* Today: highlighted */
-.fal-item.today{
-  border-color:var(--blue);
-  box-shadow:0 2px 12px rgba(79,110,247,.15),0 1px 3px rgba(79,110,247,.1);
-  background:linear-gradient(135deg,var(--white) 80%,rgba(79,110,247,.03))}
+  const handleFileUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
 
-/* Next flight: extra prominent */
-.fal-item.next-flight{
-  border-color:var(--blue);border-width:2px;
-  box-shadow:0 4px 20px rgba(79,110,247,.2)}
+    setIsAnalyzing(true);
+    setAnalysisProgress(10);
 
-/* Past: muted, no interaction */
-.fal-item.past{
-  opacity:.35;
-  box-shadow:none;
-  border-color:var(--bdr);
-  filter:saturate(.3)}
+    if (!window.Tesseract) {
+      const script = document.createElement('script');
+      script.src = 'https://unpkg.com/tesseract.js@v4.0.1/dist/tesseract.min.js';
+      document.head.appendChild(script);
+      await new Promise(resolve => script.onload = resolve);
+    }
 
-/* ── CARD HEADER ── */
-.fal-header{display:flex;align-items:center;gap:10px;padding:12px 14px 10px;cursor:pointer;user-select:none}
+    try {
+      setAnalysisProgress(20);
+      const worker = await Tesseract.createWorker({
+        logger: m => {
+          if (m.status === 'recognizing text') {
+            setAnalysisProgress(20 + Math.floor(m.progress * 80));
+          }
+        }
+      });
 
-/* Left accent bar */
-.fal-accent{width:3px;border-radius:2px;align-self:stretch;flex-shrink:0;min-height:36px;background:var(--bdr2)}
-.fal-item.today .fal-accent{background:var(--blue)}
-.fal-item.next-flight .fal-accent{background:var(--blue)}
-.fal-item.future .fal-accent{background:var(--grn)}
-.fal-item.past .fal-accent{background:var(--bdr2)}
+      await worker.loadLanguage('eng');
+      await worker.initialize('eng');
+      const { data: { text } } = await worker.recognize(file);
+      await worker.terminate();
 
-/* Date + flight info block */
-.fal-info{flex:1;min-width:0}
-.fal-date-row{display:flex;align-items:center;gap:6px;margin-bottom:3px}
-.fal-dow{font-size:15px;font-weight:800;color:var(--tx);letter-spacing:.2px}
-.fal-item.today .fal-dow,.fal-item.next-flight .fal-dow{color:var(--blue)}
-.fal-date{font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--tx2);font-weight:500}
-.fal-badge{font-size:8px;font-weight:800;padding:2px 6px;border-radius:4px;letter-spacing:.8px;text-transform:uppercase}
-.fal-badge.today-badge{background:var(--blue);color:#fff}
-.fal-badge.next-badge{background:rgba(79,110,247,.12);color:var(--blue);border:1px solid rgba(79,110,247,.3)}
+      const lines = text.split('\n');
+      const foundDuties = [];
+      const month = "05"; 
+      const year = "2026";
 
-/* Route row */
-.fal-route-row{display:flex;align-items:center;gap:6px}
-.fal-fnum{font-size:11px;font-weight:700;color:var(--tx2);font-family:'Share Tech Mono',monospace}
-.fal-route{font-size:12px;font-weight:600;color:var(--tx);display:flex;align-items:center;gap:4px}
-.fal-route .apt{font-family:'Share Tech Mono',monospace;font-size:13px;font-weight:700}
-.fal-route .apt.dep{color:var(--blue)}
-.fal-item.past .fal-route .apt.dep{color:var(--tx2)}
-.fal-arrow{color:var(--tx3);font-size:11px}
+      let lastFoundDay = null;
 
-/* Right side: time + controls */
-.fal-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0}
-.fal-deptime{font-family:'Share Tech Mono',monospace;font-size:22px;font-weight:700;color:var(--tx);line-height:1}
-.fal-item.today .fal-deptime,.fal-item.next-flight .fal-deptime{color:var(--blue)}
-.fal-item.past .fal-deptime{font-size:18px;color:var(--tx3)}
-.fal-controls{display:flex;align-items:center;gap:6px}
+      lines.forEach(line => {
+        // Detect Day Marker (e.g., "May 16")
+        const dateMatch = line.match(/May\s?(\d{2})/i);
+        if (dateMatch) {
+          lastFoundDay = dateMatch[1];
+        }
 
-/* Alarm master toggle */
-.fal-alarm-tog{width:34px;height:19px;border-radius:10px;background:var(--bdr2);border:none;
-  cursor:pointer;position:relative;transition:all .2s;flex-shrink:0;outline:none}
-.fal-alarm-tog::after{content:'';position:absolute;left:2px;top:2px;width:15px;height:15px;
-  border-radius:50%;background:#fff;transition:all .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
-.fal-alarm-tog.on{background:var(--blue)}
-.fal-alarm-tog.on::after{left:17px}
-.fal-alarm-tog.on-intl{background:var(--amb)}
-.fal-alarm-tog.on-intl::after{left:17px}
+        // Improved Regex: Supports "KE 401 ICN 19:10 - SYD" or "KE913 ICN 09:55 - MAD"
+        const flightPattern = line.match(/(KE\s?\d{3,4})\s+([A-Z]{3})\s+(\d{2}:\d{2})\s?-\s?([A-Z]{3})/i);
+        
+        if (flightPattern && lastFoundDay) {
+          foundDuties.push({
+            id: Date.now() + Math.random(),
+            date: `${year}-${month}-${lastFoundDay}`,
+            flightNo: flightPattern[1].replace(/\s/g, '').toUpperCase(),
+            origin: flightPattern[2].toUpperCase(),
+            destination: flightPattern[4].toUpperCase(), // Correctly extract SYD/MAD etc.
+            reportTime: flightPattern[3],
+            type: 'flight',
+            alarmsActive: false
+          });
+        }
+      });
 
-/* Dropdown chevron button */
-.fal-drop-btn{width:26px;height:26px;border-radius:7px;border:1.5px solid var(--bdr);
-  background:var(--bg);cursor:pointer;display:flex;align-items:center;justify-content:center;
-  color:var(--tx3);transition:all .2s;flex-shrink:0}
-.fal-drop-btn:hover{border-color:var(--blue);color:var(--blue)}
-.fal-item.open .fal-drop-btn{border-color:var(--blue);background:var(--blue-light);color:var(--blue)}
-.fal-drop-btn svg{transition:transform .2s}
-.fal-item.open .fal-drop-btn svg{transform:rotate(180deg)}
+      if (foundDuties.length > 0) {
+        setRoster(prev => {
+          const combined = [...prev, ...foundDuties];
+          return combined
+            .filter((v, i, a) => a.findIndex(t => (t.date === v.date && t.flightNo === v.flightNo)) === i)
+            .sort((a, b) => a.date.localeCompare(b.date));
+        });
+      }
 
-/* Register / done badge */
-.fal-reg-btn{padding:3px 8px;border-radius:6px;font-size:9px;font-weight:700;cursor:pointer;
-  flex-shrink:0;transition:all .18s;border:1px solid;font-family:'Inter',sans-serif;line-height:1.4}
-.fal-reg-btn.idle{background:transparent;border-color:var(--blue);color:var(--blue)}
-.fal-reg-btn.idle:active{background:var(--blue);color:#fff}
-.fal-reg-btn.done{background:rgba(34,197,94,.1);border-color:var(--grn);color:var(--grn);pointer-events:none}
+      setAnalysisProgress(100);
+      setTimeout(() => {
+        setIsAnalyzing(false);
+        setActiveMenu('schedule');
+      }, 500);
 
-/* Type badge */
-.fal-type{padding:2px 6px;border-radius:4px;font-size:9px;font-weight:700;letter-spacing:.5px}
-.fal-type.base{background:var(--blue-light);color:var(--blue)}
-.fal-type.intl{background:rgba(251,146,60,.1);color:var(--amb)}
-.fal-type.ics{background:rgba(34,197,94,.1);color:var(--grn)}
+    } catch (error) {
+      console.error("OCR Failed:", error);
+      setIsAnalyzing(false);
+    }
+  };
 
-/* ── DROPDOWN ALARM LIST ── */
-.fal-alarms{display:none;border-top:1px solid var(--bdr);padding:8px 14px 12px;flex-direction:column;gap:5px;background:var(--bg)}
-.fal-item.open .fal-alarms{display:flex}
-.fal-alarms-hdr{font-size:9px;font-weight:700;color:var(--tx3);text-transform:uppercase;
-  letter-spacing:.8px;margin-bottom:4px}
-.fal-atog{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:9px;
-  background:var(--white);border:1px solid var(--bdr);transition:all .15s}
-.fal-atog.on-base{border-color:rgba(79,110,247,.3);background:var(--blue-light)}
-.fal-atog.on-intl{border-color:rgba(251,146,60,.3);background:rgba(251,146,60,.06)}
-.atog-lbl{flex:1;font-size:11px;color:var(--tx2);font-weight:500}
-.fal-atog.on-base .atog-lbl,.fal-atog.on-intl .atog-lbl{color:var(--tx);font-weight:600}
-.atog-right{display:flex;flex-direction:column;align-items:flex-end;gap:1px;flex-shrink:0}
-.atog-time{font-family:'Share Tech Mono',monospace;font-size:11px;font-weight:600;color:var(--tx3);line-height:1}
-.atog-offset{font-size:9px;color:var(--tx3);opacity:.8;line-height:1;white-space:nowrap}
-.fal-atog.on-base .atog-time{color:var(--blue)}
-.fal-atog.on-base .atog-offset{color:var(--blue);opacity:.7}
-.fal-atog.on-intl .atog-time{color:var(--amb)}
-.fal-atog.on-intl .atog-offset{color:var(--amb);opacity:.7}
-
-/* ── PAST SECTION ── */
-.past-section-hdr{margin-top:14px;margin-bottom:8px}
-.past-toggle-btn{width:100%;padding:9px 14px;background:var(--white);
-  border:1.5px dashed var(--bdr2);border-radius:10px;color:var(--tx3);
-  font-size:11px;font-weight:600;cursor:pointer;transition:all .2s;
-  font-family:'Inter',sans-serif;display:flex;align-items:center;gap:6px}
-.past-toggle-btn:hover{border-color:var(--blue);color:var(--blue)}
-.past-toggle-btn svg{transition:transform .2s;flex-shrink:0}
-.past-toggle-btn.open svg{transform:rotate(90deg)}
-#homePastSection{display:none}
-
-/* ── TOGGLE ── */
-.tog{width:36px;height:20px;border-radius:10px;background:var(--bdr2);border:none;cursor:pointer;
-  position:relative;transition:all .2s;flex-shrink:0;outline:none}
-.tog::after{content:'';position:absolute;left:3px;top:3px;width:14px;height:14px;border-radius:50%;
-  background:#fff;transition:all .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
-.tog.on{background:var(--blue)}.tog.on::after{left:19px}
-.tog.on-amb{background:var(--amb)}.tog.on-amb::after{left:19px}
-
-/* ── BOTTOM FAB + UPLOAD SHEET ── */
-.fab{position:fixed;bottom:24px;right:20px;width:52px;height:52px;border-radius:50%;
-  background:var(--blue);border:none;color:#fff;font-size:24px;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
-  box-shadow:0 4px 20px rgba(59,130,196,.45);z-index:60;transition:all .2s}
-.fab:hover{background:var(--blue2);transform:scale(1.06)}
-.sheet-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:70;display:none;backdrop-filter:blur(4px)}
-.sheet-overlay.show{display:block}
-.sheet{position:fixed;bottom:0;left:0;right:0;background:var(--white);border-radius:20px 20px 0 0;
-  z-index:71;transform:translateY(100%);transition:transform .32s cubic-bezier(.32,0,.67,0);
-  max-height:90vh;overflow-y:auto;padding-bottom:env(safe-area-inset-bottom,16px)}
-.sheet.open{transform:translateY(0);transition:transform .32s cubic-bezier(.33,1,.68,1)}
-.sheet-handle{width:36px;height:4px;background:var(--bdr2);border-radius:2px;margin:12px auto 16px}
-.sheet-title{font-size:15px;font-weight:700;color:var(--tx);padding:0 20px 12px;border-bottom:1px solid var(--bdr)}
-.sheet-body{padding:16px 20px}
-
-/* ── ALARM SECTION (inside alarm tab) ── */
-.alarm-card{background:var(--white);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
-.alarm-card-head{padding:14px 16px;border-bottom:1px solid var(--bdr);
-  display:flex;align-items:center;gap:8px}
-.alarm-card-head .ach-ico{width:28px;height:28px;border-radius:8px;background:var(--blue-light);
-  display:flex;align-items:center;justify-content:center;color:var(--blue);flex-shrink:0}
-.alarm-card-head .ach-lbl{font-size:13px;font-weight:700;color:var(--tx);flex:1}
-.alarm-card-body{padding:14px 16px 16px}
-
-/* ── DRUM PICKER ── */
-.drum-row{display:flex;gap:6px;align-items:center;justify-content:center;margin:12px 0}
-.drum-col{display:flex;flex-direction:column;align-items:center;gap:4px}
-.dc-label{font-size:9px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:1px}
-.drum{width:52px;height:78px;overflow:hidden;position:relative;border-radius:10px;
-  border:1.5px solid var(--bdr);background:var(--bg);cursor:grab;user-select:none;
-  -webkit-user-select:none;touch-action:none}
-.drum:active{cursor:grabbing}
-.drum-inner{position:absolute;width:100%;will-change:transform}
-.drum-item{height:26px;display:flex;align-items:center;justify-content:center;
-  font-size:15px;font-weight:500;color:var(--tx3);font-family:'Inter',sans-serif;
-  transition:color .06s,font-size .06s}
-.drum-item.sel{color:var(--blue);font-size:18px;font-weight:700}
-.drum::before,.drum::after{content:'';position:absolute;left:0;right:0;height:26px;z-index:2;pointer-events:none}
-.drum::before{top:0;background:linear-gradient(to bottom,var(--bg) 30%,transparent)}
-.drum::after{bottom:0;background:linear-gradient(to top,var(--bg) 30%,transparent)}
-.drum-line{position:absolute;left:4px;right:4px;top:26px;height:26px;
-  border-top:1.5px solid var(--blue);border-bottom:1.5px solid var(--blue);
-  z-index:1;pointer-events:none;background:var(--blue-light);border-radius:6px}
-.drum-sep{font-size:18px;font-weight:600;color:var(--tx2);padding-top:10px;font-family:'Inter',sans-serif}
-.dl-row{margin-bottom:12px}
-.dl-row label{font-size:11px;font-weight:600;color:var(--tx2);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px}
-.dl-inp{width:100%;padding:10px 12px;background:var(--bg);border:1.5px solid var(--bdr);
-  border-radius:9px;color:var(--tx);font-family:'Inter',sans-serif;font-size:13px;outline:none;transition:border-color .2s}
-.dl-inp:focus{border-color:var(--blue)}
-.dl-inp[type=date]{color-scheme:light}
-body.dark .dl-inp[type=date]{color-scheme:dark}
-.btn-da{width:100%;padding:12px;background:var(--blue);border:none;border-radius:10px;
-  color:#fff;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;font-family:'Inter',sans-serif}
-.btn-da:hover{background:var(--blue2);box-shadow:0 4px 16px rgba(79,110,247,.35)}
-
-/* ── DIRECT ALARM LIST ── */
-.dal-wrap{display:flex;flex-direction:column;gap:6px;margin-top:12px}
-.dal-item{display:flex;align-items:center;gap:8px;padding:10px 12px;
-  border-radius:10px;border:1.5px solid rgba(79,110,247,.15);background:var(--blue-light);animation:dalfin .22s ease}
-@keyframes dalfin{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
-.dal-item.ring-now{border-color:var(--amb);background:rgba(251,146,60,.08);animation:pring2 .5s ease-in-out infinite alternate}
-@keyframes pring2{from{box-shadow:none}to{box-shadow:0 0 12px rgba(251,146,60,.3)}}
-.dal-dot{width:7px;height:7px;border-radius:50%;background:var(--blue);flex-shrink:0}
-.dal-item.ring-now .dal-dot{background:var(--amb);animation:blk2 .4s infinite}
-@keyframes blk2{50%{opacity:0}}
-.dal-info{flex:1;min-width:0}
-.dal-date-row{display:flex;align-items:center;gap:4px;margin-bottom:1px}
-.dal-dow{font-size:13px;font-weight:700;color:var(--tx)}
-.dal-date{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--tx2)}
-.dal-today{background:var(--blue);color:#fff;font-size:8px;font-weight:700;padding:1px 5px;border-radius:3px}
-.dal-lbl{font-size:10px;color:var(--tx2);font-weight:500}
-.dal-cd{font-size:9px;color:var(--blue);margin-top:1px;font-family:'Share Tech Mono',monospace;font-weight:600}
-.dal-item.ring-now .dal-cd{color:var(--amb)}
-.dal-time{font-family:'Share Tech Mono',monospace;font-size:22px;font-weight:700;color:var(--blue);flex-shrink:0}
-.dal-item.ring-now .dal-time{color:var(--amb)}
-.dal-del{width:26px;height:26px;border-radius:7px;background:rgba(244,63,94,.08);
-  border:1px solid rgba(244,63,94,.2);color:var(--red);cursor:pointer;
-  display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
-.dal-del:hover{background:rgba(244,63,94,.18)}
-.dal-dis{padding:4px 8px;background:rgba(251,146,60,.12);border:1.5px solid var(--amb);
-  border-radius:6px;color:var(--amb);font-size:10px;font-weight:700;cursor:pointer;flex-shrink:0}
-
-/* ── SETTINGS ── */
-.settings-section{background:var(--white);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
-.settings-row{padding:13px 16px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:12px}
-.settings-row:last-child{border-bottom:none}
-.settings-row label{font-size:11px;font-weight:600;color:var(--tx2);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px}
-.settings-inp{width:100%;padding:9px 12px;background:var(--bg);border:1.5px solid var(--bdr);
-  border-radius:9px;color:var(--tx);font-family:'Share Tech Mono',monospace;font-size:15px;
-  letter-spacing:2px;text-transform:uppercase;outline:none;transition:border-color .2s}
-.settings-inp:focus{border-color:var(--blue)}
-.settings-inp::placeholder{font-size:12px;letter-spacing:0;text-transform:none;color:var(--tx3)}
-.preset-card{background:var(--white);border-radius:14px;box-shadow:var(--shadow);margin-top:10px;overflow:hidden}
-.preset-head{padding:12px 16px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:8px}
-.ph-icon{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.ph-lbl{font-size:11px;font-weight:700;color:var(--tx);text-transform:uppercase;letter-spacing:.5px;flex:1}
-.ph-tag{font-size:9px;font-weight:700;padding:2px 7px;border-radius:5px}
-.preset-body{padding:8px 12px 10px}
-.orow{display:flex;align-items:center;gap:7px;padding:7px 8px;border-radius:8px;border:1px solid var(--bdr);background:var(--bg);margin-bottom:5px}
-.olbl{flex:1;min-width:0}
-.lbl-inp{background:transparent;border:none;outline:none;color:var(--tx);font-size:12px;font-weight:500;font-family:'Inter',sans-serif;width:100%}
-.lbl-inp:focus{color:var(--blue)}
-.olbl-s{font-size:9px;color:var(--tx3);margin-top:1px}
-.oedit{display:flex;gap:3px;align-items:center;flex-shrink:0}
-.ni{width:36px;padding:4px 3px;background:var(--white);border:1.5px solid var(--bdr);border-radius:6px;
-  color:var(--tx);font-family:'Share Tech Mono',monospace;font-size:12px;text-align:center;
-  outline:none;-webkit-appearance:none;-moz-appearance:textfield}
-.ni::-webkit-inner-spin-button{-webkit-appearance:none}
-.ni:focus{border-color:var(--blue)}
-.ul{font-size:9px;color:var(--tx3)}
-.db{width:22px;height:22px;border-radius:6px;background:rgba(244,63,94,.08);border:1px solid rgba(244,63,94,.2);
-  color:var(--red);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0}
-.db:hover{background:rgba(244,63,94,.18)}
-.add-btn{width:100%;padding:8px;background:transparent;border:1.5px dashed var(--bdr2);
-  border-radius:8px;color:var(--tx2);font-size:11px;font-weight:600;cursor:pointer;
-  transition:all .2s;margin-top:4px;font-family:'Inter',sans-serif}
-.add-btn:hover{border-color:var(--blue);color:var(--blue)}
-.add-btn.amb:hover{border-color:var(--amb);color:var(--amb)}
-.btn-save{width:100%;padding:12px;background:var(--blue);border:none;border-radius:10px;
-  color:#fff;font-size:13px;font-weight:700;cursor:pointer;margin-top:12px;transition:all .2s;font-family:'Inter',sans-serif}
-.btn-save:hover{background:var(--blue2);box-shadow:0 4px 16px rgba(79,110,247,.35)}
-
-/* ── RING OVERLAY ── */
-.ro{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;display:none;
-  align-items:center;justify-content:center;flex-direction:column;gap:16px;backdrop-filter:blur(8px)}
-.ro.show{display:flex}
-.ro-card{background:var(--white);border-radius:22px;padding:28px 24px;text-align:center;
-  width:calc(100% - 48px);max-width:340px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
-.ro-icon{width:72px;height:72px;border-radius:50%;background:rgba(251,146,60,.12);
-  border:2px solid var(--amb);display:flex;align-items:center;justify-content:center;
-  margin:0 auto 14px;animation:rpulse 1s ease-in-out infinite;color:var(--amb)}
-@keyframes rpulse{0%,100%{box-shadow:0 0 0 0 rgba(251,146,60,.4)}50%{box-shadow:0 0 0 18px rgba(251,146,60,0)}}
-.ro-title{font-size:20px;font-weight:700;color:var(--tx);margin-bottom:5px}
-.ro-detail{font-size:12px;color:var(--tx2);margin-bottom:20px}
-.ro-btn{width:100%;padding:13px;background:var(--amb);border:none;border-radius:10px;
-  color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif}
-
-/* ── TOAST ── */
-.toast{position:fixed;top:18px;left:50%;transform:translateX(-50%) translateY(-60px);
-  background:var(--tx);color:#fff;border-radius:10px;padding:9px 16px;font-size:12px;
-  font-weight:600;z-index:999;transition:all .3s cubic-bezier(.34,1.56,.64,1);
-  white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.2)}
-.toast.show{transform:translateX(-50%) translateY(0)}
-.toast.ok{background:var(--grn)}.toast.er{background:var(--red)}.toast.in{background:var(--blue)}
-
-/* ICS event row */
-.ics-event{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;
-  background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.2);margin-bottom:5px}
-.ics-event .ie-time{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--grn);font-weight:700;width:38px}
-.ics-event .ie-lbl{flex:1;font-size:11px;color:var(--tx);font-weight:500}
-</style>
-</head>
-<body>
-
-<nav class="top-nav">
-  <div class="nav-title" onclick="switchTab('calendar',null)" title="Go to Home">
-    <h1>CREW CLOCK</h1><p>FLIGHT ALARM SYSTEM</p>
-  </div>
-  <button class="nav-bell" onclick="switchTab('alarm',null)">
-    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-    <span class="badge" id="bellBadge"></span>
-  </button>
-</nav>
-
-<div class="page-tabs">
-  <button class="ptab active" id="ptab-calendar" onclick="switchTab('calendar',this)">Calendar</button>
-  <button class="ptab" id="ptab-alarm" onclick="switchTab('alarm',this)">Alarm</button>
-  <button class="ptab" id="ptab-settings" onclick="switchTab('settings',this)">Settings</button>
-</div>
-
-<!-- CALENDAR PANEL -->
-<div class="panel show" id="panel-calendar">
-  <div class="cal-card">
-    <div class="cal-nav">
-      <button class="cal-nav-btn" onclick="calMove(-1)">&#8249;</button>
-      <div class="cal-month" id="calMonthLbl">May 2026</div>
-      <button class="cal-nav-btn" onclick="calMove(1)">&#8250;</button>
-    </div>
-    <div class="cal-dow-row">
-      <div class="cal-dow-cell">S</div><div class="cal-dow-cell">M</div><div class="cal-dow-cell">T</div>
-      <div class="cal-dow-cell">W</div><div class="cal-dow-cell">T</div><div class="cal-dow-cell">F</div>
-      <div class="cal-dow-cell" style="color:var(--tx3)">S</div>
-    </div>
-    <div class="cal-grid" id="calGrid"></div>
-  </div>
-  <div class="day-card">
-    <div class="day-header">
-      <div><div class="day-title" id="dayTitle">---</div><div class="day-subtitle">Schedule</div></div>
-      <div class="day-more" onclick="openUploadSheet()">+ Upload ›</div>
-    </div>
-    <div class="day-flights" id="dayFlights"><div class="empty-state">Upload a schedule to see flights here</div></div>
-  </div>
-  <!-- Full flight list on home screen -->
-  <div id="homeFlightList" style="padding:0 14px 20px"></div>
-</div>
-
-<!-- ALARM PANEL -->
-<div class="panel" id="panel-alarm">
-  <div class="sec">
-    <div class="alarm-card">
-      <div class="alarm-card-head">
-        <div class="ach-ico"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M5 3 2 6M22 6l-3-3"/></svg></div>
-        <div class="ach-lbl">Add Alarm</div>
+  const Header = () => (
+    <header className="px-6 pt-8 pb-4 bg-white dark:bg-slate-950 sticky top-0 z-30 border-b border-slate-50 dark:border-slate-900">
+      <div className="flex justify-between items-center mb-6">
+        <Menu size={22} className="text-slate-800 dark:text-white" />
+        <div className="text-center">
+          <h1 className="text-[16px] font-black tracking-[0.2em] text-slate-900 dark:text-white">CREW CLOCK</h1>
+          <p className="text-[9px] font-bold text-blue-500 tracking-[0.1em] uppercase">v1.8.2 Route Fixed</p>
+        </div>
+        <Bell size={22} className="text-slate-800 dark:text-white" />
       </div>
-      <div class="alarm-card-body">
-        <div class="dl-row"><label>Label</label>
-          <input type="text" class="dl-inp" id="dLabel" placeholder="e.g. Wake up, Depart airport...">
+      
+      <div className="flex bg-slate-100 dark:bg-slate-900 p-1 rounded-2xl">
+        {[
+          {id: 'schedule', icon: Clock, label: 'SCHEDULE'},
+          {id: 'alarm', icon: Bell, label: 'PRESET'},
+          {id: 'settings', icon: SettingsIcon, label: 'SET'}
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveMenu(tab.id)}
+            className={`flex-1 py-2.5 flex flex-col items-center gap-1 rounded-xl transition-all ${
+              activeMenu === tab.id ? 'bg-white dark:bg-slate-800 text-blue-600 shadow-sm' : 'text-slate-400'
+            }`}
+          >
+            <tab.icon size={16} strokeWidth={activeMenu === tab.id ? 3 : 2} />
+            <span className="text-[8px] font-black">{tab.label}</span>
+          </button>
+        ))}
+      </div>
+    </header>
+  );
+
+  const MiniCalendar = () => {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const days = [];
+    for (let i = 0; i < firstDay; i++) days.push(null);
+    for (let i = 1; i <= daysInMonth; i++) days.push(i);
+
+    const hasDuty = (day) => {
+      if (!day) return null;
+      const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      return roster.find(item => item.date === dateStr);
+    };
+
+    return (
+      <div className="bg-white dark:bg-slate-950 px-6 py-4 border-b border-slate-100 dark:border-slate-900">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-[14px] font-black text-slate-900 dark:text-white uppercase italic tracking-wider">
+            {MONTH_NAMES[month]} {year}
+          </h3>
+          <div className="flex gap-2">
+            <button className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"><ChevronLeft size={18}/></button>
+            <button className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"><ChevronRight size={18}/></button>
+          </div>
         </div>
-        <div class="dl-row"><label>Date</label>
-          <input type="date" class="dl-inp" id="dDate">
+        <div className="grid grid-cols-7 gap-y-2 text-center">
+          {DAYS_SHORT.map(d => (
+            <span key={d} className="text-[9px] font-black text-slate-400 pb-2">{d}</span>
+          ))}
+          {days.map((day, idx) => {
+            const duty = hasDuty(day);
+            const isToday = day === 14; 
+            return (
+              <div key={idx} className="relative py-1 flex flex-col items-center">
+                <span className={`text-[11px] font-bold w-7 h-7 flex items-center justify-center rounded-full transition-all ${
+                  day ? (isToday ? 'bg-blue-600 text-white' : 'text-slate-700 dark:text-slate-300') : ''
+                } ${duty && !isToday ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600' : ''}`}>
+                  {day}
+                </span>
+                {duty && (
+                  <div className={`w-1 h-1 rounded-full mt-0.5 ${isToday ? 'bg-white' : 'bg-blue-500'}`} />
+                )}
+              </div>
+            );
+          })}
         </div>
-        <div class="dl-row" style="margin-bottom:0">
-          <label>Time</label>
-          <div class="drum-row">
-            <div class="drum-col">
-              <div class="dc-label">HR</div>
-              <div class="drum" id="drumH"><div class="drum-line"></div><div class="drum-inner" id="drumH-inner"></div></div>
+      </div>
+    );
+  };
+
+  const ScheduleList = () => {
+    const todayStr = '2026-05-14';
+    const upcoming = roster.filter(item => item.date >= todayStr).sort((a,b) => a.date.localeCompare(b.date));
+    const past = roster.filter(item => item.date < todayStr).sort((a,b) => b.date.localeCompare(a.date));
+
+    const DutyCard = ({ item, isPast }) => {
+      const isExpanded = expandedMissionId === item.id;
+
+      return (
+        <div className="flex flex-col gap-1">
+          <div 
+            onClick={() => !isPast && setExpandedMissionId(isExpanded ? null : item.id)}
+            className={`flex items-center justify-between p-5 rounded-[28px] border transition-all active:scale-[0.98] ${
+              isPast 
+              ? 'bg-slate-50/50 dark:bg-slate-900/30 border-slate-100 dark:border-slate-800/50 opacity-40 grayscale' 
+              : `bg-white dark:bg-slate-900 border-blue-100 dark:border-blue-900/30 shadow-sm ${isExpanded ? 'ring-2 ring-blue-500/20 shadow-blue-500/10' : ''}`
+            }`}
+          >
+            <div className="flex items-center gap-4">
+              <div className="text-center min-w-[45px]">
+                <p className={`text-[13px] font-black italic ${isPast ? 'text-slate-400' : 'text-blue-600'}`}>
+                  {item.date.slice(5).replace('-', '.')}
+                </p>
+                <p className="text-[9px] font-bold text-slate-300 uppercase">
+                  {DAYS_SHORT[new Date(item.date).getDay()]}
+                </p>
+              </div>
+              <div>
+                <p className={`text-[14px] font-black uppercase tracking-tight ${isPast ? 'text-slate-500' : 'text-slate-900 dark:text-white'}`}>
+                  {item.origin} {item.destination !== '???' ? `→ ${item.destination}` : ''}
+                </p>
+                <p className="text-[10px] font-bold text-slate-400">{item.flightNo}</p>
+              </div>
             </div>
-            <div class="drum-sep">:</div>
-            <div class="drum-col">
-              <div class="dc-label">MIN</div>
-              <div class="drum" id="drumM"><div class="drum-line"></div><div class="drum-inner" id="drumM-inner"></div></div>
+
+            <div className="flex items-center gap-3">
+               <div className={`px-3 py-1.5 rounded-xl font-black text-[12px] italic ${
+                  isPast ? 'bg-slate-100 dark:bg-slate-800 text-slate-400' : 'bg-blue-50 dark:bg-blue-950/50 text-blue-600'
+                }`}>
+                  {item.reportTime}
+                </div>
+              {!isPast && (
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setRoster(prev => prev.map(d => d.id === item.id ? {...d, alarmsActive: !d.alarmsActive} : d));
+                  }}
+                  className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all ${
+                    item.alarmsActive ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'
+                  }`}
+                >
+                  <Bell size={18} strokeWidth={item.alarmsActive ? 3 : 2} />
+                </button>
+              )}
             </div>
           </div>
-        </div>
-        <button class="btn-da" onclick="addDirectAlarm()">Add Alarm</button>
-      </div>
-    </div>
-    <div id="dalCardWrap"></div>
-  </div>
-</div>
 
-<!-- SETTINGS PANEL -->
-<div class="panel" id="panel-settings">
-  <div class="sec">
-    <div class="settings-section">
-      <div class="settings-row"><div style="flex:1">
-        <label>Home Base Airport (IATA)</label>
-        <input type="text" class="settings-inp" id="baseAptInput" maxlength="3" placeholder="e.g. ICN">
-      </div></div>
-      <div class="settings-row" style="justify-content:space-between">
-        <div>
-          <div style="font-size:13px;font-weight:600;color:var(--tx)">Dark Mode</div>
-          <div style="font-size:11px;color:var(--tx3);margin-top:2px">Switch to dark background</div>
+          {!isPast && isExpanded && (
+            <div className="px-2 pb-2">
+               <div className="bg-slate-50 dark:bg-slate-900/50 rounded-b-[24px] rounded-t-[10px] p-4 border-x border-b border-blue-50 dark:border-blue-900/20 space-y-4 animate-in slide-in-from-top-2">
+                  <div className="flex justify-between items-center px-1">
+                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest italic">Calculated Alarm Schedule</span>
+                    <span className="text-[9px] font-bold text-blue-600">Report {item.reportTime}</span>
+                  </div>
+                  
+                  {alarmCategories.map(category => (
+                    <div key={category.id} className="space-y-2">
+                       <div className="flex items-center gap-2 px-1">
+                          <category.icon size={12} className="text-blue-500 opacity-60" />
+                          <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{category.name}</span>
+                       </div>
+                       <div className="grid gap-2">
+                          {category.items.filter(i => i.enabled).map(preset => (
+                            <div key={preset.id} className="flex justify-between items-center p-3 bg-white dark:bg-slate-950/50 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm">
+                               <div>
+                                 <p className="text-[10px] font-black text-slate-900 dark:text-white uppercase">{preset.title}</p>
+                                 <p className="text-[8px] font-bold text-slate-400">-{preset.hours}h {preset.minutes}m before</p>
+                               </div>
+                               <p className="text-md font-black text-blue-600 italic">
+                                 {calculateAlarmTime(item.reportTime, preset.hours, preset.minutes)}
+                               </p>
+                            </div>
+                          ))}
+                       </div>
+                    </div>
+                  ))}
+               </div>
+            </div>
+          )}
         </div>
-        <button class="tog" id="darkTogBtn" onclick="toggleDark(this)"></button>
-      </div>
-    </div>
-    <div class="preset-card">
-      <div class="preset-head">
-        <div class="ph-icon" style="background:var(--blue-light);color:var(--blue)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
-        <div class="ph-lbl">Home Base Presets</div>
-        <span class="ph-tag" style="background:var(--blue-light);color:var(--blue)">BASE</span>
-      </div>
-      <div class="preset-body" id="basePresets"></div>
-    </div>
-    <div class="preset-card">
-      <div class="preset-head">
-        <div class="ph-icon" style="background:rgba(251,146,60,.1);color:var(--amb)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>
-        <div class="ph-lbl">International Presets</div>
-        <span class="ph-tag" style="background:rgba(251,146,60,.1);color:var(--amb)">INTL</span>
-      </div>
-      <div class="preset-body" id="intlPresets"></div>
-    </div>
-    <button class="btn-save" onclick="saveSettingsUI()">Save Settings</button>
-  </div>
-</div>
+      );
+    };
 
-<!-- FAB: Upload Schedule -->
-<button class="fab" onclick="openUploadSheet()" title="Upload Schedule">
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-</button>
-
-<!-- UPLOAD SHEET -->
-<div class="sheet-overlay" id="sheetOverlay" onclick="closeUploadSheet()"></div>
-<div class="sheet" id="uploadSheet">
-  <div class="sheet-handle"></div>
-  <div class="sheet-title">Upload Schedule
-    <span id="ocrModeBadge" class="ocr-badge online" style="vertical-align:middle"></span>
-  </div>
-  <div class="sheet-body">
-    <div class="upload-panel">
-      <div class="upload-tabs">
-        <button class="utab active" id="utab-img" onclick="switchUploadTab('img',this)">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-2px;margin-right:4px"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-          Image / Photo
-        </button>
-        <button class="utab" id="utab-ics" onclick="switchUploadTab('ics',this)">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-2px;margin-right:4px"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          ICS Calendar
-        </button>
-      </div>
-      <div class="upload-body">
-        <!-- IMAGE TAB -->
-        <div id="upload-img-panel">
-          <div class="upz" id="upz">
-            <input type="file" accept="image/*" id="imgIn" onchange="handleImg(event)">
-            <img id="prevImg" alt="">
-            <div class="up-ico" id="upIco"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
-            <div class="up-t" id="upT">Upload Schedule Image</div>
-            <div class="up-s" id="upS">Tap to select from gallery or camera</div>
+    return (
+      <div className="flex flex-col">
+        <MiniCalendar />
+        <div className="px-6 py-6 space-y-8">
+          <div className="space-y-4">
+            <h2 className="text-[10px] font-black text-blue-600 uppercase tracking-[0.25em] flex items-center gap-2 px-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-600"></span> Upcoming Missions
+            </h2>
+            <div className="space-y-3">
+              {upcoming.length > 0 ? (
+                upcoming.map((item) => <DutyCard key={item.id} item={item} isPast={false} />)
+              ) : (
+                <p className="text-[10px] font-bold text-slate-400 italic text-center py-4">No upcoming duties found</p>
+              )}
+            </div>
           </div>
-          <div class="ocr-info">
-            <strong id="ocrModeTitle">AI Analysis (Online)</strong>
-            <span id="ocrModeDesc">Uses Claude AI for high-accuracy schedule parsing. Requires internet connection.</span>
-          </div>
-          <button class="btn-az" id="azBtn" onclick="event.stopPropagation();analyze()">Scan with AI</button>
-          <div class="prog" id="prog"><div class="prog-t"><div class="prog-f"></div></div>
-            <div class="prog-l" id="progL">Analyzing schedule...</div>
-          </div>
-        </div>
-        <!-- ICS TAB -->
-        <div id="upload-ics-panel" style="display:none">
-          <div class="upz" id="icsUpz">
-            <input type="file" accept=".ics,.ical,text/calendar" id="icsIn" onchange="handleICS(event)">
-            <div class="up-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="16" y1="14" x2="16" y2="14"/></svg></div>
-            <div class="up-t">Upload ICS / iCal File</div>
-            <div class="up-s">Tap to select .ics calendar file</div>
-          </div>
-          <div class="ocr-info" style="margin-top:10px">
-            <strong>Offline ICS Parsing</strong>
-            Works without internet. Supports standard iCalendar (.ics) format exported from airline apps, Jeppesen, or calendar apps.
-          </div>
-          <div id="icsResultWrap" style="margin-top:10px"></div>
+          {past.length > 0 && (
+            <div className="space-y-4 pb-24">
+              <h2 className="text-[10px] font-black text-slate-300 uppercase tracking-[0.25em] px-1 italic">Mission History</h2>
+              <div className="space-y-3">
+                {past.map((item) => <DutyCard key={item.id} item={item} isPast={true} />)}
+              </div>
+            </div>
+          )}
         </div>
       </div>
-    </div>
-    <div id="sheetFalWrap"></div>
-  </div>
-</div>
-
-<!-- Ring overlay -->
-<div class="ro" id="ro">
-  <div class="ro-card">
-    <div class="ro-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div>
-    <div class="ro-title" id="rtt">ALARM</div>
-    <div class="ro-detail" id="rdt"></div>
-    <button class="ro-btn" onclick="dismissOv()">DISMISS</button>
-  </div>
-</div>
-<div class="toast" id="toast"></div>
-
-<script>
-/* ═══ DEFAULTS ═══ */
-var DEF_BASE=[{id:'b1',h:3,m:0,lbl:'Wake Up'},{id:'b2',h:2,m:30,lbl:'Prepare for Duty'},{id:'b3',h:1,m:30,lbl:'Depart for Airport'},{id:'b4',h:0,m:40,lbl:'Gate Closing'}];
-var DEF_INTL=[{id:'i1',h:2,m:0,lbl:'Wake Up (Overseas)'},{id:'i2',h:1,m:30,lbl:'Hotel Checkout'},{id:'i3',h:1,m:0,lbl:'Transfer to Airport'},{id:'i4',h:0,m:40,lbl:'Gate Closing'}];
-
-/* ═══ STATE ═══ */
-var baseApt='ICN',baseOffs=[],intlOffs=[],baseOn={},intlOn={},bOc=100,iOc=200;
-var alms=[],detectedFlights=[],flightToggles={},openFlights={},registeredFlights={};
-var curImg=null,aCtx=null,oscs=[];
-var _now=new Date(),drumH_val=_now.getHours(),drumM_val=_now.getMinutes();
-var calYear,calMonth,calSelDate;
-var ITEM_H=26;
-var isOnline=navigator.onLine;
-
-/* ═══ UTILS ═══ */
-function p2(n){return String(n).padStart(2,'0');}
-function fmt(dt){return p2(dt.getHours())+':'+p2(dt.getMinutes());}
-function uid(){return String(Date.now())+String(Math.random()).slice(2,6);}
-function dc(o){return JSON.parse(JSON.stringify(o));}
-function escQ(s){return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
-function todayStr(){var n=new Date();return n.getFullYear()+'-'+p2(n.getMonth()+1)+'-'+p2(n.getDate());}
-function buildDate(ds,h,m){if(ds){var dp=ds.split('-');return new Date(+dp[0],+dp[1]-1,+dp[2],h,m,0,0);}var d=new Date();d.setHours(h,m,0,0);return d;}
-function parseFlightDate(f){if(!f.date)return new Date(9999,0,1);var dp=f.date.split('-');var tp=(f.depTime||'00:00').split(':');return new Date(+dp[0],+dp[1]-1,+dp[2],+tp[0],+tp[1],0,0);}
-
-/* ═══ ONLINE DETECTION ═══ */
-window.addEventListener('online', function(){isOnline=true;updateOcrModeUI();});
-window.addEventListener('offline', function(){isOnline=false;updateOcrModeUI();});
-function updateOcrModeUI(){
-  var badge=document.getElementById('ocrModeBadge');
-  var title=document.getElementById('ocrModeTitle');
-  var desc=document.getElementById('ocrModeDesc');
-  if(!badge)return;
-  if(isOnline){
-    badge.className='ocr-badge online';badge.textContent='● Online';
-    if(title)title.textContent='AI Analysis (Online)';
-    if(desc)desc.textContent='Uses Claude AI for high-accuracy schedule parsing.';
-  }else{
-    badge.className='ocr-badge offline';badge.textContent='● Offline';
-    if(title)title.textContent='Offline OCR Mode';
-    if(desc)desc.textContent='Tesseract.js OCR runs fully on-device. Upload a clear, high-contrast schedule image for best results.';
-  }
-}
-
-/* ═══ LOAD / SAVE ═══ */
-function loadSettings(){
-  try{var s=localStorage.getItem('crewclock_v4');if(s){var d=JSON.parse(s);baseApt=(d.baseApt||'ICN').toUpperCase();baseOffs=d.baseOffs||dc(DEF_BASE);intlOffs=d.intlOffs||dc(DEF_INTL);baseOn=d.baseOn||{};intlOn=d.intlOn||{};}else resetDef();}catch(e){resetDef();}
-  baseOffs.forEach(function(o){if(baseOn[o.id]===undefined)baseOn[o.id]=true;});
-  intlOffs.forEach(function(o){if(intlOn[o.id]===undefined)intlOn[o.id]=true;});
-}
-function saveSettings(){try{syncAllPresets();localStorage.setItem('crewclock_v4',JSON.stringify({baseApt:baseApt,baseOffs:baseOffs,intlOffs:intlOffs,baseOn:baseOn,intlOn:intlOn}));}catch(e){}}
-function resetDef(){baseOffs=dc(DEF_BASE);intlOffs=dc(DEF_INTL);baseOn={};intlOn={};baseOffs.forEach(function(o){baseOn[o.id]=true;});intlOffs.forEach(function(o){intlOn[o.id]=true;});}
-
-/* ═══ INIT ═══ */
-function init(){
-  loadSettings();
-  var now=new Date();calYear=now.getFullYear();calMonth=now.getMonth();calSelDate=todayStr();
-  document.getElementById('dDate').value=todayStr();
-  document.getElementById('baseAptInput').value=baseApt;
-  var dark=localStorage.getItem('crewclock_dark')==='1';
-  if(dark){document.body.classList.add('dark');var b=document.getElementById('darkTogBtn');if(b)b.classList.add('on');}
-  renderCal();renderBasePresets();renderIntlPresets();initDrums();updateOcrModeUI();
-  tickClock();setInterval(tickClock,1000);setInterval(checkAlarms,1000);
-}
-
-/* ═══ TABS ═══ */
-function switchTab(name,btn){
-  document.querySelectorAll('.ptab').forEach(function(b){b.classList.remove('active');});
-  var pt=document.getElementById('ptab-'+name);if(pt)pt.classList.add('active');
-  document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('show');});
-  document.getElementById('panel-'+name).classList.add('show');
-  if(name==='settings'){document.getElementById('baseAptInput').value=baseApt;renderBasePresets();renderIntlPresets();}
-  if(name==='calendar'){renderDaySchedule(calSelDate);renderHomeFlightList();}
-  if(name==='alarm'){var _n=new Date();setDrum('drumH',_n.getHours(),true);setDrum('drumM',_n.getMinutes(),true);}
-}
-
-/* ═══ UPLOAD SHEET ═══ */
-function openUploadSheet(){
-  document.getElementById('sheetOverlay').classList.add('show');
-  document.getElementById('uploadSheet').classList.add('open');
-  updateOcrModeUI();
-}
-function closeUploadSheet(){
-  document.getElementById('sheetOverlay').classList.remove('show');
-  document.getElementById('uploadSheet').classList.remove('open');
-  // 스캔 결과가 있으면 홈 화면으로 이동
-  if(detectedFlights.length){
-    switchTab('calendar',null);
-  }
-}
-function switchUploadTab(name,btn){
-  document.querySelectorAll('.utab').forEach(function(b){b.classList.remove('active');});
-  btn.classList.add('active');
-  document.getElementById('upload-img-panel').style.display=name==='img'?'':'none';
-  document.getElementById('upload-ics-panel').style.display=name==='ics'?'':'none';
-}
-
-/* ═══ CALENDAR ═══ */
-function calMove(d){calMonth+=d;if(calMonth>11){calMonth=0;calYear++;}if(calMonth<0){calMonth=11;calYear--;}renderCal();}
-function renderCal(){
-  var M=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  document.getElementById('calMonthLbl').textContent=M[calMonth]+' '+calYear;
-  var grid=document.getElementById('calGrid');
-  var today=new Date();today.setHours(0,0,0,0);
-  var first=new Date(calYear,calMonth,1);
-  var startDow=first.getDay();
-  var dim=new Date(calYear,calMonth+1,0).getDate();
-  var dimP=new Date(calYear,calMonth,0).getDate();
-  var fDates={};detectedFlights.forEach(function(f){if(f.date)fDates[f.date]=(fDates[f.date]||0)+1;});
-  var aDates={};alms.filter(function(a){return !a.dism;}).forEach(function(a){var dk=a.time.getFullYear()+'-'+p2(a.time.getMonth()+1)+'-'+p2(a.time.getDate());aDates[dk]=(aDates[dk]||0)+1;});
-  var cells='';var total=Math.ceil((startDow+dim)/7)*7;
-  for(var i=0;i<total;i++){
-    var day,mo,yr,isOther=false;
-    if(i<startDow){day=dimP-startDow+i+1;mo=calMonth===0?11:calMonth-1;yr=calMonth===0?calYear-1:calYear;isOther=true;}
-    else if(i>=startDow+dim){day=i-startDow-dim+1;mo=calMonth===11?0:calMonth+1;yr=calMonth===11?calYear+1:calYear;isOther=true;}
-    else{day=i-startDow+1;mo=calMonth;yr=calYear;}
-    var dk=yr+'-'+p2(mo+1)+'-'+p2(day);
-    var d=new Date(yr,mo,day);d.setHours(0,0,0,0);
-    var isTod=d.getTime()===today.getTime();var isSel=dk===calSelDate;
-    var cls='cal-day'+(isOther?' other-month':'')+(isTod?' today':'')+(isSel&&!isTod?' selected':'');
-    var dots='';
-    var fc=Math.min(fDates[dk]||0,3);var ac=Math.min(aDates[dk]||0,2);
-    for(var di=0;di<fc;di++)dots+='<div class="cal-dot b"></div>';
-    for(var ai=0;ai<ac;ai++)dots+='<div class="cal-dot g"></div>';
-    cells+='<div class="'+cls+'" onclick="calSelectDay(\''+dk+'\')">'
-      +'<div class="cal-day-num">'+day+'</div>'
-      +(dots?'<div class="cal-dots">'+dots+'</div>':'')+'</div>';
-  }
-  grid.innerHTML=cells;
-}
-function calSelectDay(dk){calSelDate=dk;var dp=dk.split('-');calYear=+dp[0];calMonth=+dp[1]-1;renderCal();renderDaySchedule(dk);}
-
-function renderDaySchedule(dk){
-  var D=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-  var dp=dk.split('-');var d=new Date(+dp[0],+dp[1]-1,+dp[2]);
-  document.getElementById('dayTitle').textContent=dk+' ('+D[d.getDay()]+')';
-  var flights=detectedFlights.filter(function(f){return f.date===dk;});
-  var dayAlms=alms.filter(function(a){
-    if(a.dism)return false;
-    var adk=a.time.getFullYear()+'-'+p2(a.time.getMonth()+1)+'-'+p2(a.time.getDate());
-    return adk===dk;
-  });
-  if(!flights.length&&!dayAlms.length){
-    document.getElementById('dayFlights').innerHTML='<div class="empty-state">No schedule for this day</div>';
-    return;
-  }
-  var rows=[];
-  flights.forEach(function(f){
-    var subLbl=f.type==='base'?'Home Departure':'Intl Departure';
-    var h='<div class="dfr">'
-      +'<div class="dfr-time">'+f.depTime+'</div>'
-      +'<div class="dfr-info">'
-      +'<div class="dfr-route">'+f.depApt+' &#8594; '+(f.arrApt||'---')+'</div>'
-      +'<div class="dfr-sub">'+subLbl+'</div>'
-      +'</div>'
-      +'<div class="dfr-fnum">'+escQ(f.flight||'')+'</div>'
-      +'</div>';
-    rows.push({s:+(f.depTime||'0000').replace(':',''), html:h});
-  });
-  dayAlms.forEach(function(a){
-    var h='<div class="dfr">'
-      +'<div class="dfr-time">'+fmt(a.time)+'</div>'
-      +'<div class="dfr-info"><div class="dfr-route">'+escQ(a.lbl)+'</div></div>'
-      +'</div>';
-    rows.push({s:+fmt(a.time).replace(':',''), html:h});
-  });
-  rows.sort(function(a,b){return a.s-b.s;});
-  document.getElementById('dayFlights').innerHTML=rows.map(function(r){return r.html;}).join('<div class="dfr-sep"></div>');
-}
-
-function renderCalFalWrap(dk){
-  // no-op: kept for compatibility, home list shows all flights
-  renderHomeFlightList();
-}
-
-function renderHomeFlightList(){
-  var wrap=document.getElementById('homeFlightList');if(!wrap)return;
-  if(!detectedFlights.length){wrap.innerHTML='';return;}
-
-  var now=new Date();
-  var sorted=detectedFlights.slice().sort(function(a,b){return parseFlightDate(a)-parseFlightDate(b);});
-
-  var upcoming=[],past=[];
-  sorted.forEach(function(f){
-    var idx=detectedFlights.indexOf(f);
-    if(parseFlightDate(f)<now) past.push({f:f,idx:idx});
-    else upcoming.push({f:f,idx:idx});
-  });
-
-  // Mark the very next flight
-  var nextIdx=upcoming.length>0?upcoming[0].idx:-1;
-
-  var html='<div class="home-section-hdr">'
-    +'<h2>Flight Schedule &nbsp;<span style="font-size:10px;font-weight:500;color:var(--tx3)">'+detectedFlights.length+' flights</span></h2>'
-    +'<div class="upload-link" onclick="openUploadSheet()">'
-    +'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>'
-    +'Upload</div></div>';
-
-  if(upcoming.length){
-    html+='<div class="fal-list">'+upcoming.map(function(x){
-      var extra=x.idx===nextIdx?'next-flight':'';
-      return renderFalItem(x.f,x.idx,extra);
-    }).join('')+'</div>';
-  }else{
-    html+='<div class="empty-state" style="padding:14px">No upcoming flights</div>';
-  }
-
-  if(past.length){
-    html+='<div class="past-section-hdr">'
-      +'<button class="past-toggle-btn" id="homePastBtn" onclick="toggleHomePast(this)">'
-      +'<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>'
-      +past.length+' past flight'+(past.length>1?'s':'')
-      +'</button></div>'
-      +'<div id="homePastSection" style="display:none">'
-      +'<div class="fal-list">'+past.map(function(x){return renderFalItem(x.f,x.idx,'past');}).join('')+'</div>'
-      +'</div>';
-  }
-
-  wrap.innerHTML=html;
-}
-
-function toggleHomePast(btn){
-  var sec=document.getElementById('homePastSection');if(!sec)return;
-  var open=sec.style.display==='block';
-  sec.style.display=open?'none':'block';
-  btn.classList.toggle('open',!open);
-}
-
-function toggleHomePast(btn){
-  var sec=document.getElementById('homePastSection');if(!sec)return;
-  var open=sec.style.display==='block';
-  sec.style.display=open?'none':'block';
-  btn.innerHTML=open
-    ?'&#9656; &nbsp;'+btn.innerHTML.replace(/.*?(\d+)/,'$1').trim().split(' ')[0]+' past flight(s)'
-    :'&#9662; &nbsp;Hide past flights';
-}
-
-/* ═══ IMAGE UPLOAD ═══ */
-function handleImg(e){
-  var f=e.target.files[0];if(!f)return;curImg=f;
-  var r=new FileReader();
-  r.onload=function(ev){
-    var img=document.getElementById('prevImg');img.src=ev.target.result;img.style.display='block';
-    document.getElementById('upIco').style.display='none';
-    document.getElementById('upT').textContent=f.name;
-    document.getElementById('upS').textContent='Tap to change';
-    document.getElementById('azBtn').style.display='block';
-  };r.readAsDataURL(f);
-}
-
-/* ═══ AI ANALYZE (online) ═══ */
-function analyze(){
-  if(!curImg)return;
-  syncAllPresets();
-  detectedFlights=[];flightToggles={};openFlights={};registeredFlights={};
-  var btn=document.getElementById('azBtn');var pg=document.getElementById('prog');
-  btn.disabled=true;btn.style.display='none';pg.style.display='block';
-  document.getElementById('progL').textContent='Analyzing schedule...';
-  var reader=new FileReader();
-  reader.onload=function(ev){
-    var b64=ev.target.result.split(',')[1];var mt=curImg.type||'image/jpeg';
-    var today=new Date();var todayIso=today.getFullYear()+'-'+p2(today.getMonth()+1)+'-'+p2(today.getDate());
-    var prompt='You are an airline crew schedule parser. Home base: '+baseApt+'. Today: '+todayIso+'.\n'
-      +'Parse ALL flight legs with both departure airport AND departure time visible.\n'
-      +'Examples: "KE 913 ICN 09:55 - MAD 18:00" -> {depApt:ICN,depTime:09:55,arrApt:MAD}\n'
-      +'"KE 914 MAD 20:00 - ICN" -> {depApt:MAD,depTime:20:00,arrApt:ICN}\n'
-      +'type="base" if depApt==='+baseApt+' else type="intl". Include past dates.\n'
-      +'Output ONLY minified JSON: {"flights":[{"date":"2026-05-03","flight":"KE913","depApt":"ICN","depTime":"09:55","arrApt":"MAD","type":"base"}]}\n'
-      +'Empty: {"flights":[]}';
-    fetch('https://api.anthropic.com/v1/messages',{method:'POST',
-      headers:{'Content-Type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2000,
-        messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:mt,data:b64}},{type:'text',text:prompt}]}]})
-    })
-    .then(function(res){if(!res.ok)throw new Error('HTTP '+res.status);return res.json();})
-    .then(function(data){
-      if(data.error)throw new Error(data.error.message||'API error');
-      var txt=(data.content||[]).map(function(i){return i.text||'';}).join('');
-      var parsed;try{var m=txt.replace(/```json|```/g,'').trim().match(/\{[\s\S]*\}/);parsed=JSON.parse(m?m[0]:txt);}catch(e){parsed={flights:[]};}
-      pg.style.display='none';btn.disabled=false;btn.style.display='block';
-      detectedFlights=parsed.flights||[];
-      initFlightToggles();renderHomeFlightList();renderSheetFalWrap();renderCal();renderDaySchedule(calSelDate);
-      closeUploadSheet();
-      toast(detectedFlights.length+' flights detected','ok');
-    })
-    .catch(function(err){
-      pg.style.display='none';btn.disabled=false;btn.style.display='block';
-      toast('Error: '+(err.message||err),'er');
-    });
+    );
   };
-  reader.onerror=function(){pg.style.display='none';btn.disabled=false;btn.style.display='block';toast('Failed to read image','er');};
-  reader.readAsDataURL(curImg);
-}
 
-/* ═══ OFFLINE OCR (Tesseract.js) ═══ */
-function analyzeOffline(){
-  if(!curImg){toast('Please select an image first','er');return;}
-  syncAllPresets();
-  var btn=document.getElementById('azBtn');
-  var pg=document.getElementById('prog');
-  var pl=document.getElementById('progL');
-  btn.disabled=true;btn.style.display='none';pg.style.display='block';
-  pl.textContent='Preparing offline OCR...';
+  const PresetTab = () => {
+    const [newItem, setNewItem] = useState({ categoryId: null, title: '', hours: 0, minutes: 0 });
 
-  function onProgress(m){
-    if(m.status==='loading tesseract core')pl.textContent='Loading OCR engine...';
-    else if(m.status==='initializing tesseract')pl.textContent='Initializing OCR...';
-    else if(m.status==='loading language traineddata')pl.textContent='Loading language data...';
-    else if(m.status==='initializing api')pl.textContent='Starting OCR API...';
-    else if(m.status==='recognizing text')pl.textContent='Reading text... '+Math.round((m.progress||0)*100)+'%';
-  }
+    const handleAdd = (catId) => {
+      if (newItem.title && newItem.categoryId === catId) {
+        addPresetItem(catId, newItem.title, newItem.hours, newItem.minutes);
+        setNewItem({ categoryId: null, title: '', hours: 0, minutes: 0 });
+      } else {
+        setNewItem({ ...newItem, categoryId: catId });
+      }
+    };
 
-  function finish(text){
-    pg.style.display='none';btn.disabled=false;btn.style.display='block';
-    var flights=parseScheduleText(text);
-    detectedFlights=flights;
-    initFlightToggles();renderHomeFlightList();renderSheetFalWrap();renderCal();renderDaySchedule(calSelDate);
-    closeUploadSheet();
-    toast(flights.length+' flights detected (Offline OCR)','ok');
-  }
+    return (
+      <div className="px-6 py-6 space-y-8 pb-32">
+        <div className="space-y-1">
+           <h2 className="text-[14px] font-black text-slate-900 dark:text-white uppercase italic">Preset Library</h2>
+           <p className="text-[9px] font-bold text-slate-400">Add alarms based on your preparation routine.</p>
+        </div>
 
-  function fail(err){
-    pg.style.display='none';btn.disabled=false;btn.style.display='block';
-    toast('OCR error: '+(err.message||err),'er');
-    console.error('[OCR]',err);
-  }
+        {alarmCategories.map(category => (
+          <div key={category.id} className="space-y-4">
+             <div className="flex justify-between items-center px-1">
+                <div className="flex items-center gap-2">
+                   <category.icon size={16} className="text-blue-600" />
+                   <h3 className="text-[12px] font-black text-slate-800 dark:text-white uppercase tracking-wider">{category.name}</h3>
+                </div>
+                <button onClick={() => handleAdd(category.id)} className="text-blue-600"><PlusCircle size={20} /></button>
+             </div>
 
-  function runTesseract(){
-    pl.textContent='Starting OCR recognition...';
-    Tesseract.recognize(curImg,'eng',{logger:onProgress})
-      .then(function(result){finish(result.data.text);})
-      .catch(fail);
-  }
+             <div className="space-y-3">
+                {category.items.map(item => (
+                  <div key={item.id} className="p-5 bg-white dark:bg-slate-900 rounded-[24px] border border-slate-100 dark:border-slate-800 flex justify-between items-center shadow-sm">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{item.title}</p>
+                        <button onClick={() => deletePresetItem(category.id, item.id)} className="text-red-300"><Trash2 size={10} /></button>
+                      </div>
+                      <p className="text-lg font-black text-slate-900 dark:text-white italic">-{item.hours}h {item.minutes}m</p>
+                    </div>
+                    <button 
+                      onClick={() => {
+                        setAlarmCategories(prev => prev.map(c => c.id === category.id ? {...c, items: c.items.map(i => i.id === item.id ? {...i, enabled: !i.enabled} : i)} : c));
+                      }}
+                      className={`w-11 h-6 rounded-full relative transition-colors ${item.enabled ? 'bg-blue-600' : 'bg-slate-200 dark:bg-slate-800'}`}
+                    >
+                      <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all shadow-sm ${item.enabled ? 'left-6' : 'left-1'}`} />
+                    </button>
+                  </div>
+                ))}
 
-  if(typeof Tesseract!=='undefined'){
-    runTesseract();
-  }else{
-    // Dynamic load fallback
-    pl.textContent='Loading Tesseract.js...';
-    var sc=document.createElement('script');
-    sc.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
-    sc.onload=function(){runTesseract();};
-    sc.onerror=function(){fail(new Error('Failed to load Tesseract.js. Check your connection.'));};
-    document.head.appendChild(sc);
-  }
-}
-
-// Auto-select online vs offline based on connection
-document.getElementById('azBtn').addEventListener('click',function(e){
-  e.stopPropagation();
-  if(isOnline){analyze();}else{analyzeOffline();}
-},true);
-// Remove inline onclick to prevent double-fire — handled by listener above
-document.getElementById('azBtn').removeAttribute('onclick');
-
-/* ═══ OFFLINE TEXT PARSER (Airline Schedule Specialized) ═══ */
-function parseScheduleText(rawText){
-  var text=rawText;
-  var flights=[];
-  var today=new Date();
-  var curYear=today.getFullYear();
-
-  // ── Step 1: Detect month/year from header (e.g. "May 2026") ──
-  var MONTHS={jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
-  var curMo=today.getMonth();
-  var moMatch=text.match(/(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{4})/i);
-  if(!moMatch) moMatch=text.match(/(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\w*\s+(\d{4})/i);
-  if(moMatch){
-    var moKey=moMatch[1].toLowerCase().slice(0,3);
-    curMo=MONTHS[moKey]!==undefined?MONTHS[moKey]:curMo;
-    curYear=parseInt(moMatch[2]);
-  }
-
-  // ── Step 2: Build position → date map from calendar grid ──
-  // Find "May 01", "May 02"... or just "01","02"... patterns with context
-  var dateMap={};  // charIndex → {y,m,d}
-  // Full "MON DD" pattern
-  var fullDateRe=/(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\w*\s+(\d{1,2})/gi;
-  var fdm;
-  while((fdm=fullDateRe.exec(text))!==null){
-    var d=parseInt(fdm[1]);
-    var mk=fdm[0].trim().toLowerCase().slice(0,3);
-    var mo=MONTHS[mk]!==undefined?MONTHS[mk]:curMo;
-    var yr=curYear;
-    if(mo<curMo-1) yr++;  // handle year wrap
-    dateMap[fdm.index]={y:yr,m:mo,d:d};
-  }
-  // Standalone day numbers (less reliable, use as fallback)
-  var dayOnlyRe=new RegExp('(?:^|\\n)\\s*(\\d{1,2})\\s*(?:\\n|$)','gm');
-  var dom;
-  while((dom=dayOnlyRe.exec(text))!==null){
-    if(!dateMap[dom.index]){
-      var dv=parseInt(dom[1]);
-      if(dv>=1&&dv<=31) dateMap[dom.index]={y:curYear,m:curMo,d:dv};
-    }
-  }
-
-  // ── Step 3: Sort date positions ──
-  var datePosArr=Object.keys(dateMap).map(Number).sort(function(a,b){return a-b;});
-
-  // ── Step 4: Find date for a given text position ──
-  function dateForPos(pos){
-    // Find latest datePos <= pos
-    var best=null;
-    for(var i=0;i<datePosArr.length;i++){
-      if(datePosArr[i]<=pos) best=dateMap[datePosArr[i]];
-      else break;
-    }
-    if(!best) best={y:curYear,m:curMo,d:1};
-    return best.y+'-'+p2(best.m+1)+'-'+p2(best.d);
-  }
-
-  // ── Step 5: Flight leg patterns ──
-  // Pattern A: "KE 913 ICN 09:55 - MAD 18:00"  (full leg with dep+arr)
-  // Pattern B: "KE913 ICN 09:55"                (dep only)
-  // Pattern C: "KE 041 ICN 16:40 - SEA"         (dep + arr airport, no arr time)
-  var seenKeys={};
-
-  // Pattern A & C: flight with dep airport + dep time + optional arr
-  var reA=/([A-Z]{1,3}\s?\d{2,4})\s+([A-Z]{3})\s+(\d{1,2}:\d{2})\s*[-–]?\s*([A-Z]{3})?/g;
-  var mA;
-  while((mA=reA.exec(text))!==null){
-    var fnum=mA[1].replace(/\s/,'');
-    var depApt=mA[2];
-    var depTime=mA[3];
-    // Normalize time
-    var tParts=depTime.split(':');
-    var hh=parseInt(tParts[0]),mm=parseInt(tParts[1]);
-    if(hh>23||mm>59) continue;
-    depTime=p2(hh)+':'+p2(mm);
-    var arrApt=mA[4]||'';
-    var dateStr=dateForPos(mA.index);
-    var type=depApt===baseApt?'base':'intl';
-    var key=dateStr+'-'+fnum+'-'+depApt+'-'+depTime;
-    if(seenKeys[key]) continue;
-    seenKeys[key]=true;
-    flights.push({date:dateStr,flight:fnum,depApt:depApt,depTime:depTime,arrApt:arrApt,type:type});
-  }
-
-  // Deduplicate and sort
-  flights.sort(function(a,b){
-    if(a.date!==b.date) return a.date<b.date?-1:1;
-    return a.depTime<b.depTime?-1:1;
-  });
-  return flights;
-}
-
-/* ═══ ICS PARSER ═══ */
-function handleICS(e){
-  var f=e.target.files[0];if(!f)return;
-  var r=new FileReader();
-  r.onload=function(ev){
-    try{
-      var flights=parseICS(ev.target.result);
-      if(!flights.length){document.getElementById('icsResultWrap').innerHTML='<div class="empty-state">No flight events found in this ICS file.</div>';return;}
-      detectedFlights=flights;initFlightToggles();renderICSResult(flights);renderHomeFlightList();renderCal();renderDaySchedule(calSelDate);
-      toast(flights.length+' events imported from ICS','ok');
-    }catch(err){toast('ICS parse error: '+err.message,'er');console.error(err);}
+                {newItem.categoryId === category.id && (
+                  <div className="p-5 bg-blue-50/50 dark:bg-blue-900/10 rounded-[24px] border-2 border-dashed border-blue-200 dark:border-blue-800/50 space-y-4 animate-in zoom-in-95 duration-200">
+                     <input placeholder="Alarm Title" className="w-full bg-white dark:bg-slate-950 rounded-xl p-3 text-[11px] font-black outline-none ring-1 ring-blue-100" value={newItem.title} onChange={e => setNewItem({...newItem, title: e.target.value})} />
+                     <div className="flex gap-2">
+                        <input type="number" placeholder="Hours" className="flex-1 bg-white dark:bg-slate-950 rounded-xl p-3 text-xs font-black outline-none" value={newItem.hours} onChange={e => setNewItem({...newItem, hours: e.target.value})} />
+                        <input type="number" placeholder="Mins" className="flex-1 bg-white dark:bg-slate-950 rounded-xl p-3 text-xs font-black outline-none" value={newItem.minutes} onChange={e => setNewItem({...newItem, minutes: e.target.value})} />
+                     </div>
+                     <div className="flex gap-2">
+                        <button onClick={() => setNewItem({ categoryId: null, title: '', hours: 0, minutes: 0 })} className="flex-1 py-3 text-[10px] font-black text-slate-400 uppercase">Cancel</button>
+                        <button onClick={() => handleAdd(category.id)} className="flex-[2] py-3 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase">Add</button>
+                     </div>
+                  </div>
+                )}
+             </div>
+          </div>
+        ))}
+      </div>
+    );
   };
-  r.readAsText(f,'UTF-8');
-}
 
-function parseICS(text){
-  var events=[];var cur=null;
-  var lines=text.replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n');
-  // Unfold lines
-  var unfolded=[];
-  lines.forEach(function(l){
-    if(l.startsWith(' ')||l.startsWith('\t')){if(unfolded.length)unfolded[unfolded.length-1]+=l.trim();}
-    else unfolded.push(l);
-  });
-  unfolded.forEach(function(line){
-    if(line.trim()==='BEGIN:VEVENT'){cur={raw:{}};}
-    else if(line.trim()==='END:VEVENT'&&cur){events.push(cur);cur=null;}
-    else if(cur){
-      var ci=line.indexOf(':');if(ci<0)return;
-      var key=line.slice(0,ci).split(';')[0].trim();
-      var val=line.slice(ci+1).trim();
-      cur.raw[key]=val;
-    }
-  });
-  // Parse into flight-like objects
-  var flights=[];
-  events.forEach(function(ev){
-    var r=ev.raw;
-    var summary=r['SUMMARY']||'';
-    var dtstart=r['DTSTART']||r['DTSTART;TZID']||'';
-    var dtend=r['DTEND']||r['DTEND;TZID']||'';
-    var location=r['LOCATION']||'';
-    var desc=r['DESCRIPTION']||'';
-    // Parse datetime
-    var dt=parseICSDate(dtstart);if(!dt)return;
-    var dateStr=dt.getFullYear()+'-'+p2(dt.getMonth()+1)+'-'+p2(dt.getDate());
-    var depTime=p2(dt.getHours())+':'+p2(dt.getMinutes());
-    // Try to extract flight info from summary
-    // Patterns: "KE081 ICN-JFK", "KE 081 ICN→JFK", "Flight KE081"
-    var fnum='',depApt='',arrApt='';
-    var fm=summary.match(/\b([A-Z]{2}\s?\d{2,4})\b/);if(fm)fnum=fm[1].replace(/\s/,'');
-    var rm=summary.match(/\b([A-Z]{3})\s*[-→>]\s*([A-Z]{3})\b/);
-    if(rm){depApt=rm[1];arrApt=rm[2];}
-    if(!depApt&&location){var lm=location.match(/\b([A-Z]{3})\b/g);if(lm&&lm.length>=1)depApt=lm[0];if(lm&&lm.length>=2)arrApt=lm[lm.length-1];}
-    if(!depApt){depApt=summary.slice(0,3).toUpperCase().replace(/[^A-Z]/g,'');}
-    var type=depApt===baseApt?'base':(depApt?'intl':'ics');
-    flights.push({date:dateStr,flight:fnum||summary.slice(0,10),depApt:depApt||'???',depTime:depTime,arrApt:arrApt||'???',type:type,summary:summary});
-  });
-  flights.sort(function(a,b){return parseFlightDate(a)-parseFlightDate(b);});
-  return flights;
-}
+  return (
+    <div className={`fixed inset-0 flex justify-center ${isDarkMode ? 'dark bg-black' : 'bg-slate-100'} overflow-hidden transition-colors`}>
+      <div className="relative w-full max-w-[450px] h-full bg-slate-50 dark:bg-slate-950 flex flex-col shadow-2xl border-x border-slate-200 dark:border-slate-900">
+        <Header />
+        <main className="flex-1 overflow-y-auto no-scrollbar">
+          {activeMenu === 'schedule' && <ScheduleList />}
+          {activeMenu === 'alarm' && <PresetTab />}
+          {activeMenu === 'settings' && (
+            <div className="px-6 py-6 space-y-4">
+              <div className="p-5 bg-white dark:bg-slate-900 rounded-[24px] border border-slate-100 dark:border-slate-800 flex justify-between items-center">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-xl"><SettingsIcon size={18} className="text-blue-600" /></div>
+                  <p className="text-xs font-black dark:text-white uppercase">Night Mode</p>
+                </div>
+                <button onClick={() => setIsDarkMode(!isDarkMode)} className={`w-12 h-6 rounded-full relative ${isDarkMode ? 'bg-blue-600' : 'bg-slate-200'}`}><div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${isDarkMode ? 'left-7' : 'left-1'}`} /></button>
+              </div>
+            </div>
+          )}
+        </main>
 
-function parseICSDate(s){
-  if(!s)return null;
-  s=s.replace(/;[^:]*:/,':').replace(/.*:/,'');
-  // Handle TZID in value part
-  if(s.includes('T')){
-    // 20260503T093000Z or 20260503T093000
-    var m=s.match(/(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})(Z?)/);
-    if(m){
-      var d=new Date(+m[1],+m[2]-1,+m[3],+m[4],+m[5],+m[6]);
-      if(m[7]==='Z')d=new Date(d.getTime()+d.getTimezoneOffset()*60000);
-      return d;
-    }
-  }else{
-    var m2=s.match(/(\d{4})(\d{2})(\d{2})/);
-    if(m2)return new Date(+m2[1],+m2[2]-1,+m2[3],0,0,0);
-  }
-  return null;
-}
+        <button onClick={() => fileInputRef.current.click()} className="absolute bottom-8 right-6 w-16 h-16 bg-blue-600 text-white rounded-[24px] flex items-center justify-center shadow-2xl shadow-blue-600/40 active:scale-95 transition-all z-40 hover:bg-blue-700">
+          <Plus size={32} strokeWidth={3} />
+        </button>
 
-function renderICSResult(flights){
-  var wrap=document.getElementById('icsResultWrap');
-  if(!flights.length){wrap.innerHTML='';return;}
-  var now=new Date();
-  var html='<div style="font-size:11px;font-weight:600;color:var(--tx2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">'+flights.length+' Events Imported</div>';
-  var shown=flights.slice(0,8);
-  shown.forEach(function(f){
-    var past=parseFlightDate(f)<now;
-    html+='<div class="ics-event" style="opacity:'+(past?.4:1)+'">'
-      +'<div class="ie-time">'+f.depTime+'</div>'
-      +'<div class="ie-lbl">'+escQ(f.summary||f.flight)+' <span style="color:var(--tx3);font-size:9px">'+f.date+'</span></div>'
-      +'<div class="fal-type ics" style="font-size:8px">'+(f.type==='base'?'HOME':(f.type==='intl'?'INTL':'ICS'))+'</div>'
-      +'</div>';
-  });
-  if(flights.length>8)html+='<div class="empty-state" style="padding:8px">...and '+(flights.length-8)+' more</div>';
-  wrap.innerHTML=html;
-}
+        {isAnalyzing && (
+          <div className="absolute inset-0 z-[100] bg-slate-900/90 backdrop-blur-xl flex flex-col items-center justify-center p-10 animate-in fade-in">
+            <div className="relative mb-8">
+               <div className="absolute inset-0 bg-blue-500 blur-2xl opacity-20 animate-pulse"></div>
+               <div className="w-24 h-24 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
+               <div className="absolute inset-0 flex items-center justify-center">
+                  <FileSearch size={32} className="text-blue-500" />
+               </div>
+            </div>
+            <h2 className="text-2xl font-black text-white italic uppercase tracking-widest">{analysisProgress}%</h2>
+            <p className="text-slate-400 text-[9px] font-black mt-2 tracking-[0.4em] uppercase">Offline AI Route Matching...</p>
+            <p className="text-slate-500 text-[8px] font-bold mt-8 max-w-[200px] text-center opacity-50 uppercase leading-relaxed">Fixing SYD/MAD/SEA recognition issues.</p>
+          </div>
+        )}
+        <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileUpload} />
+      </div>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,700;0,800;1,800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+      `}</style>
+    </div>
+  );
+};
 
-/* ═══ FLIGHT TOGGLES ═══ */
-function initFlightToggles(){
-  detectedFlights.forEach(function(f,idx){
-    if(!flightToggles[idx])flightToggles[idx]={};
-    var offs=f.type==='base'?baseOffs:intlOffs;
-    var onMap=f.type==='base'?baseOn:intlOn;
-    offs.forEach(function(o){if(flightToggles[idx][o.id]===undefined)flightToggles[idx][o.id]=!!onMap[o.id];});
-  });
-}
-
-/* ═══ FLIGHT LIST RENDER ═══ */
-function renderSheetFalWrap(){
-  var wrap=document.getElementById('sheetFalWrap');if(!wrap)return;
-  if(!detectedFlights.length){wrap.innerHTML='';return;}
-  var now=new Date();
-  detectedFlights.sort(function(a,b){return parseFlightDate(a)-parseFlightDate(b);});
-  var up=[],past=[];
-  detectedFlights.forEach(function(f,idx){if(parseFlightDate(f)<now)past.push({f:f,idx:idx});else up.push({f:f,idx:idx});});
-  var html='<div style="margin-top:14px"><div style="font-size:11px;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Detected Flights</div>';
-  html+='<div class="fal-list">'+up.map(function(x){return renderFalItem(x.f,x.idx);}).join('')+'</div>';
-  if(past.length){html+='<div class="past-bar"><button class="past-toggle-btn" id="pastBtn" onclick="togglePast(this)">▸ &nbsp;'+past.length+' past flights</button></div><div id="pastSection" style="display:none"><div class="fal-list" style="margin-top:6px">'+past.map(function(x){return renderFalItemPast(x.f,x.idx);}).join('')+'</div></div>';}
-  html+='</div>';
-  wrap.innerHTML=html;
-}
-
-function renderFalItem(f,idx,extraCls){
-  var now=new Date();var fdt=parseFlightDate(f);
-  var todayMid=new Date();todayMid.setHours(0,0,0,0);
-  var fdtMid=new Date(fdt);fdtMid.setHours(0,0,0,0);
-  var isTod=fdtMid.getTime()===todayMid.getTime();
-  var isPast=(extraCls||'').indexOf('past')>=0;
-  var isNext=(extraCls||'').indexOf('next-flight')>=0;
-  var cls='fal-item';
-  if(isPast) cls+=' past';
-  else if(isTod) cls+=' today';
-  else if(isNext) cls+=' next-flight';
-  else cls+=' future';
-
-  var dp=(f.date||'').split('-');
-  var dateStr=(dp[1]||'')+'/'+(dp[2]||'');
-  var D=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-  var dow=D[fdt.getDay()]||'';
-  var tl=f.type==='base'?'HOME':(f.type==='intl'?'INTL':'ICS');
-  var tc=f.type==='base'?'base':(f.type==='intl'?'intl':'ics');
-  var offs=f.type==='intl'?intlOffs:baseOffs;
-  var isOpen=!!openFlights[idx];
-  var regDone=!!registeredFlights[idx];
-
-  // Alarm master toggle state: on if any offset is toggled on
-  var anyOn=offs.some(function(o){return !!(flightToggles[idx]&&flightToggles[idx][o.id]);});
-  var mastTogCls='fal-alarm-tog'+(anyOn?(f.type==='intl'?' on-intl':' on'):'');
-
-  // Badge
-  var badge='';
-  if(isTod) badge='<span class="fal-badge today-badge">TODAY</span>';
-  else if(isNext) badge='<span class="fal-badge next-badge">NEXT</span>';
-
-  // Dropdown alarm rows
-  var togsHtml=offs.map(function(o){
-    var on=!!(flightToggles[idx]&&flightToggles[idx][o.id]);
-    var at=new Date(fdt.getTime()-(o.h*60+o.m)*60000);
-    var ac=on?(f.type==='intl'?' on-intl':' on-base'):'';
-    var togCls='tog'+(on?(f.type==='intl'?' on-amb':' on'):'');
-    // Offset label: "2h 30m before" or "40m before"
-    var offTxt='';
-    if(o.h>0&&o.m>0) offTxt='('+o.h+'h '+o.m+'m before)';
-    else if(o.h>0)   offTxt='('+o.h+'h before)';
-    else              offTxt='('+o.m+'m before)';
-    return '<div class="fal-atog'+ac+'">'
-      +'<button class="'+togCls+'" onclick="togFA('+idx+',\''+o.id+'\')" ></button>'
-      +'<span class="atog-lbl">'+escQ(o.lbl)+'</span>'
-      +'<div class="atog-right">'
-      +'<span class="atog-time">'+fmt(at)+'</span>'
-      +'<span class="atog-offset">'+offTxt+'</span>'
-      +'</div>'
-      +'</div>';
-  }).join('');
-
-  var regBtn='<button class="fal-reg-btn '+(regDone?'done':'idle')+'" '
-    +(regDone?'':'onclick="event.stopPropagation();registerFlight('+idx+')"')
-    +'>'+(regDone?'&#10003;':'Set')+'</button>';
-
-  var dropBtn='<button class="fal-drop-btn" onclick="event.stopPropagation();toggleFlight('+idx+')">'
-    +'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>'
-    +'</button>';
-
-  return '<div class="'+cls+(isOpen?' open':'')+'" id="fali-'+idx+'">'
-    // Header
-    +'<div class="fal-header" onclick="toggleFlight('+idx+')">'
-    +'<div class="fal-accent"></div>'
-    +'<div class="fal-info">'
-    // Date row
-    +'<div class="fal-date-row">'
-    +'<span class="fal-dow">'+dow+'</span>'
-    +'<span class="fal-date">'+dateStr+'</span>'
-    +badge
-    +'</div>'
-    // Route row
-    +'<div class="fal-route-row">'
-    +'<span class="fal-fnum">'+escQ(f.flight||'')+'</span>'
-    +'<span class="fal-route">'
-    +'<span class="apt dep">'+f.depApt+'</span>'
-    +'<span class="fal-arrow">&#8594;</span>'
-    +'<span class="apt">'+( f.arrApt||'---')+'</span>'
-    +'</span>'
-    +'<span class="fal-type '+tc+'">'+tl+'</span>'
-    +'</div>'
-    +'</div>'
-    // Right: time + controls
-    +'<div class="fal-right">'
-    +'<div class="fal-deptime">'+f.depTime+'</div>'
-    +'<div class="fal-controls">'
-    +(isPast?'':(regBtn+'<button class="'+mastTogCls+'" onclick="event.stopPropagation();toggleMasterAlarm('+idx+')" title="Toggle all alarms"></button>'))
-    +dropBtn
-    +'</div></div>'
-    +'</div>'
-    // Alarm dropdown
-    +'<div class="fal-alarms">'
-    +'<div class="fal-alarms-hdr">Preset Alarms</div>'
-    +togsHtml
-    +'</div>'
-    +'</div>';
-}
-
-function renderFalItemPast(f,idx){
-  var fdt=parseFlightDate(f);var dp=(f.date||'').split('-');
-  var D=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];var dow=D[fdt.getDay()]||'';
-  var tl=f.type==='base'?'HOME':(f.type==='intl'?'INTL':'ICS');var tc=f.type==='base'?'base':(f.type==='intl'?'intl':'ics');
-  return '<div class="fal-item past" id="fali-'+idx+'"><div class="fal-header" style="cursor:default;padding:8px 12px"><div class="fal-dot"></div><div class="fal-info"><div class="fal-date-row"><span class="fal-dow" style="font-size:12px">'+dow+'</span><span class="fal-date" style="font-size:10px">'+dp[1]+'/'+dp[2]+'</span></div><div class="fal-flight">'+escQ(f.flight||'')+' &nbsp;'+f.depApt+' \u2192 '+(f.arrApt||'---')+'</div></div><div class="fal-deptime" style="font-size:15px">'+f.depTime+'</div><div class="fal-type '+tc+'">'+tl+'</div></div></div>';
-}
-
-function toggleFlight(idx){openFlights[idx]=!openFlights[idx];rerenderFlight(idx);}
-function togFA(idx,offId){if(!flightToggles[idx])flightToggles[idx]={};flightToggles[idx][offId]=!flightToggles[idx][offId];rerenderFlight(idx);}
-function rerenderFlight(idx){
-  var f=detectedFlights[idx];if(!f)return;
-  var el=document.getElementById('fali-'+idx);if(!el)return;
-  var now=new Date();
-  var sorted=detectedFlights.slice().sort(function(a,b){return parseFlightDate(a)-parseFlightDate(b);});
-  var upcoming=sorted.filter(function(ff){return parseFlightDate(ff)>=now;});
-  var nextFlight=upcoming.length>0?upcoming[0]:null;
-  var isPast=parseFlightDate(f)<now;
-  var isNext=!isPast&&nextFlight&&detectedFlights.indexOf(nextFlight)===idx;
-  var extraCls=isPast?'past':(isNext?'next-flight':'');
-  var tmp=document.createElement('div');tmp.innerHTML=renderFalItem(f,idx,extraCls);
-  el.parentNode.replaceChild(tmp.firstChild,el);
-}
-function toggleMasterAlarm(idx){
-  if(!flightToggles[idx])flightToggles[idx]={};
-  var f=detectedFlights[idx];if(!f)return;
-  var offs=f.type==='intl'?intlOffs:baseOffs;
-  var anyOn=offs.some(function(o){return !!flightToggles[idx][o.id];});
-  // if any on → turn all off; if all off → turn all on
-  offs.forEach(function(o){flightToggles[idx][o.id]=!anyOn;});
-  rerenderFlight(idx);
-}
-
-function togglePast(btn){var sec=document.getElementById('pastSection');if(!sec)return;var open=sec.style.display==='block';sec.style.display=open?'none':'block';btn.textContent=open?'▸ \u00a0past flights':'▴ \u00a0hide past flights';}
-
-function registerFlight(idx){
-  syncAllPresets();var f=detectedFlights[idx];if(!f)return;
-  var depDt=parseFlightDate(f);var now=new Date();
-  var offs=f.type==='base'?baseOffs:intlOffs;
-  if(!flightToggles[idx])flightToggles[idx]={};
-  offs.forEach(function(o){flightToggles[idx][o.id]=true;});
-  var added=0;
-  offs.forEach(function(o){
-    var at=new Date(depDt.getTime()-(o.h*60+o.m)*60000);
-    if(at<=now)return;
-    if(alms.find(function(a){return !a.dism&&Math.abs(a.time-at)<2000;}))return;
-    alms.push({id:uid(),time:at,dep:new Date(depDt),lbl:o.lbl+' ('+f.flight+')',type:f.type,armed:true,ring:false,dism:false});
-    added++;
-  });
-  registeredFlights[idx]=true;rerenderFlight(idx);
-  if(!added){toast(f.flight+' — expired or duplicate','er');return;}
-  alms.sort(function(a,b){return a.time-b.time;});
-  renderCal();renderDaySchedule(calSelDate);renderHomeFlightList();
-  toast(f.flight+' — '+added+' alarms set','ok');
-}
-
-/* ═══ DIRECT ALARM ═══ */
-function addDirectAlarm(){
-  var dv=document.getElementById('dDate').value;
-  var lbl=(document.getElementById('dLabel').value||'Alarm').trim();
-  var h=drumH_val,m=drumM_val;
-  var at=buildDate(dv,h,m);var now=new Date();
-  if(at<=now){toast('This time has already passed','er');return;}
-  if(alms.find(function(a){return !a.dism&&Math.abs(a.time-at)<2000;})){toast('An alarm already exists at this time','er');return;}
-  alms.push({id:uid(),time:at,dep:null,lbl:lbl,type:'direct',armed:true,ring:false,dism:false});
-  alms.sort(function(a,b){return a.time-b.time;});
-  renderDirectAlarms();renderCal();renderDaySchedule(calSelDate);
-  toast('"'+lbl+'" '+p2(h)+':'+p2(m),'ok');
-  document.getElementById('dLabel').value='';
-}
-
-function renderDirectAlarms(){
-  var wrap=document.getElementById('dalCardWrap');if(!wrap)return;
-  var directs=alms.filter(function(a){return a.type==='direct'&&!a.dism;});
-  if(!directs.length){wrap.innerHTML='';return;}
-  var D=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-  var now=new Date();var todayMid=new Date();todayMid.setHours(0,0,0,0);
-  wrap.innerHTML='<div class="dal-wrap">'+directs.map(function(a){
-    var t=a.time;var dow=D[t.getDay()];var tMid=new Date(t);tMid.setHours(0,0,0,0);
-    var isTod=tMid.getTime()===todayMid.getTime();
-    var dateStr=p2(t.getMonth()+1)+'/'+p2(t.getDate());
-    var timeStr=p2(t.getHours())+':'+p2(t.getMinutes());
-    var isRing=a.ring;var diff=t-now;var cdTxt='';
-    if(isRing)cdTxt='▶ RINGING';
-    else if(diff>0){var s2=Math.floor(diff/1000);var hh=Math.floor(s2/3600),mm=Math.floor((s2%3600)/60),ss=s2%60;cdTxt='T-'+(hh?hh+'H ':'')+mm+'M '+ss+'S';}
-    else cdTxt='PASSED';
-    var act=isRing?'<button class="dal-dis" onclick="dismissDirectAlarm(\''+a.id+'\')">DISMISS</button>':'<button class="dal-del" onclick="delDirectAlarm(\''+a.id+'\')">✕</button>';
-    return '<div class="dal-item'+(isRing?' ring-now':'')+'" id="dal-'+a.id+'">'
-      +'<div class="dal-dot"></div><div class="dal-info">'
-      +'<div class="dal-date-row"><span class="dal-dow">'+dow+'</span><span class="dal-date">'+dateStr+'</span>'+(isTod?'<span class="dal-today">TODAY</span>':'')+'</div>'
-      +'<div class="dal-lbl">'+escQ(a.lbl)+'</div>'
-      +'<div class="dal-cd" id="dcd-'+a.id+'">'+cdTxt+'</div></div>'
-      +'<div class="dal-time">'+timeStr+'</div>'+act+'</div>';
-  }).join('')+'</div>';
-}
-
-function delDirectAlarm(id){alms=alms.filter(function(a){return a.id!==id;});renderDirectAlarms();renderCal();}
-function dismissDirectAlarm(id){var a=alms.find(function(x){return x.id===id;});if(a){a.dism=true;a.ring=false;}if(!alms.some(function(x){return x.ring;})){stopSnd();document.getElementById('ro').classList.remove('show');}renderDirectAlarms();}
-
-function updateDirectCDs(){
-  var now=new Date();
-  alms.filter(function(a){return a.type==='direct'&&!a.dism;}).forEach(function(a){
-    var el=document.getElementById('dcd-'+a.id);if(!el)return;
-    if(a.ring){el.textContent='▶ RINGING';return;}
-    var diff=a.time-now;if(diff<=0){el.textContent='PASSED';return;}
-    var s2=Math.floor(diff/1000);var hh=Math.floor(s2/3600),mm=Math.floor((s2%3600)/60),ss=s2%60;
-    el.textContent='T-'+(hh?hh+'H ':'')+mm+'M '+ss+'S';
-  });
-}
-
-/* ═══ CLOCK / ALARMS ═══ */
-function tickClock(){
-  updateDirectCDs();
-  var badge=document.getElementById('bellBadge');
-  if(badge)badge.classList.toggle('show',alms.some(function(a){return a.ring;}));
-}
-function checkAlarms(){
-  var now=new Date(),needRender=false;
-  alms.forEach(function(a){if(a.dism||a.ring)return;var diff=now-a.time;if(diff>=0&&diff<60000){a.ring=true;needRender=true;trigAlarm(a);}});
-  alms.forEach(function(a){if(a.ring&&(now-a.time)>=60000){a.ring=false;a.dism=true;needRender=true;if(!alms.some(function(x){return x.ring;})){stopSnd();document.getElementById('ro').classList.remove('show');}}});
-  if(needRender)renderDirectAlarms();
-  var bl=alms.length;alms=alms.filter(function(a){return !a.dism||(now-a.time<300000);});
-  if(alms.length!==bl)renderDirectAlarms();
-}
-function trigAlarm(a){document.getElementById('rtt').textContent=a.lbl;document.getElementById('rdt').textContent=fmt(a.time)+(a.dep?' · DEP '+fmt(a.dep):'');document.getElementById('ro').classList.add('show');playSnd();if(navigator.vibrate)navigator.vibrate([400,150,400,150,400]);}
-function dismissOv(){alms.forEach(function(a){if(a.ring){a.dism=true;a.ring=false;}});stopSnd();document.getElementById('ro').classList.remove('show');renderDirectAlarms();}
-function dismissA(id){var a=alms.find(function(x){return x.id===id;});if(a){a.dism=true;a.ring=false;}if(!alms.some(function(x){return x.ring;})){stopSnd();document.getElementById('ro').classList.remove('show');}renderDirectAlarms();}
-
-/* ═══ SETTINGS ═══ */
-function toggleDark(btn){var d=document.body.classList.toggle('dark');btn.classList.toggle('on',d);localStorage.setItem('crewclock_dark',d?'1':'0');}
-function saveSettingsUI(){var v=(document.getElementById('baseAptInput').value||'').trim().toUpperCase().slice(0,3);if(v.length<2){toast('Please enter an airport code','er');return;}syncAllPresets();baseApt=v;saveSettings();toast('Settings saved','ok');}
-function syncAllPresets(){
-  baseOffs.forEach(function(o){var h=document.getElementById('boh-'+o.id),m=document.getElementById('bom-'+o.id),l=document.getElementById('bolbl-'+o.id);if(h)o.h=Math.max(0,+h.value||0);if(m)o.m=Math.max(0,Math.min(59,+m.value||0));if(l)o.lbl=l.value||'Alarm';});
-  intlOffs.forEach(function(o){var h=document.getElementById('ioh-'+o.id),m=document.getElementById('iom-'+o.id),l=document.getElementById('iolbl-'+o.id);if(h)o.h=Math.max(0,+h.value||0);if(m)o.m=Math.max(0,Math.min(59,+m.value||0));if(l)o.lbl=l.value||'Alarm';});
-}
-function presetRow(o,on,px,type){
-  var tc='tog'+(on?(type==='base'?' on':' on-amb'):'');
-  return '<div class="orow" id="'+px+'orow-'+o.id+'">'
-    +'<button class="'+tc+'" onclick="togPre(\''+px+'\',\''+o.id+'\',this)"></button>'
-    +'<div class="olbl"><input class="lbl-inp" type="text" value="'+escQ(o.lbl)+'" id="'+px+'olbl-'+o.id+'">'
-    +'<div class="olbl-s" id="'+px+'os-'+o.id+'">'+o.h+'H '+o.m+'M before dep.</div></div>'
-    +'<div class="oedit">'
-    +'<input type="number" class="ni" value="'+o.h+'" min="0" max="48" id="'+px+'oh-'+o.id+'" oninput="syncPR(\''+px+'\',\''+o.id+'\')">&thinsp;<span class="ul">H</span>&nbsp;'
-    +'<input type="number" class="ni" value="'+o.m+'" min="0" max="59" id="'+px+'om-'+o.id+'" oninput="syncPR(\''+px+'\',\''+o.id+'\')">&thinsp;<span class="ul">M</span>&nbsp;'
-    +'<button class="db" onclick="delPre(\''+px+'\',\''+o.id+'\')">✕</button></div></div>';
-}
-function renderBasePresets(){var c=document.getElementById('basePresets');c.innerHTML=baseOffs.map(function(o){return presetRow(o,!!baseOn[o.id],'b','base');}).join('')+'<button class="add-btn" onclick="addBaseOff()">+ Add BASE Alarm</button>';}
-function renderIntlPresets(){var c=document.getElementById('intlPresets');c.innerHTML=intlOffs.map(function(o){return presetRow(o,!!intlOn[o.id],'i','intl');}).join('')+'<button class="add-btn amb" onclick="addIntlOff()">+ Add INTL Alarm</button>';}
-function togPre(px,id,btn){if(px==='b'){baseOn[id]=!baseOn[id];btn.className='tog'+(baseOn[id]?' on':'');}else{intlOn[id]=!intlOn[id];btn.className='tog'+(intlOn[id]?' on-amb':'');}}
-function syncPR(px,id){var arr=px==='b'?baseOffs:intlOffs;var o=arr.find(function(x){return x.id===id;});if(!o)return;var h=document.getElementById(px+'oh-'+id),m=document.getElementById(px+'om-'+id),l=document.getElementById(px+'olbl-'+id);if(h)o.h=Math.max(0,+h.value||0);if(m)o.m=Math.max(0,Math.min(59,+m.value||0));if(l)o.lbl=l.value||'Alarm';var s=document.getElementById(px+'os-'+id);if(s)s.textContent=o.h+'H '+o.m+'M before dep.';}
-function delPre(px,id){if(px==='b'){baseOffs=baseOffs.filter(function(x){return x.id!==id;});delete baseOn[id];renderBasePresets();}else{intlOffs=intlOffs.filter(function(x){return x.id!==id;});delete intlOn[id];renderIntlPresets();}}
-function addBaseOff(){var id='b'+(bOc++);baseOffs.push({id:id,h:1,m:0,lbl:'Alarm'});baseOn[id]=true;renderBasePresets();}
-function addIntlOff(){var id='i'+(iOc++);intlOffs.push({id:id,h:1,m:0,lbl:'Alarm'});intlOn[id]=true;renderIntlPresets();}
-
-/* ═══ DRUM ═══ */
-function initDrums(){buildDrum('drumH',24,drumH_val);buildDrum('drumM',60,drumM_val);}
-function buildDrum(id,count,initVal){
-  var inner=document.getElementById(id+'-inner');var items='';var pad=5;
-  for(var i=-pad;i<count+pad;i++){var v=((i%count)+count)%count;items+='<div class="drum-item" data-v="'+v+'">'+p2(v)+'</div>';}
-  inner.innerHTML=items;setDrum(id,initVal,false);attachDrumEvents(id,count);
-}
-function setDrum(id,val,animate){
-  var inner=document.getElementById(id+'-inner');var pad=5;
-  var y=-(pad+val)*ITEM_H+ITEM_H;
-  inner.style.transition=animate?'transform .18s cubic-bezier(.25,.46,.45,.94)':'none';
-  inner.style.transform='translateY('+y+'px)';
-  inner.querySelectorAll('.drum-item').forEach(function(el){el.classList.toggle('sel',+el.dataset.v===val);});
-  if(id==='drumH')drumH_val=val;else drumM_val=val;
-}
-function attachDrumEvents(id,count){
-  var drum=document.getElementById(id);
-  var lastY,rafId=0,velocity=0,pixelOffset=0;
-  function getVal(){return id==='drumH'?drumH_val:drumM_val;}
-  function applyOffset(){
-    var pad=5;var baseY=-(pad+getVal())*ITEM_H+ITEM_H;
-    var inner=document.getElementById(id+'-inner');
-    inner.style.transition='none';inner.style.transform='translateY('+(baseY+pixelOffset)+'px)';
-  }
-  function snapToNearest(){
-    var steps=Math.round(-pixelOffset/ITEM_H);pixelOffset=0;
-    setDrum(id,((getVal()+steps)%count+count)%count,true);
-  }
-  function momentum(){
-    if(Math.abs(velocity)<0.4){snapToNearest();return;}
-    pixelOffset-=velocity;
-    if(Math.abs(pixelOffset)>ITEM_H*3){snapToNearest();velocity=0;return;}
-    applyOffset();velocity*=0.85;rafId=requestAnimationFrame(momentum);
-  }
-  function onStart(y){cancelAnimationFrame(rafId);pixelOffset=0;lastY=y;velocity=0;drum.dataset.drag='1';}
-  function onMove(y){
-    if(!drum.dataset.drag)return;
-    var dy=lastY-y;velocity=dy;lastY=y;pixelOffset-=dy;
-    while(pixelOffset<=-ITEM_H){pixelOffset+=ITEM_H;var nv=((getVal()+1)%count+count)%count;if(id==='drumH')drumH_val=nv;else drumM_val=nv;document.querySelectorAll('#'+id+'-inner .drum-item').forEach(function(el){el.classList.toggle('sel',+el.dataset.v===nv);});}
-    while(pixelOffset>=ITEM_H){pixelOffset-=ITEM_H;var nv=((getVal()-1)%count+count)%count;if(id==='drumH')drumH_val=nv;else drumM_val=nv;document.querySelectorAll('#'+id+'-inner .drum-item').forEach(function(el){el.classList.toggle('sel',+el.dataset.v===nv);});}
-    applyOffset();
-  }
-  function onEnd(){drum.dataset.drag='';rafId=requestAnimationFrame(momentum);}
-  drum.addEventListener('touchstart',function(e){onStart(e.touches[0].clientY);},{passive:true});
-  drum.addEventListener('touchmove',function(e){e.preventDefault();onMove(e.touches[0].clientY);},{passive:false});
-  drum.addEventListener('touchend',onEnd);
-  drum.addEventListener('mousedown',function(e){onStart(e.clientY);e.preventDefault();});
-  document.addEventListener('mousemove',function(e){if(drum.dataset.drag)onMove(e.clientY);});
-  document.addEventListener('mouseup',function(){if(drum.dataset.drag)onEnd();});
-  drum.addEventListener('wheel',function(e){e.preventDefault();setDrum(id,((getVal()+(e.deltaY>0?1:-1))%count+count)%count,true);},{passive:false});
-}
-
-/* ═══ SOUND ═══ */
-function getACtx(){if(!aCtx)aCtx=new(window.AudioContext||window.webkitAudioContext)();if(aCtx.state==='suspended')aCtx.resume();return aCtx;}
-function playSnd(){try{var ctx=getACtx();stopSnd();function beep(f,s,d){var o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.type='sine';o.frequency.value=f;var t0=ctx.currentTime+s;g.gain.setValueAtTime(0,t0);g.gain.linearRampToValueAtTime(0.25,t0+.02);g.gain.linearRampToValueAtTime(0,t0+d-.02);o.start(t0);o.stop(t0+d);oscs.push(o);}for(var i=0;i<20;i++){var b=i*2;beep(880,b,.15);beep(1100,b+.2,.15);beep(880,b+.4,.15);}}catch(e){}}
-function stopSnd(){oscs.forEach(function(o){try{o.stop();}catch(e){}});oscs=[];}
-
-/* ═══ TOAST ═══ */
-function toast(msg,type){var t=document.getElementById('toast');t.textContent=msg;t.className='toast show '+(type||'in');clearTimeout(t._tt);t._tt=setTimeout(function(){t.classList.remove('show');},2600);}
-
-init();
-</script>
-</body>
-</html>
+export default App;
