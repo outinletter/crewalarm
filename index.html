@@ -664,8 +664,8 @@ body.dark .dl-inp[type=date]{color-scheme:dark}
 <div class="notif-banner" id="notifBanner">
   <div class="nb-ico">🔔</div>
   <div class="nb-body">
-    <div class="nb-title">Enable Background Alarms</div>
-    <div class="nb-sub">Allow notifications to ring even when screen is off</div>
+    <div class="nb-title" id="notifBannerTitle">Enable Alarm Notifications</div>
+    <div class="nb-sub" id="notifBannerSub">Tap Allow so alarms can notify you</div>
   </div>
   <button class="nb-action" onclick="requestNotifPermission()">Allow</button>
   <button class="nb-close" onclick="dismissNotifBanner()">&#x2715;</button>
@@ -1638,6 +1638,11 @@ function addDirectAlarm(){
   renderDirectAlarms();renderCal();renderDaySchedule(calSelDate);
   toast('"'+lbl+'" '+p2(h)+':'+p2(m),'ok');
   document.getElementById('dLabel').value='';
+  // Scroll down to show alarm list
+  setTimeout(function(){
+    var wrap=document.getElementById('dalCardWrap');
+    if(wrap) wrap.scrollIntoView({behavior:'smooth',block:'nearest'});
+  },100);
 }
 
 function renderDirectAlarms(){
