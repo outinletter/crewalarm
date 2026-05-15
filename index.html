@@ -1011,7 +1011,7 @@ function switchTab(name,btn){
   document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('show');});
   document.getElementById('panel-'+name).classList.add('show');
   if(name==='settings'){document.getElementById('baseAptInput').value=baseApt;renderBasePresets();renderIntlPresets();}
-  if(name==='calendar'){renderDaySchedule(calSelDate);renderHomeFlightList();}
+  if(name==='calendar'){renderDaySchedule(calSelDate);if(detectedFlights.length)renderHomeFlightList();}
   if(name==='alarm'){var _n=new Date();setDrum('drumH',_n.getHours(),true);setDrum('drumM',_n.getMinutes(),true);}
 }
 
