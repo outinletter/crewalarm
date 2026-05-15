@@ -1905,16 +1905,26 @@ function checkAlarms(){
   if(alms.length!==bl){saveAlarms();renderDirectAlarms();}
 }
 function trigAlarm(a){
-  // Ensure time is Date
   if(!(a.time instanceof Date)) a.time=new Date(a.time);
   if(a.dep&&!(a.dep instanceof Date)) a.dep=new Date(a.dep);
   document.getElementById('rtt').textContent=a.lbl;
   document.getElementById('rdt').textContent=fmt(a.time)+(a.dep?' · DEP '+fmt(a.dep):'');
   document.getElementById('ro').classList.add('show');
-  // Resume AudioContext if suspended (required after page bg/lock)
-  if(aCtx&&aCtx.state==='suspended') aCtx.resume().then(function(){playSnd();});
-  else playSnd();
-  if(navigator.vibrate)navigator.vibrate([400,150,400,150,400,150,400]);
+
+  // Resume AudioContext (required on iOS after bg/lock)
+  var ctx=getACtx();
+  if(ctx&&ctx.state==='suspended'){
+    ctx.resume().then(function(){playSnd();});
+  } else {
+    playSnd();
+  }
+
+  // Strong vibration pattern
+  if(navigator.vibrate){
+    navigator.vibrate([700,200,700,200,700,200,700,200,700]);
+  }
+
+  // System notification (works even when screen off on supported devices)
   showNotificationIfGranted(a);
   acquireWakeLock();
 }
@@ -1937,7 +1947,37 @@ function clearAllData(){
 }
 
 function toggleDark(btn){var d=document.body.classList.toggle('dark');btn.classList.toggle('on',d);localStorage.setItem('crewclock_dark',d?'1':'0');}
-function saveSettingsUI(){var v=(document.getElementById('baseAptInput').value||'').trim().toUpperCase().slice(0,3);if(v.length<2){toast('Please enter an airport code','er');return;}syncAllPresets();baseApt=v;saveSettings();toast('Settings saved','ok');}
+function saveSettingsUI(){
+  var v=(document.getElementById('baseAptInput').value||'').trim().toUpperCase().slice(0,3);
+  if(v.length<2){toast('Please enter an airport code','er');return;}
+  syncAllPresets();
+  baseApt=v;
+  saveSettings();
+
+  // ── 프리셋 변경 시 홈 화면 알람 목록 갱신 ──
+  if(detectedFlights.length){
+    // 1. 토글 상태 초기화 (새 프리셋 반영)
+    initFlightToggles();
+
+    // 2. 기존 등록된 알람(flight 계열) 제거 후 재등록
+    var now=new Date();
+    alms=alms.filter(function(a){ return a.type==='direct'; }); // 직접 설정 알람은 유지
+    registeredFlights={};
+
+    // 3. 전체 자동 재등록
+    var added=autoRegisterAll();
+
+    // 4. 홈 화면 + 달력 갱신
+    renderHomeFlightList();
+    renderCal();
+    renderDaySchedule(calSelDate);
+    saveAlarms();
+    scheduleNotificationsViaSW();
+    toast('Settings saved — '+added+' alarms updated','ok');
+  } else {
+    toast('Settings saved','ok');
+  }
+}
 function syncAllPresets(){
   baseOffs.forEach(function(o){var h=document.getElementById('boh-'+o.id),m=document.getElementById('bom-'+o.id),l=document.getElementById('bolbl-'+o.id);if(h)o.h=Math.max(0,+h.value||0);if(m)o.m=Math.max(0,Math.min(59,+m.value||0));if(l)o.lbl=l.value||'Alarm';});
   intlOffs.forEach(function(o){var h=document.getElementById('ioh-'+o.id),m=document.getElementById('iom-'+o.id),l=document.getElementById('iolbl-'+o.id);if(h)o.h=Math.max(0,+h.value||0);if(m)o.m=Math.max(0,Math.min(59,+m.value||0));if(l)o.lbl=l.value||'Alarm';});
@@ -2014,8 +2054,57 @@ function attachDrumEvents(id,count){
 }
 
 /* ═══ SOUND ═══ */
-function getACtx(){if(!aCtx)aCtx=new(window.AudioContext||window.webkitAudioContext)();if(aCtx.state==='suspended')aCtx.resume();return aCtx;}
-function playSnd(){try{var ctx=getACtx();stopSnd();function beep(f,s,d){var o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.type='sine';o.frequency.value=f;var t0=ctx.currentTime+s;g.gain.setValueAtTime(0,t0);g.gain.linearRampToValueAtTime(0.25,t0+.02);g.gain.linearRampToValueAtTime(0,t0+d-.02);o.start(t0);o.stop(t0+d);oscs.push(o);}for(var i=0;i<20;i++){var b=i*2;beep(880,b,.15);beep(1100,b+.2,.15);beep(880,b+.4,.15);}}catch(e){}}
+function getACtx(){
+  if(!aCtx){
+    try{ aCtx=new(window.AudioContext||window.webkitAudioContext)(); }
+    catch(e){ return null; }
+  }
+  if(aCtx.state==='suspended') aCtx.resume();
+  return aCtx;
+}
+function playSnd(){
+  try{
+    var ctx=getACtx();
+    if(!ctx){console.warn('[Audio] no context');return;}
+    if(ctx.state==='suspended') ctx.resume();
+    stopSnd();
+
+    // Alarm pattern: urgent double-beep repeating
+    // Frequencies chosen to cut through ambient noise
+    function beep(freq, startT, dur, vol){
+      var osc=ctx.createOscillator();
+      var gain=ctx.createGain();
+      // Compressor to maximize perceived loudness
+      var comp=ctx.createDynamicsCompressor();
+      comp.threshold.value=-6;
+      comp.ratio.value=20;
+      osc.connect(gain);
+      gain.connect(comp);
+      comp.connect(ctx.destination);
+      osc.type='square'; // harsh/cutting tone
+      osc.frequency.value=freq;
+      var t0=ctx.currentTime+startT;
+      gain.gain.setValueAtTime(0,t0);
+      gain.gain.linearRampToValueAtTime(vol||0.8, t0+0.01);
+      gain.gain.setValueAtTime(vol||0.8, t0+dur-0.02);
+      gain.gain.linearRampToValueAtTime(0, t0+dur);
+      osc.start(t0);
+      osc.stop(t0+dur+0.01);
+      oscs.push(osc);
+    }
+
+    // Pattern: beep-beep ... pause ... beep-beep (like alarm clock)
+    // Each cycle = 1.2 seconds, repeat 50 times (~60 seconds)
+    for(var i=0;i<50;i++){
+      var base=i*1.2;
+      beep(1047,base+0.0, 0.12, 0.9); // C6
+      beep(1319,base+0.0, 0.12, 0.8); // E6 (harmony)
+      beep(1047,base+0.18,0.12, 0.9);
+      beep(1319,base+0.18,0.12, 0.8);
+      // silent 0.86s gap
+    }
+  }catch(e){console.warn('[playSnd]',e);}
+}
 function stopSnd(){oscs.forEach(function(o){try{o.stop();}catch(e){}});oscs=[];}
 
 /* ═══ TOAST ═══ */
