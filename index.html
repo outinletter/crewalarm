@@ -526,7 +526,7 @@ body.dark .dl-inp[type=date]{color-scheme:dark}
       <div><div class="day-title" id="dayTitle">---</div><div class="day-subtitle">Schedule</div></div>
       <div class="day-more" onclick="openUploadSheet()">+ ICS ›</div>
     </div>
-    <div class="day-flights" id="dayFlights"><div class="empty-state">Upload a schedule to see flights here</div></div>
+    <div class="day-flights" id="dayFlights"></div>
   </div>
   <!-- Full flight list on home screen -->
   <div id="homeFlightList" style="padding:0 14px 20px"></div>
@@ -685,6 +685,204 @@ body.dark .dl-inp[type=date]{color-scheme:dark}
 <div class="toast" id="toast"></div>
 
 <script>
+/* ── SW / WakeLock / Notification globals ── */
+var swReg=null;
+var wakeLock=null;
+var deferredInstallPrompt=null;
+
+function scheduleNotificationsViaSW(){
+  try{
+    if(!swReg||!swReg.active)return;
+    var upcoming=alms.filter(function(a){
+      if(!(a.time instanceof Date))a.time=new Date(a.time);
+      return !a.dism&&a.time>new Date();
+    });
+    swReg.active.postMessage({
+      type:'SCHEDULE_ALARMS',
+      alarms:upcoming.map(function(a){
+        return {id:a.id,time:a.time.toISOString(),lbl:a.lbl,
+          dep:a.dep?(a.dep instanceof Date?a.dep.toISOString():a.dep):null};
+      })
+    });
+  }catch(e){console.warn('[SW sync]',e);}
+}
+
+function acquireWakeLock(){
+  if(!('wakeLock' in navigator))return;
+  if(wakeLock)return;
+  navigator.wakeLock.request('screen').then(function(wl){
+    wakeLock=wl;
+    wl.addEventListener('release',function(){
+      wakeLock=null;
+      if(alms.some(function(a){return !a.dism&&a.armed;})){
+        setTimeout(acquireWakeLock,2000);
+      }
+    });
+  }).catch(function(){});
+}
+
+function releaseWakeLock(){
+  if(wakeLock){try{wakeLock.release();}catch(e){}wakeLock=null;}
+}
+
+/* Re-acquire on visibility change */
+document.addEventListener('visibilitychange',function(){
+  if(document.visibilityState==='visible'){
+    if(alms.some(function(a){return !a.dism&&a.armed;}))acquireWakeLock();
+  }
+});
+
+/* ── Notification / SW / PWA stubs ── */
+function isIOS(){
+  return /iphone|ipad|ipod/i.test(navigator.userAgent)||
+    (navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+}
+function isStandalone(){
+  return window.navigator.standalone===true||
+    window.matchMedia('(display-mode: standalone)').matches;
+}
+function showNotificationIfGranted(alarm){
+  try{
+    if(!('Notification' in window)||Notification.permission!=='granted')return;
+    if(swReg){
+      swReg.showNotification('✈ '+alarm.lbl,{
+        body:fmt(alarm.time)+(alarm.dep?' · DEP '+fmt(alarm.dep):''),
+        requireInteraction:true,
+        vibrate:[500,200,500,200,500],
+        tag:'alarm-'+alarm.id,renotify:true
+      }).catch(function(){});
+    }else{
+      new Notification('✈ '+alarm.lbl,{
+        body:fmt(alarm.time)+(alarm.dep?' · DEP '+fmt(alarm.dep):''),
+        requireInteraction:true,tag:'alarm-'+alarm.id
+      });
+    }
+  }catch(e){}
+}
+function requestNotifPermission(){
+  dismissNotifBanner();
+  if(!('Notification' in window)){toast('Notifications not supported','er');return;}
+  Notification.requestPermission().then(function(r){
+    if(r==='granted'){toast('Alarm notifications enabled ✓','ok');scheduleNotificationsViaSW();}
+    else toast('Notifications blocked','er');
+  });
+}
+function dismissNotifBanner(){
+  var el=document.getElementById('notifBanner');
+  if(el)el.classList.remove('show');
+  try{localStorage.setItem('crewclock_notif_asked','1');}catch(e){}
+}
+function initNotifications(){
+  if(!('Notification' in window)){
+    if(isIOS()&&!isStandalone())setTimeout(showIOSInstallGuide,2500);
+    return;
+  }
+  if(Notification.permission==='granted'||Notification.permission==='denied')return;
+  if(localStorage.getItem('crewclock_notif_asked'))return;
+  setTimeout(function(){
+    var el=document.getElementById('notifBanner');
+    if(el)el.classList.add('show');
+  },2000);
+}
+function showIOSInstallGuide(){
+  if(document.getElementById('iosGuide'))return;
+  var el=document.createElement('div');
+  el.id='iosGuide';
+  el.style.cssText='position:fixed;bottom:0;left:0;right:0;background:var(--white);'
+    +'border-top:1px solid var(--bdr);padding:16px;z-index:145;font-family:Inter,sans-serif;'
+    +'box-shadow:0 -4px 20px rgba(59,130,196,.15)';
+  var closeBtn=document.createElement('button');
+  closeBtn.textContent='✕';
+  closeBtn.style.cssText='background:transparent;border:none;font-size:18px;color:var(--tx3);cursor:pointer;flex-shrink:0';
+  closeBtn.onclick=function(){var g=document.getElementById('iosGuide');if(g)g.remove();};
+  el.innerHTML='<div style="display:flex;align-items:flex-start;gap:10px">'
+    +'<div style="font-size:22px">📱</div>'
+    +'<div style="flex:1"><div style="font-size:13px;font-weight:700;color:var(--tx);margin-bottom:4px">Enable Background Alarms on iPhone</div>'
+    +'<div style="font-size:11px;color:var(--tx2);line-height:1.6">'
+    +'1. Tap <strong>Share</strong> ⬆️ → <strong>Add to Home Screen</strong><br>'
+    +'2. Open app from home screen icon<br>'
+    +'3. Allow notifications when prompted</div></div>'
+    +'</div>';
+  el.querySelector('div').appendChild(closeBtn);
+  document.body.appendChild(el);
+}
+function initSW(){
+  if(!('serviceWorker' in navigator)) return;
+  navigator.serviceWorker.register('./sw.js', {scope:'./'})
+    .then(function(reg){
+      swReg = reg;
+      console.log('[SW] registered, scope:', reg.scope);
+      if(reg.waiting) reg.waiting.postMessage({type:'SKIP_WAITING'});
+      reg.addEventListener('updatefound', function(){
+        var nw = reg.installing;
+        if(!nw) return;
+        nw.addEventListener('statechange', function(){
+          if(nw.state==='installed' && navigator.serviceWorker.controller)
+            nw.postMessage({type:'SKIP_WAITING'});
+        });
+      });
+      navigator.serviceWorker.addEventListener('message', function(e){
+        if(!e.data) return;
+        if(e.data.type === 'ALARM_FIRED'){
+          e.data.ids.forEach(function(id){
+            var a = alms.find(function(x){ return x.id===id; });
+            if(a && !a.ring && !a.dism){
+              if(!(a.time instanceof Date)) a.time = new Date(a.time);
+              if(a.dep && !(a.dep instanceof Date)) a.dep = new Date(a.dep);
+              a.ring = true;
+              trigAlarm(a);
+            }
+          });
+          renderDirectAlarms();
+        }
+      });
+      setTimeout(scheduleNotificationsViaSW, 500);
+    })
+    .catch(function(err){
+      console.warn('[SW] failed:', err.message);
+    });
+}
+
+
+
+
+
+
+
+self.addEventListener('notificationclick',function(e){
+  e.notification.close();
+  e.waitUntil(
+    self.clients.matchAll({type:'window',includeUncontrolled:true}).then(function(cls){
+      for(var i=0;i<cls.length;i++){if(cls[i].focus)return cls[i].focus();}
+      if(self.clients.openWindow)return self.clients.openWindow('./');
+    })
+  );
+});
+
+function installPWA(){
+  if(!deferredInstallPrompt)return;
+  deferredInstallPrompt.prompt();
+  deferredInstallPrompt.userChoice.then(function(r){
+    if(r.outcome==='accepted')toast('Installing CrewClock...','ok');
+    deferredInstallPrompt=null;dismissPWA();
+  });
+}
+function dismissPWA(){
+  var el=document.getElementById('pwaBanner');
+  if(el)el.classList.remove('show');
+  try{localStorage.setItem('crewclock_pwa_dismissed','1');}catch(e){}
+}
+window.addEventListener('beforeinstallprompt',function(e){
+  e.preventDefault();deferredInstallPrompt=e;
+  if(!localStorage.getItem('crewclock_pwa_dismissed')){
+    setTimeout(function(){var b=document.getElementById('pwaBanner');if(b)b.classList.add('show');},3000);
+  }
+});
+window.addEventListener('appinstalled',function(){
+  dismissPWA();toast('App installed! Background alarms enabled ✓','ok');
+});
+
+
 /* ═══ DEFAULTS ═══ */
 var DEF_BASE=[{id:'b1',h:3,m:0,lbl:'Wake Up'},{id:'b2',h:2,m:30,lbl:'Prepare for Duty'},{id:'b3',h:1,m:30,lbl:'Depart for Airport'},{id:'b4',h:0,m:40,lbl:'Gate Closing'}];
 var DEF_INTL=[{id:'i1',h:2,m:0,lbl:'Wake Up (Overseas)'},{id:'i2',h:1,m:30,lbl:'Hotel Checkout'},{id:'i3',h:1,m:0,lbl:'Transfer to Airport'},{id:'i4',h:0,m:40,lbl:'Gate Closing'}];
@@ -799,6 +997,7 @@ function init(){
   loadFlights();
   loadAlarms();
   renderCal();renderBasePresets();renderIntlPresets();initDrums();updateOcrModeUI();
+  initSW();initNotifications();
   // Restore home flight list if we had flights saved
   if(detectedFlights.length){ renderHomeFlightList(); }
   if(alms.length){ renderDirectAlarms(); }
@@ -878,7 +1077,7 @@ function renderDaySchedule(dk){
     return adk===dk;
   });
   if(!flights.length&&!dayAlms.length){
-    document.getElementById('dayFlights').innerHTML='<div class="empty-state">No schedule for this day</div>';
+    document.getElementById('dayFlights').innerHTML='';
     return;
   }
   var rows=[];
@@ -963,14 +1162,7 @@ function toggleHomePast(btn){
   btn.classList.toggle('open',!open);
 }
 
-function toggleHomePast(btn){
-  var sec=document.getElementById('homePastSection');if(!sec)return;
-  var open=sec.style.display==='block';
-  sec.style.display=open?'none':'block';
-  btn.innerHTML=open
-    ?'&#9656; &nbsp;'+btn.innerHTML.replace(/.*?(\d+)/,'$1').trim().split(' ')[0]+' past flight(s)'
-    :'&#9662; &nbsp;Hide past flights';
-}
+
 
 /* ═══ IMAGE UPLOAD ═══ */
 function handleImg(e){
@@ -1357,9 +1549,11 @@ function parseICS(text){
     // Skip RESERVE and non-flight events
     var sumUpper=summary.toUpperCase();
     var isReserve=SKIP_KEYWORDS.some(function(kw){
-      return sumUpper===kw.trim()
-        ||sumUpper===kw.trim()+' '
-        ||sumUpper.match(new RegExp('^'+kw.trim().replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(\\s|$)'));
+      var kw2=kw.trim();
+      return sumUpper===kw2
+        ||sumUpper.startsWith(kw2+' ')
+        ||sumUpper.startsWith(kw2+'\t')
+        ||(sumUpper===kw2);
     });
     if(isReserve)return;
     // Also skip if no flight number pattern at all (pure status events)
@@ -1499,10 +1693,7 @@ function renderFalItem(f,idx,extraCls){
       +'</div>';
   }).join('');
 
-  // No manual Set button — auto-registered. Show status indicator only.
-  var regBtn=regDone
-    ?'<span class="fal-reg-btn done" style="pointer-events:none">&#10003;</span>'
-    :'';
+  var regBtn='';
 
   var dropBtn='<button class="fal-drop-btn" onclick="event.stopPropagation();toggleFlight('+idx+')">'
     +'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>'
@@ -1598,7 +1789,7 @@ function autoRegisterAll(){
     });
     registeredFlights[idx]=true;
   });
-  if(added>0){alms.sort(function(a,b){return a.time-b.time;});saveAlarms();syncAlarmsToSW();acquireWakeLock();}
+  if(added>0){alms.sort(function(a,b){return a.time-b.time;});saveAlarms();scheduleNotificationsViaSW();acquireWakeLock();}
   return added;
 }
 
@@ -1619,7 +1810,7 @@ function registerFlight(idx){
   registeredFlights[idx]=true;rerenderFlight(idx);
   if(!added){toast(f.flight+' — expired or duplicate','er');return;}
   alms.sort(function(a,b){return a.time-b.time;});
-  saveAlarms();syncAlarmsToSW();acquireWakeLock();
+  saveAlarms();scheduleNotificationsViaSW();acquireWakeLock();
   renderCal();renderDaySchedule(calSelDate);renderHomeFlightList();
   toast(f.flight+' — '+added+' alarms set','ok');
 }
@@ -1634,7 +1825,7 @@ function addDirectAlarm(){
   if(alms.find(function(a){return !a.dism&&Math.abs(a.time-at)<2000;})){toast('An alarm already exists at this time','er');return;}
   alms.push({id:uid(),time:at,dep:null,lbl:lbl,type:'direct',armed:true,ring:false,dism:false});
   alms.sort(function(a,b){return a.time-b.time;});
-  saveAlarms();syncAlarmsToSW();acquireWakeLock();
+  saveAlarms();scheduleNotificationsViaSW();acquireWakeLock();
   renderDirectAlarms();renderCal();renderDaySchedule(calSelDate);
   toast('"'+lbl+'" '+p2(h)+':'+p2(m),'ok');
   document.getElementById('dLabel').value='';
