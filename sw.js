@@ -52,7 +52,7 @@ function startChecking(){
   if(checkInterval) return; // already running
   checkInterval = setInterval(function(){
     fireReadyAlarms();
-  }, 10000); // check every 10s
+  }, 15000); // check every 15s
   fireReadyAlarms(); // immediate first check
 }
 
@@ -63,12 +63,12 @@ function fireReadyAlarms(){
   pendingAlarms = pendingAlarms.filter(function(a){
     var t = new Date(a.time).getTime();
     var diff = now - t;
-    if(diff >= 0 && diff < 120000){ // within 2 min window
+    if(diff >= 0 && diff < 180000){ // within 3 min window
       showAlarmNotification(a);
       fired.push(a.id);
       return false; // remove from queue
     }
-    if(diff >= 120000){ // expired
+    if(diff >= 180000){ // expired
       return false;
     }
     return true; // keep

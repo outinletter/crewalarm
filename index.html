@@ -226,7 +226,7 @@ body{background:var(--bg);color:var(--tx);font-family:'Inter',sans-serif;font-si
 .fal-controls{display:flex;align-items:center;gap:6px}
 
 /* Alarm master toggle */
-.fal-alarm-tog{width:34px;height:19px;border-radius:10px;background:var(--bdr2);border:none;
+.fal-alarm-tog{display:none;width:34px;height:19px;border-radius:10px;background:var(--bdr2);border:none;
   cursor:pointer;position:relative;transition:all .2s;flex-shrink:0;outline:none}
 .fal-alarm-tog::after{content:'';position:absolute;left:2px;top:2px;width:15px;height:15px;
   border-radius:50%;background:#fff;transition:all .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
@@ -296,7 +296,7 @@ body{background:var(--bg);color:var(--tx);font-family:'Inter',sans-serif;font-si
 .tog.on-amb{background:var(--amb)}.tog.on-amb::after{left:19px}
 
 /* ── BOTTOM FAB + UPLOAD SHEET ── */
-.fab{position:fixed;bottom:24px;right:20px;width:52px;height:52px;border-radius:50%;
+.fab{position:fixed;bottom:24px;left:20px;width:52px;height:52px;border-radius:50%;
   background:var(--blue);border:none;color:#fff;font-size:24px;cursor:pointer;
   display:flex;align-items:center;justify-content:center;
   box-shadow:0 4px 20px rgba(59,130,196,.45);z-index:60;transition:all .2s}
@@ -621,25 +621,31 @@ body.dark .dl-inp[type=date]{color-scheme:dark}
     <button onclick="closeUploadSheet()" style="background:var(--blue-light);border:none;border-radius:8px;padding:5px 12px;font-size:12px;font-weight:600;color:var(--blue);cursor:pointer;font-family:Inter,sans-serif">Done</button>
   </div>
   <div class="sheet-body">
-    <!-- ICS ONLY upload zone -->
-    <div class="upz" id="icsUpz" style="border-radius:14px">
-      <input type="file" accept=".ics,.ical,text/calendar" id="icsIn" onchange="handleICS(event)">
-      <div class="up-ico" id="icsIco">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Hidden file input — triggered by button below -->
+    <input type="file" accept=".ics,.ical,text/calendar" id="icsIn" onchange="handleICS(event)" style="display:none">
+    <!-- Big tap-friendly upload button -->
+    <button onclick="document.getElementById('icsIn').click()" style="
+      width:100%;padding:28px 16px;border-radius:16px;border:2.5px dashed var(--bdr2);
+      background:var(--white);cursor:pointer;display:flex;flex-direction:column;
+      align-items:center;gap:12px;transition:all .2s;font-family:Inter,sans-serif">
+      <div style="width:56px;height:56px;border-radius:14px;background:var(--blue-light);
+        display:flex;align-items:center;justify-content:center;color:var(--blue)">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <rect x="3" y="4" width="18" height="18" rx="2"/>
           <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
           <line x1="3" y1="10" x2="21" y2="10"/>
           <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/>
         </svg>
       </div>
-      <div class="up-t" id="icsUpT">Upload ICS / iCal File</div>
-      <div class="up-s" id="icsUpS">Tap to select .ics calendar file</div>
+      <div>
+        <div style="font-size:15px;font-weight:700;color:var(--tx)" id="icsUpT">Select ICS / iCal File</div>
+        <div style="font-size:12px;color:var(--tx2);margin-top:4px" id="icsUpS">Tap to open file picker</div>
+      </div>
+    </button>
+    <div style="margin-top:12px;padding:10px 14px;background:var(--blue-light);border-radius:10px;font-size:11px;color:var(--tx2);line-height:1.6">
+      <strong style="color:var(--blue);display:block;margin-bottom:2px">Offline — No internet required</strong>
+      RESERVE, OFF, STANDBY, DO entries are automatically excluded.
     </div>
-    <div class="ocr-info" style="margin-top:10px">
-      <strong>Offline — No internet required</strong>
-      Supports standard iCalendar (.ics) from airline apps, Jeppesen, crew portals, or any calendar app. RESERVE / OFF / STANDBY entries are automatically excluded.
-    </div>
-    <!-- Parse progress / result -->
     <div id="icsResultWrap" style="margin-top:10px"></div>
     <div id="sheetFalWrap"></div>
   </div>
@@ -1322,7 +1328,21 @@ function parseICS(text){
     }
   });
   // RESERVE / standby keywords to skip
-  var SKIP_KEYWORDS=['RESERVE','RESERV','STANDBY','STBY','DO','DAY OFF','OFF','LO ','LAYOVER','REST','ATDO','RES'];
+  // Keywords to exclude — non-flight events
+  var SKIP_KEYWORDS=[
+    'RESERVE','RESERV','RES',
+    'DO','DAYS OFF','DAY OFF',
+    'OFF','OFF DUTY',
+    'STANDBY','STBY','SBY',
+    'LAYOVER','LO',
+    'REST','ATDO',
+    'REPORT','REP','REPORT TIME',
+    'CHECK IN','CHECK-IN','CHECKIN',
+    'BRIEFING','DEBRIEF',
+    'GROUND','GRD',
+    'TRAINING','TRN',
+    'SICK','SIM'
+  ];
 
   // Parse into flight-like objects
   var flights=[];
@@ -1514,7 +1534,7 @@ function renderFalItem(f,idx,extraCls){
     +'<div class="fal-right">'
     +'<div class="fal-deptime">'+f.depTime+'</div>'
     +'<div class="fal-controls">'
-    +(isPast?'':(regBtn+'<button class="'+mastTogCls+'" onclick="event.stopPropagation();toggleMasterAlarm('+idx+')" title="Toggle all alarms"></button>'))
+    +(isPast?'':regBtn)
     +dropBtn
     +'</div></div>'
     +'</div>'
@@ -1667,17 +1687,37 @@ function tickClock(){
 }
 function checkAlarms(){
   var now=new Date(),needRender=false;
-  alms.forEach(function(a){if(a.dism||a.ring)return;var diff=now-a.time;if(diff>=0&&diff<60000){a.ring=true;needRender=true;trigAlarm(a);}});
-  alms.forEach(function(a){if(a.ring&&(now-a.time)>=60000){a.ring=false;a.dism=true;needRender=true;if(!alms.some(function(x){return x.ring;})){stopSnd();document.getElementById('ro').classList.remove('show');}}});
+  alms.forEach(function(a){
+    // Ensure time is a Date object (may be string after localStorage restore)
+    if(!(a.time instanceof Date)) a.time=new Date(a.time);
+    if(a.dep&&!(a.dep instanceof Date)) a.dep=new Date(a.dep);
+    if(a.dism||a.ring)return;
+    var diff=now-a.time;
+    if(diff>=0&&diff<60000){a.ring=true;needRender=true;trigAlarm(a);}
+  });
+  alms.forEach(function(a){
+    if(a.ring&&(now-a.time)>=60000){
+      a.ring=false;a.dism=true;needRender=true;
+      if(!alms.some(function(x){return x.ring;})){
+        stopSnd();document.getElementById('ro').classList.remove('show');
+      }
+    }
+  });
   if(needRender)renderDirectAlarms();
-  var bl=alms.length;alms=alms.filter(function(a){return !a.dism||(now-a.time<300000);});
+  var bl=alms.length;
+  alms=alms.filter(function(a){return !a.dism||(now-a.time<300000);});
   if(alms.length!==bl){saveAlarms();renderDirectAlarms();}
 }
 function trigAlarm(a){
+  // Ensure time is Date
+  if(!(a.time instanceof Date)) a.time=new Date(a.time);
+  if(a.dep&&!(a.dep instanceof Date)) a.dep=new Date(a.dep);
   document.getElementById('rtt').textContent=a.lbl;
   document.getElementById('rdt').textContent=fmt(a.time)+(a.dep?' · DEP '+fmt(a.dep):'');
   document.getElementById('ro').classList.add('show');
-  playSnd();
+  // Resume AudioContext if suspended (required after page bg/lock)
+  if(aCtx&&aCtx.state==='suspended') aCtx.resume().then(function(){playSnd();});
+  else playSnd();
   if(navigator.vibrate)navigator.vibrate([400,150,400,150,400,150,400]);
   showNotificationIfGranted(a);
   acquireWakeLock();
