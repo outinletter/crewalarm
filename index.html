@@ -88,7 +88,6 @@ body{background:var(--bg);color:var(--tx);font-family:'Inter',sans-serif;font-si
 .cal-dow-cell{text-align:center;font-size:10px;font-weight:600;color:var(--tx3);padding:3px 0;letter-spacing:.3px}
 .cal-dow-cell:first-child{color:var(--red)}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);padding:0 6px 10px}
-/* Fixed mobile cell size */
 .cal-day{height:40px;display:flex;flex-direction:column;align-items:center;justify-content:center;
   cursor:pointer;transition:background .15s;border-radius:8px;position:relative}
 .cal-day:hover{background:var(--blue-light)}
@@ -121,39 +120,14 @@ body{background:var(--bg);color:var(--tx);font-family:'Inter',sans-serif;font-si
 .dfr-sep{height:1px;background:var(--bdr);margin:0 14px}
 .empty-state{padding:20px;text-align:center;color:var(--tx3);font-size:12px}
 
-/* ── UPLOAD PANEL ── */
-.upload-panel{background:var(--white);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
-.upload-tabs{display:flex;border-bottom:1px solid var(--bdr)}
-.utab{flex:1;padding:10px;border:none;background:transparent;font-family:'Inter',sans-serif;
-  font-size:12px;font-weight:500;color:var(--tx2);cursor:pointer;border-bottom:2px solid transparent;transition:all .18s}
-.utab.active{color:var(--blue);border-bottom-color:var(--blue);font-weight:600;background:var(--blue-light)}
+/* ── UPLOAD PANEL & BUTTONS ── */
 .upload-body{padding:16px}
-.upz{text-align:center;cursor:pointer;transition:background .2s;position:relative;border-radius:10px;
-  border:2px dashed var(--bdr2);padding:20px 16px;background:transparent}
-.upz:hover{border-color:var(--blue);background:var(--blue-light)}
-.upz input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
-.up-ico{width:44px;height:44px;border-radius:10px;background:var(--blue-light);
-  display:flex;align-items:center;justify-content:center;margin:0 auto 8px;color:var(--blue)}
-.up-t{font-size:13px;font-weight:600;color:var(--tx)}
-.up-s{font-size:11px;color:var(--tx2);margin-top:3px}
-#prevImg{width:100%;max-height:130px;object-fit:contain;border-radius:8px;margin-bottom:8px;display:none}
-.ocr-info{background:var(--blue-light);border:1px solid rgba(79,110,247,.2);border-radius:8px;
-  padding:10px 12px;margin-top:10px;font-size:11px;color:var(--tx2);line-height:1.5}
-.ocr-info strong{color:var(--blue);display:block;margin-bottom:2px;font-size:12px}
-.btn-az{display:none;width:100%;padding:12px;background:var(--blue);border:none;border-radius:10px;
-  color:#fff;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;margin-top:10px;font-family:'Inter',sans-serif}
+.btn-az{width:100%;padding:12px;background:var(--blue);border:none;border-radius:10px;
+  color:#fff;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;font-family:'Inter',sans-serif}
 .btn-az:hover{background:var(--blue2);box-shadow:0 4px 16px rgba(79,110,247,.35)}
 .btn-az:disabled{opacity:.5;pointer-events:none}
-.prog{display:none;margin-top:10px}
-.prog-t{height:3px;background:var(--bdr);border-radius:2px;overflow:hidden}
-.prog-f{height:100%;background:var(--blue);border-radius:2px;animation:sc 1.4s ease-in-out infinite}
-@keyframes sc{0%{width:0;margin-left:0}50%{width:55%}100%{width:0;margin-left:100%}}
-.prog-l{font-size:10px;color:var(--blue);text-align:center;margin-top:5px;font-weight:500}
-/* OCR mode indicator */
-.ocr-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;
-  font-size:10px;font-weight:600;letter-spacing:.5px;margin-left:8px}
-.ocr-badge.online{background:rgba(34,197,94,.12);color:var(--grn)}
-.ocr-badge.offline{background:rgba(251,146,60,.12);color:var(--amb)}
+.btn-outline{background:transparent; border:1.5px solid var(--blue); color:var(--blue);}
+.btn-outline:hover{background:var(--blue-light); box-shadow:none;}
 
 /* ── FLIGHT LIST ── */
 .fal-list{display:flex;flex-direction:column;gap:8px}
@@ -163,43 +137,26 @@ body{background:var(--bg);color:var(--tx);font-family:'Inter',sans-serif;font-si
 .home-section-hdr .upload-link{font-size:11px;color:var(--blue);font-weight:600;cursor:pointer;
   display:flex;align-items:center;gap:3px}
 
-/* Card base */
 .fal-item{background:var(--white);border-radius:14px;overflow:hidden;
   border:1.5px solid var(--bdr);transition:all .2s;
   box-shadow:0 1px 3px rgba(0,0,0,.05)}
-
-/* Upcoming: normal */
 .fal-item.future{border-color:var(--bdr)}
-
-/* Today: highlighted */
 .fal-item.today{
   border-color:var(--blue);
   box-shadow:0 2px 12px rgba(79,110,247,.15),0 1px 3px rgba(79,110,247,.1);
   background:linear-gradient(135deg,var(--white) 80%,rgba(79,110,247,.03))}
-
-/* Next flight: extra prominent */
 .fal-item.next-flight{
   border-color:var(--blue);border-width:2px;
   box-shadow:0 4px 20px rgba(79,110,247,.2)}
-
-/* Past: muted, no interaction */
 .fal-item.past{
-  opacity:.35;
-  box-shadow:none;
-  border-color:var(--bdr);
-  filter:saturate(.3)}
+  opacity:.35; box-shadow:none; border-color:var(--bdr); filter:saturate(.3)}
 
-/* ── CARD HEADER ── */
 .fal-header{display:flex;align-items:center;gap:10px;padding:12px 14px 10px;cursor:pointer;user-select:none}
-
-/* Left accent bar */
 .fal-accent{width:3px;border-radius:2px;align-self:stretch;flex-shrink:0;min-height:36px;background:var(--bdr2)}
-.fal-item.today .fal-accent{background:var(--blue)}
-.fal-item.next-flight .fal-accent{background:var(--blue)}
+.fal-item.today .fal-accent, .fal-item.next-flight .fal-accent{background:var(--blue)}
 .fal-item.future .fal-accent{background:var(--grn)}
 .fal-item.past .fal-accent{background:var(--bdr2)}
 
-/* Date + flight info block */
 .fal-info{flex:1;min-width:0}
 .fal-date-row{display:flex;align-items:center;gap:6px;margin-bottom:3px}
 .fal-dow{font-size:15px;font-weight:800;color:var(--tx);letter-spacing:.2px}
@@ -209,7 +166,6 @@ body{background:var(--bg);color:var(--tx);font-family:'Inter',sans-serif;font-si
 .fal-badge.today-badge{background:var(--blue);color:#fff}
 .fal-badge.next-badge{background:rgba(79,110,247,.12);color:var(--blue);border:1px solid rgba(79,110,247,.3)}
 
-/* Route row */
 .fal-route-row{display:flex;align-items:center;gap:6px}
 .fal-fnum{font-size:11px;font-weight:700;color:var(--tx2);font-family:'Share Tech Mono',monospace}
 .fal-route{font-size:12px;font-weight:600;color:var(--tx);display:flex;align-items:center;gap:4px}
@@ -218,24 +174,12 @@ body{background:var(--bg);color:var(--tx);font-family:'Inter',sans-serif;font-si
 .fal-item.past .fal-route .apt.dep{color:var(--tx2)}
 .fal-arrow{color:var(--tx3);font-size:11px}
 
-/* Right side: time + controls */
 .fal-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0}
 .fal-deptime{font-family:'Share Tech Mono',monospace;font-size:22px;font-weight:700;color:var(--tx);line-height:1}
 .fal-item.today .fal-deptime,.fal-item.next-flight .fal-deptime{color:var(--blue)}
 .fal-item.past .fal-deptime{font-size:18px;color:var(--tx3)}
 .fal-controls{display:flex;align-items:center;gap:6px}
 
-/* Alarm master toggle */
-.fal-alarm-tog{display:none;width:34px;height:19px;border-radius:10px;background:var(--bdr2);border:none;
-  cursor:pointer;position:relative;transition:all .2s;flex-shrink:0;outline:none}
-.fal-alarm-tog::after{content:'';position:absolute;left:2px;top:2px;width:15px;height:15px;
-  border-radius:50%;background:#fff;transition:all .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
-.fal-alarm-tog.on{background:var(--blue)}
-.fal-alarm-tog.on::after{left:17px}
-.fal-alarm-tog.on-intl{background:var(--amb)}
-.fal-alarm-tog.on-intl::after{left:17px}
-
-/* Dropdown chevron button */
 .fal-drop-btn{width:26px;height:26px;border-radius:7px;border:1.5px solid var(--bdr);
   background:var(--bg);cursor:pointer;display:flex;align-items:center;justify-content:center;
   color:var(--tx3);transition:all .2s;flex-shrink:0}
@@ -244,14 +188,6 @@ body{background:var(--bg);color:var(--tx);font-family:'Inter',sans-serif;font-si
 .fal-drop-btn svg{transition:transform .2s}
 .fal-item.open .fal-drop-btn svg{transform:rotate(180deg)}
 
-/* Register / done badge */
-.fal-reg-btn{padding:3px 8px;border-radius:6px;font-size:9px;font-weight:700;cursor:pointer;
-  flex-shrink:0;transition:all .18s;border:1px solid;font-family:'Inter',sans-serif;line-height:1.4}
-.fal-reg-btn.idle{background:transparent;border-color:var(--blue);color:var(--blue)}
-.fal-reg-btn.idle:active{background:var(--blue);color:#fff}
-.fal-reg-btn.done{background:rgba(34,197,94,.1);border-color:var(--grn);color:var(--grn);pointer-events:none}
-
-/* Type badge */
 .fal-type{padding:2px 6px;border-radius:4px;font-size:9px;font-weight:700;letter-spacing:.5px}
 .fal-type.base{background:var(--blue-light);color:var(--blue)}
 .fal-type.intl{background:rgba(251,146,60,.1);color:var(--amb)}
@@ -311,7 +247,7 @@ body{background:var(--bg);color:var(--tx);font-family:'Inter',sans-serif;font-si
 .sheet-title{font-size:15px;font-weight:700;color:var(--tx);padding:0 20px 12px;border-bottom:1px solid var(--bdr)}
 .sheet-body{padding:16px 20px}
 
-/* ── ALARM SECTION (inside alarm tab) ── */
+/* ── ALARM SECTION ── */
 .alarm-card{background:var(--white);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
 .alarm-card-head{padding:14px 16px;border-bottom:1px solid var(--bdr);
   display:flex;align-items:center;gap:8px}
@@ -347,9 +283,6 @@ body{background:var(--bg);color:var(--tx);font-family:'Inter',sans-serif;font-si
 .dl-inp:focus{border-color:var(--blue)}
 .dl-inp[type=date]{color-scheme:light}
 body.dark .dl-inp[type=date]{color-scheme:dark}
-.btn-da{width:100%;padding:12px;background:var(--blue);border:none;border-radius:10px;
-  color:#fff;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;font-family:'Inter',sans-serif}
-.btn-da:hover{background:var(--blue2);box-shadow:0 4px 16px rgba(79,110,247,.35)}
 
 /* ── DIRECT ALARM LIST ── */
 .dal-wrap{display:flex;flex-direction:column;gap:6px;margin-top:12px}
@@ -387,7 +320,6 @@ body.dark .dl-inp[type=date]{color-scheme:dark}
   border-radius:9px;color:var(--tx);font-family:'Share Tech Mono',monospace;font-size:15px;
   letter-spacing:2px;text-transform:uppercase;outline:none;transition:border-color .2s}
 .settings-inp:focus{border-color:var(--blue)}
-.settings-inp::placeholder{font-size:12px;letter-spacing:0;text-transform:none;color:var(--tx3)}
 .preset-card{background:var(--white);border-radius:14px;box-shadow:var(--shadow);margin-top:10px;overflow:hidden}
 .preset-head{padding:12px 16px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:8px}
 .ph-icon{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
@@ -408,15 +340,11 @@ body.dark .dl-inp[type=date]{color-scheme:dark}
 .ul{font-size:9px;color:var(--tx3)}
 .db{width:22px;height:22px;border-radius:6px;background:rgba(244,63,94,.08);border:1px solid rgba(244,63,94,.2);
   color:var(--red);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0}
-.db:hover{background:rgba(244,63,94,.18)}
 .add-btn{width:100%;padding:8px;background:transparent;border:1.5px dashed var(--bdr2);
   border-radius:8px;color:var(--tx2);font-size:11px;font-weight:600;cursor:pointer;
   transition:all .2s;margin-top:4px;font-family:'Inter',sans-serif}
 .add-btn:hover{border-color:var(--blue);color:var(--blue)}
 .add-btn.amb:hover{border-color:var(--amb);color:var(--amb)}
-.btn-save{width:100%;padding:12px;background:var(--blue);border:none;border-radius:10px;
-  color:#fff;font-size:13px;font-weight:700;cursor:pointer;margin-top:12px;transition:all .2s;font-family:'Inter',sans-serif}
-.btn-save:hover{background:var(--blue2);box-shadow:0 4px 16px rgba(79,110,247,.35)}
 
 /* ── RING OVERLAY ── */
 .ro{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;display:none;
@@ -480,12 +408,6 @@ body.dark .dl-inp[type=date]{color-scheme:dark}
   white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.2)}
 .toast.show{transform:translateX(-50%) translateY(0)}
 .toast.ok{background:var(--grn)}.toast.er{background:var(--red)}.toast.in{background:var(--blue)}
-
-/* ICS event row */
-.ics-event{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;
-  background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.2);margin-bottom:5px}
-.ics-event .ie-time{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--grn);font-weight:700;width:38px}
-.ics-event .ie-lbl{flex:1;font-size:11px;color:var(--tx);font-weight:500}
 </style>
 </head>
 <body>
@@ -523,12 +445,14 @@ body.dark .dl-inp[type=date]{color-scheme:dark}
   </div>
   <div class="day-card">
     <div class="day-header">
-      <div><div class="day-title" id="dayTitle">---</div><div class="day-subtitle">Schedule</div></div>
-      <div class="day-more" onclick="openUploadSheet()">+ ICS ›</div>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <div class="day-title" id="dayTitle">---</div>
+        <div id="dayFlightHeaderInfo" style="display:none; font-size:11px; font-weight:700; color:var(--blue); background:var(--blue-light); padding:2px 6px; border-radius:4px; font-family:'Share Tech Mono',monospace;"></div>
+      </div>
+      <div class="day-more" onclick="openUploadSheet()">+ Add ›</div>
     </div>
     <div class="day-flights" id="dayFlights"></div>
   </div>
-  <!-- Full flight list on home screen -->
   <div id="homeFlightList" style="padding:0 14px 20px"></div>
 </div>
 
@@ -561,7 +485,7 @@ body.dark .dl-inp[type=date]{color-scheme:dark}
             </div>
           </div>
         </div>
-        <button class="btn-da" onclick="addDirectAlarm()">Add Alarm</button>
+        <button class="btn-az" onclick="addDirectAlarm()" style="margin-top: 15px;">Add Alarm</button>
       </div>
     </div>
     <div id="dalCardWrap"></div>
@@ -600,7 +524,7 @@ body.dark .dl-inp[type=date]{color-scheme:dark}
       </div>
       <div class="preset-body" id="intlPresets"></div>
     </div>
-    <button class="btn-save" onclick="saveSettingsUI()">Save Settings</button>
+    <button class="btn-az" style="margin-top:15px;" onclick="saveSettingsUI()">Save Settings</button>
     <button onclick="clearAllData()" style="width:100%;padding:11px;background:transparent;border:1.5px solid var(--red);border-radius:10px;color:var(--red);font-size:13px;font-weight:600;cursor:pointer;margin-top:8px;font-family:Inter,sans-serif">
       Clear All Saved Data
     </button>
@@ -608,7 +532,7 @@ body.dark .dl-inp[type=date]{color-scheme:dark}
 </div>
 
 <!-- FAB: Upload Schedule -->
-<button class="fab" onclick="openUploadSheet()" title="Import ICS Schedule">
+<button class="fab" onclick="openUploadSheet()" title="Import Schedule">
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
 </button>
 
@@ -621,31 +545,20 @@ body.dark .dl-inp[type=date]{color-scheme:dark}
     <button onclick="closeUploadSheet()" style="background:var(--blue-light);border:none;border-radius:8px;padding:5px 12px;font-size:12px;font-weight:600;color:var(--blue);cursor:pointer;font-family:Inter,sans-serif">Done</button>
   </div>
   <div class="sheet-body">
-    <!-- Hidden file input — triggered by button below -->
+    <!-- ICS 파일 인풋 (숨김) -->
     <input type="file" accept=".ics,.ical,text/calendar" id="icsIn" onchange="handleICS(event)" style="display:none">
-    <!-- Big tap-friendly upload button -->
-    <button onclick="document.getElementById('icsIn').click()" style="
-      width:100%;padding:28px 16px;border-radius:16px;border:2.5px dashed var(--bdr2);
-      background:var(--white);cursor:pointer;display:flex;flex-direction:column;
-      align-items:center;gap:12px;transition:all .2s;font-family:Inter,sans-serif">
-      <div style="width:56px;height:56px;border-radius:14px;background:var(--blue-light);
-        display:flex;align-items:center;justify-content:center;color:var(--blue)">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="4" width="18" height="18" rx="2"/>
-          <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
-          <line x1="3" y1="10" x2="21" y2="10"/>
-          <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/>
-        </svg>
-      </div>
-      <div>
-        <div style="font-size:15px;font-weight:700;color:var(--tx)" id="icsUpT">Select ICS / iCal File</div>
-        <div style="font-size:12px;color:var(--tx2);margin-top:4px" id="icsUpS">Tap to open file picker</div>
-      </div>
-    </button>
-    <div style="margin-top:12px;padding:10px 14px;background:var(--blue-light);border-radius:10px;font-size:11px;color:var(--tx2);line-height:1.6">
-      <strong style="color:var(--blue);display:block;margin-bottom:2px">Offline — No internet required</strong>
-      RESERVE, OFF, STANDBY, DO entries are automatically excluded.
+    
+    <!-- FIX 3: 명시적인 ICS 업로드 / 수동 입력 선택 버튼 -->
+    <div style="display:flex; gap:10px; margin-bottom: 12px;">
+      <button onclick="document.getElementById('icsIn').click()" class="btn-az" style="flex:1; margin-top:0;">Upload ICS File</button>
+      <button onclick="showManualEntryFallback()" class="btn-az btn-outline" style="flex:1; margin-top:0;">Manual Text</button>
     </div>
+
+    <div style="padding:10px 14px;background:var(--blue-light);border-radius:10px;font-size:11px;color:var(--tx2);line-height:1.6">
+      <strong style="color:var(--blue);display:block;margin-bottom:2px">Offline — No internet required</strong>
+      RESERVE, OFF, STANDBY, DO entries are automatically excluded from ICS.
+    </div>
+    
     <div id="icsResultWrap" style="margin-top:10px"></div>
     <div id="sheetFalWrap"></div>
   </div>
@@ -671,7 +584,7 @@ body.dark .dl-inp[type=date]{color-scheme:dark}
   <button class="nb-close" onclick="dismissNotifBanner()">&#x2715;</button>
 </div>
 
-<!-- PWA install banner (Android Chrome) -->
+<!-- PWA install banner -->
 <div class="pwa-banner" id="pwaBanner">
   <div class="pb-ico">✈</div>
   <div class="pb-body">
@@ -700,7 +613,8 @@ function scheduleNotificationsViaSW(){
     swReg.active.postMessage({
       type:'SCHEDULE_ALARMS',
       alarms:upcoming.map(function(a){
-        return {id:a.id,time:a.time.toISOString(),lbl:a.lbl,
+        var nlbl = a.lbl + (a.fnum ? ' (' + a.fnum + ')' : '');
+        return {id:a.id,time:a.time.toISOString(),lbl:nlbl,
           dep:a.dep?(a.dep instanceof Date?a.dep.toISOString():a.dep):null};
       })
     });
@@ -725,14 +639,12 @@ function releaseWakeLock(){
   if(wakeLock){try{wakeLock.release();}catch(e){}wakeLock=null;}
 }
 
-/* Re-acquire on visibility change */
 document.addEventListener('visibilitychange',function(){
   if(document.visibilityState==='visible'){
     if(alms.some(function(a){return !a.dism&&a.armed;}))acquireWakeLock();
   }
 });
 
-/* ── Notification / SW / PWA stubs ── */
 function isIOS(){
   return /iphone|ipad|ipod/i.test(navigator.userAgent)||
     (navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
@@ -744,15 +656,16 @@ function isStandalone(){
 function showNotificationIfGranted(alarm){
   try{
     if(!('Notification' in window)||Notification.permission!=='granted')return;
+    var nlbl = alarm.lbl + (alarm.fnum ? ' (' + alarm.fnum + ')' : '');
     if(swReg){
-      swReg.showNotification('✈ '+alarm.lbl,{
+      swReg.showNotification('✈ '+nlbl,{
         body:fmt(alarm.time)+(alarm.dep?' · DEP '+fmt(alarm.dep):''),
         requireInteraction:true,
         vibrate:[500,200,500,200,500],
         tag:'alarm-'+alarm.id,renotify:true
       }).catch(function(){});
     }else{
-      new Notification('✈ '+alarm.lbl,{
+      new Notification('✈ '+nlbl,{
         body:fmt(alarm.time)+(alarm.dep?' · DEP '+fmt(alarm.dep):''),
         requireInteraction:true,tag:'alarm-'+alarm.id
       });
@@ -811,7 +724,6 @@ function initSW(){
   navigator.serviceWorker.register('./sw.js', {scope:'./'})
     .then(function(reg){
       swReg = reg;
-      console.log('[SW] registered, scope:', reg.scope);
       if(reg.waiting) reg.waiting.postMessage({type:'SKIP_WAITING'});
       reg.addEventListener('updatefound', function(){
         var nw = reg.installing;
@@ -839,25 +751,9 @@ function initSW(){
       setTimeout(scheduleNotificationsViaSW, 500);
     })
     .catch(function(err){
-      console.warn('[SW] failed:', err.message);
+      console.warn('[SW] failed (Ignored if running locally/single file):', err.message);
     });
 }
-
-
-
-
-
-
-
-self.addEventListener('notificationclick',function(e){
-  e.notification.close();
-  e.waitUntil(
-    self.clients.matchAll({type:'window',includeUncontrolled:true}).then(function(cls){
-      for(var i=0;i<cls.length;i++){if(cls[i].focus)return cls[i].focus();}
-      if(self.clients.openWindow)return self.clients.openWindow('./');
-    })
-  );
-});
 
 function installPWA(){
   if(!deferredInstallPrompt)return;
@@ -882,15 +778,14 @@ window.addEventListener('appinstalled',function(){
   dismissPWA();toast('App installed! Background alarms enabled ✓','ok');
 });
 
-
 /* ═══ DEFAULTS ═══ */
-var DEF_BASE=[{id:'b1',h:3,m:0,lbl:'Wake Up'},{id:'b2',h:2,m:30,lbl:'Prepare for Duty'},{id:'b3',h:1,m:30,lbl:'Depart for Airport'},{id:'b4',h:0,m:40,lbl:'Gate Closing'}];
-var DEF_INTL=[{id:'i1',h:2,m:0,lbl:'Wake Up (Overseas)'},{id:'i2',h:1,m:30,lbl:'Hotel Checkout'},{id:'i3',h:1,m:0,lbl:'Transfer to Airport'},{id:'i4',h:0,m:40,lbl:'Gate Closing'}];
+var DEF_BASE=[{id:'b1',h:4,m:30,lbl:'Prepare for Duty'},{id:'b2',h:4,m:0,lbl:'Depart for Airport'},{id:'b3',h:0,m:40,lbl:'BOARDING TIME'}];
+var DEF_INTL=[{id:'i1',h:3,m:0,lbl:'Wake Up (Overseas)'},{id:'i2',h:2,m:0,lbl:'Hotel Checkout'},{id:'i3',h:0,m:40,lbl:'BOARDING TIME'}];
 
 /* ═══ STATE ═══ */
 var baseApt='ICN',baseOffs=[],intlOffs=[],baseOn={},intlOn={},bOc=100,iOc=200;
 var alms=[],detectedFlights=[],flightToggles={},openFlights={},registeredFlights={};
-var curImg=null,aCtx=null,oscs=[];
+var aCtx=null,oscs=[];
 var _now=new Date(),drumH_val=_now.getHours(),drumM_val=_now.getMinutes();
 var calYear,calMonth,calSelDate;
 var ITEM_H=26;
@@ -905,32 +800,14 @@ function todayStr(){var n=new Date();return n.getFullYear()+'-'+p2(n.getMonth()+
 function buildDate(ds,h,m){if(ds){var dp=ds.split('-');return new Date(+dp[0],+dp[1]-1,+dp[2],h,m,0,0);}var d=new Date();d.setHours(h,m,0,0);return d;}
 function parseFlightDate(f){if(!f.date)return new Date(9999,0,1);var dp=f.date.split('-');var tp=(f.depTime||'00:00').split(':');return new Date(+dp[0],+dp[1]-1,+dp[2],+tp[0],+tp[1],0,0);}
 
-/* ═══ ONLINE DETECTION ═══ */
-function updateOcrModeUI(){
-  var badge=document.getElementById('ocrModeBadge');
-  var title=document.getElementById('ocrModeTitle');
-  var desc=document.getElementById('ocrModeDesc');
-  if(!badge)return;
-  if(isOnline){
-    badge.className='ocr-badge online';badge.textContent='● Online';
-    if(title)title.textContent='AI Analysis (Online)';
-    if(desc)desc.textContent='Uses Claude AI for high-accuracy schedule parsing.';
-  }else{
-    badge.className='ocr-badge offline';badge.textContent='● Offline';
-    if(title)title.textContent='Offline OCR Mode';
-    if(desc)desc.textContent='Tesseract.js OCR runs fully on-device. Upload a clear, high-contrast schedule image for best results.';
-  }
-}
-
 /* ═══ LOAD / SAVE ═══ */
 function loadSettings(){
-  try{var s=localStorage.getItem('crewclock_v4');if(s){var d=JSON.parse(s);baseApt=(d.baseApt||'ICN').toUpperCase();baseOffs=d.baseOffs||dc(DEF_BASE);intlOffs=d.intlOffs||dc(DEF_INTL);baseOn=d.baseOn||{};intlOn=d.intlOn||{};}else resetDef();}catch(e){resetDef();}
+  try{var s=localStorage.getItem('crewclock_v5');if(s){var d=JSON.parse(s);baseApt=(d.baseApt||'ICN').toUpperCase();baseOffs=d.baseOffs||dc(DEF_BASE);intlOffs=d.intlOffs||dc(DEF_INTL);baseOn=d.baseOn||{};intlOn=d.intlOn||{};}else resetDef();}catch(e){resetDef();}
   baseOffs.forEach(function(o){if(baseOn[o.id]===undefined)baseOn[o.id]=true;});
   intlOffs.forEach(function(o){if(intlOn[o.id]===undefined)intlOn[o.id]=true;});
 }
-function saveSettings(){try{syncAllPresets();localStorage.setItem('crewclock_v4',JSON.stringify({baseApt:baseApt,baseOffs:baseOffs,intlOffs:intlOffs,baseOn:baseOn,intlOn:intlOn}));}catch(e){}}
+function saveSettings(){try{syncAllPresets();localStorage.setItem('crewclock_v5',JSON.stringify({baseApt:baseApt,baseOffs:baseOffs,intlOffs:intlOffs,baseOn:baseOn,intlOn:intlOn}));}catch(e){}}
 
-/* ── 스케줄 + 알람 영속 저장 ── */
 function saveFlights(){
   try{
     localStorage.setItem('crewclock_flights', JSON.stringify(detectedFlights));
@@ -946,7 +823,8 @@ function saveAlarms(){
         id:a.id,
         time:a.time instanceof Date?a.time.toISOString():a.time,
         dep:a.dep instanceof Date?a.dep.toISOString():(a.dep||null),
-        lbl:a.lbl,type:a.type,armed:a.armed,ring:false,dism:a.dism
+        lbl:a.lbl,type:a.type,armed:a.armed,ring:false,dism:a.dism,
+        fnum:a.fnum, depApt:a.depApt, arrApt:a.arrApt
       };
     });
     localStorage.setItem('crewclock_alarms', JSON.stringify(data));
@@ -977,7 +855,8 @@ function loadAlarms(){
           id:a.id,
           time:new Date(a.time),
           dep:a.dep?new Date(a.dep):null,
-          lbl:a.lbl,type:a.type,armed:a.armed,ring:false,dism:a.dism
+          lbl:a.lbl,type:a.type,armed:a.armed,ring:false,dism:a.dism,
+          fnum:a.fnum, depApt:a.depApt, arrApt:a.arrApt
         };
       });
   }catch(e){console.warn('[load alarms]',e);}
@@ -993,12 +872,12 @@ function init(){
   document.getElementById('baseAptInput').value=baseApt;
   var dark=localStorage.getItem('crewclock_dark')==='1';
   if(dark){document.body.classList.add('dark');var b=document.getElementById('darkTogBtn');if(b)b.classList.add('on');}
-  // Load persisted schedule + alarms
+  
   loadFlights();
   loadAlarms();
-  renderCal();renderBasePresets();renderIntlPresets();initDrums();updateOcrModeUI();
+  renderCal();renderBasePresets();renderIntlPresets();initDrums();
   initSW();initNotifications();
-  // Restore home flight list if we had flights saved
+  
   if(detectedFlights.length){ renderHomeFlightList(); }
   if(alms.length){ renderDirectAlarms(); }
   tickClock();setInterval(tickClock,1000);setInterval(checkAlarms,1000);
@@ -1019,20 +898,85 @@ function switchTab(name,btn){
 function openUploadSheet(){
   document.getElementById('sheetOverlay').classList.add('show');
   document.getElementById('uploadSheet').classList.add('open');
-  updateOcrModeUI();
 }
 function closeUploadSheet(){
   document.getElementById('sheetOverlay').classList.remove('show');
   document.getElementById('uploadSheet').classList.remove('open');
-  // 스캔 결과가 있으면 홈 화면으로 이동
-  if(detectedFlights.length){
-    switchTab('calendar',null);
-  }
+  if(detectedFlights.length) switchTab('calendar',null);
 }
-// switchUploadTab removed (ICS only)
+
+/* ── FIX 3: 수동 스케줄 텍스트 파서 UI ── */
+function showManualEntryFallback(){
+  var wrap=document.getElementById('sheetFalWrap');
+  if(!wrap)return;
+  wrap.innerHTML='<div style="margin-top:14px;background:var(--white);border-radius:12px;padding:16px;box-shadow:var(--shadow)">'
+    +'<div style="font-size:12px;font-weight:700;color:var(--tx);margin-bottom:10px">Manual Flight Entry</div>'
+    +'<div style="font-size:11px;color:var(--tx2);margin-bottom:12px;line-height:1.5">'
+    +'Enter one flight per line:<br>'
+    +'<code style="font-size:10px;background:var(--bg);padding:2px 6px;border-radius:4px">KE913 ICN 09:55 MAD</code>'
+    +'</div>'
+    +'<textarea id="manualFlightInput" rows="6" style="width:100%;padding:10px;border:1.5px solid var(--bdr);border-radius:9px;font-family:Share Tech Mono,monospace;font-size:12px;background:var(--bg);color:var(--tx);resize:vertical;outline:none;line-height:1.8" placeholder="03 KE913 ICN 09:55 MAD&#10;05 KE914 MAD 20:00 ICN"></textarea>'
+    +'<div style="margin-bottom:8px; margin-top:8px"><label style="font-size:11px;color:var(--tx2);font-weight:600">Month &amp; Year</label>'
+    +'<input type="month" id="manualMonth" style="width:100%;margin-top:4px;padding:9px 10px;border:1.5px solid var(--bdr);border-radius:9px;background:var(--bg);color:var(--tx);font-size:13px;outline:none;color-scheme:light dark"></div>'
+    +'<button class="btn-az" onclick="parseManualEntry()" style="margin-top:10px">Parse Flights</button>'
+    +'</div>';
+    
+    // 자동 이번달 세팅
+    var dt = new Date();
+    document.getElementById('manualMonth').value = dt.getFullYear() + "-" + p2(dt.getMonth() + 1);
+}
+
+function parseManualEntry(){
+  var raw=document.getElementById('manualFlightInput').value||'';
+  var mo=document.getElementById('manualMonth').value||'';
+  var yr,mIdx;
+  if(mo){var mp=mo.split('-');yr=+mp[0];mIdx=+mp[1]-1;}
+  else{var n=new Date();yr=n.getFullYear();mIdx=n.getMonth();}
+
+  var flights=[];var seen={};
+  raw.split('\n').forEach(function(line){
+    line=line.trim();if(!line)return;
+    // Pattern: [Day] FNUM DEP HH:MM [ARR]
+    var datePrefix=line.match(/^(\d{1,2})\s+/);
+    var dayNum=datePrefix?parseInt(datePrefix[1]):null;
+    var rest=datePrefix?line.slice(datePrefix[0].length):line;
+    var m=rest.match(/([A-Z]{1,3}\s?\d{2,4})\s+([A-Z]{3})\s+(\d{1,2}:\d{2})(?:\s+([A-Z]{3}))?/i);
+    if(!m)return;
+    
+    var fnum=m[1].replace(/\s/,'').toUpperCase();
+    var dep=m[2].toUpperCase();
+    var time=m[3];
+    var arr=(m[4]||'???').toUpperCase();
+    var d=dayNum||1;
+    var dateStr=yr+'-'+p2(mIdx+1)+'-'+p2(d);
+    
+    var key=dateStr+fnum+dep+time;
+    if(seen[key])return;seen[key]=true;
+    flights.push({date:dateStr,flight:fnum,depApt:dep,depTime:time,arrApt:arr,type:dep===baseApt?'base':'intl'});
+  });
+
+  if(!flights.length){toast('No valid flights found in input','er');return;}
+  detectedFlights=flights;
+  initFlightToggles();
+  autoRegisterAll(); // 수동입력도 자동으로 알람 등록
+  saveFlights();
+  renderHomeFlightList();
+  renderSheetFalWrap();
+  renderCal();
+  renderDaySchedule(calSelDate);
+  closeUploadSheet();
+  toast(flights.length+' flights added','ok');
+}
+
 
 /* ═══ CALENDAR ═══ */
-function calMove(d){calMonth+=d;if(calMonth>11){calMonth=0;calYear++;}if(calMonth<0){calMonth=11;calYear--;}renderCal();}
+function calMove(d){
+    calMonth+=d;
+    if(calMonth>11){calMonth=0;calYear++;}
+    if(calMonth<0){calMonth=11;calYear--;}
+    renderCal();
+}
+
 function renderCal(){
   var M=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   document.getElementById('calMonthLbl').textContent=M[calMonth]+' '+calYear;
@@ -1076,6 +1020,20 @@ function renderDaySchedule(dk){
     var adk=a.time.getFullYear()+'-'+p2(a.time.getMonth()+1)+'-'+p2(a.time.getDate());
     return adk===dk;
   });
+
+  // 해당 날짜의 비행 정보를 헤더 옆으로 이동
+  var hInfoEl = document.getElementById('dayFlightHeaderInfo');
+  if(hInfoEl) {
+     if(flights.length > 0) {
+         hInfoEl.innerHTML = flights.map(function(f){
+             return f.flight + ' ' + f.depApt + '→' + (f.arrApt||'---');
+         }).join('<br>');
+         hInfoEl.style.display = 'block';
+     } else {
+         hInfoEl.style.display = 'none';
+     }
+  }
+
   if(!flights.length&&!dayAlms.length){
     document.getElementById('dayFlights').innerHTML='';
     return;
@@ -1094,19 +1052,16 @@ function renderDaySchedule(dk){
     rows.push({s:+(f.depTime||'0000').replace(':',''), html:h});
   });
   dayAlms.forEach(function(a){
+    // 개별 알람 목록 옆에서는 비행 정보 삭제 (헤더로 옮겼기 때문)
+    var routeHtml = escQ(a.lbl);
     var h='<div class="dfr">'
       +'<div class="dfr-time">'+fmt(a.time)+'</div>'
-      +'<div class="dfr-info"><div class="dfr-route">'+escQ(a.lbl)+'</div></div>'
+      +'<div class="dfr-info"><div class="dfr-route">'+routeHtml+'</div></div>'
       +'</div>';
     rows.push({s:+fmt(a.time).replace(':',''), html:h});
   });
   rows.sort(function(a,b){return a.s-b.s;});
   document.getElementById('dayFlights').innerHTML=rows.map(function(r){return r.html;}).join('<div class="dfr-sep"></div>');
-}
-
-function renderCalFalWrap(dk){
-  // no-op: kept for compatibility, home list shows all flights
-  renderHomeFlightList();
 }
 
 function renderHomeFlightList(){
@@ -1123,14 +1078,11 @@ function renderHomeFlightList(){
     else upcoming.push({f:f,idx:idx});
   });
 
-  // Mark the very next flight
   var nextIdx=upcoming.length>0?upcoming[0].idx:-1;
 
   var html='<div class="home-section-hdr">'
     +'<h2>Flight Schedule &nbsp;<span style="font-size:10px;font-weight:500;color:var(--tx3)">'+detectedFlights.length+' flights</span></h2>'
-    +'<div class="upload-link" onclick="openUploadSheet()">'
-    +'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>'
-    +'Upload</div></div>';
+    +'</div>';
 
   if(upcoming.length){
     html+='<div class="fal-list">'+upcoming.map(function(x){
@@ -1148,7 +1100,7 @@ function renderHomeFlightList(){
       +past.length+' past flight'+(past.length>1?'s':'')
       +'</button></div>'
       +'<div id="homePastSection" style="display:none">'
-      +'<div class="fal-list">'+past.map(function(x){return renderFalItem(x.f,x.idx,'past');}).join('')+'</div>'
+      +'<div class="fal-list">'+past.map(function(x){return renderFalItemPast(x.f,x.idx);}).join('')+'</div>'
       +'</div>';
   }
 
@@ -1162,296 +1114,9 @@ function toggleHomePast(btn){
   btn.classList.toggle('open',!open);
 }
 
-
-
-/* ═══ IMAGE UPLOAD ═══ */
-function handleImg(e){
-  var f=e.target.files[0];if(!f)return;curImg=f;
-  var r=new FileReader();
-  r.onload=function(ev){
-    var img=document.getElementById('prevImg');img.src=ev.target.result;img.style.display='block';
-    document.getElementById('upIco').style.display='none';
-    document.getElementById('upT').textContent=f.name;
-    document.getElementById('upS').textContent='Tap to change';
-    document.getElementById('azBtn').style.display='block';
-  };r.readAsDataURL(f);
-}
-
-
-/* ═══ OFFLINE OCR — Canvas pixel reader (no Worker, no CORS) ═══ */
-function analyzeOffline(){
-  if(!curImg){toast('Please select an image first','er');return;}
-  syncAllPresets();
-  var btn=document.getElementById('azBtn');
-  var pg=document.getElementById('prog');
-  var pl=document.getElementById('progL');
-  btn.disabled=true;btn.style.display='none';pg.style.display='block';
-  pl.textContent='Reading image...';
-
-  function finish(flights){
-    pg.style.display='none';btn.disabled=false;btn.style.display='block';
-    if(!flights.length){
-      toast('No flights found — check base airport in Settings','er');
-      return;
-    }
-    detectedFlights=flights;
-    initFlightToggles();renderHomeFlightList();renderSheetFalWrap();renderCal();renderDaySchedule(calSelDate);
-    closeUploadSheet();
-    toast(flights.length+' flights detected','ok');
-  }
-
-  function fail(msg){
-    pg.style.display='none';btn.disabled=false;btn.style.display='block';
-    toast(msg||'Scan failed','er');
-  }
-
-  // ── Strategy: read image as data URL → draw on canvas → extract pixel rows
-  // Then use line-by-line character recognition via Canvas API (no Worker needed)
-  var url=URL.createObjectURL(curImg);
-  var img=new Image();
-  img.crossOrigin='anonymous';
-  img.onload=function(){
-    URL.revokeObjectURL(url);
-    pl.textContent='Processing image...';
-
-    // Draw to offscreen canvas
-    var canvas=document.createElement('canvas');
-    var MAX=1600;
-    var scale=Math.min(1,MAX/Math.max(img.width,img.height));
-    canvas.width=Math.round(img.width*scale);
-    canvas.height=Math.round(img.height*scale);
-    var ctx=canvas.getContext('2d');
-    ctx.drawImage(img,0,0,canvas.width,canvas.height);
-
-    pl.textContent='Extracting text regions...';
-
-    // Get image data for text extraction
-    var imageData;
-    try{
-      imageData=ctx.getImageData(0,0,canvas.width,canvas.height);
-    }catch(e){
-      // Canvas tainted (CORS) — fall back to manual entry UI
-      fail('Cannot read image pixels (security restriction). Please use the manual entry below.');
-      showManualEntryFallback();
-      return;
-    }
-
-    // Convert to grayscale + find dark text regions
-    var text=extractTextFromCanvas(canvas,imageData);
-    pl.textContent='Parsing schedule...';
-    var flights=parseScheduleText(text);
-    finish(flights);
-  };
-  img.onerror=function(){
-    URL.revokeObjectURL(url);
-    fail('Failed to load image');
-  };
-  img.src=url;
-}
-
-/* ── Canvas-based text extraction ──
-   Reads pixel rows, finds text-colored (dark) pixels, 
-   groups them into character-approximate blocks, outputs rough text. */
-function extractTextFromCanvas(canvas,imageData){
-  var w=canvas.width,h=canvas.height;
-  var data=imageData.data;
-
-  // Convert to grayscale brightness array
-  var gray=new Uint8Array(w*h);
-  for(var i=0;i<w*h;i++){
-    gray[i]=Math.round(0.299*data[i*4]+0.587*data[i*4+1]+0.114*data[i*4+2]);
-  }
-
-  // Detect background brightness (most common value = background)
-  var hist=new Int32Array(256);
-  for(var i=0;i<gray.length;i++) hist[gray[i]]++;
-  var bgBright=0,bgCount=0;
-  for(var i=200;i<256;i++){if(hist[i]>bgCount){bgCount=hist[i];bgBright=i;}}
-  var threshold=bgBright-40; // pixels darker than this = text
-
-  // Find horizontal text rows (rows with significant dark pixels)
-  var rowLines=[];
-  var inText=false,rowStart=0;
-  for(var y=0;y<h;y++){
-    var darkCount=0;
-    for(var x=0;x<w;x++){
-      if(gray[y*w+x]<threshold) darkCount++;
-    }
-    var ratio=darkCount/w;
-    if(ratio>0.01&&!inText){inText=true;rowStart=y;}
-    else if(ratio<=0.005&&inText){inText=false;rowLines.push({y0:rowStart,y1:y});}
-  }
-  if(inText) rowLines.push({y0:rowStart,y1:h});
-
-  // For each row, extract column segments (characters)
-  // We don't do full OCR — instead we return the raw pixel pattern
-  // and rely on parseScheduleText pattern matching on a simplified representation.
-  // 
-  // Better approach: use the image filename + EXIF + fallback patterns
-  // Return a synthesized text based on pixel block analysis
-  
-  // Actually — since we can't do real OCR without Tesseract Worker,
-  // return empty and let the caller show manual UI
-  return '';
-}
-
-/* ── Manual flight entry fallback UI ── */
-function showManualEntryFallback(){
-  var wrap=document.getElementById('sheetFalWrap');
-  if(!wrap)return;
-  wrap.innerHTML='<div style="margin-top:14px;background:var(--white);border-radius:12px;padding:16px;box-shadow:var(--shadow)">'
-    +'<div style="font-size:12px;font-weight:700;color:var(--tx);margin-bottom:10px">Manual Flight Entry</div>'
-    +'<div style="font-size:11px;color:var(--tx2);margin-bottom:12px;line-height:1.5">'
-    +'Enter one flight per line:<br>'
-    +'<code style="font-size:10px;background:var(--bg);padding:2px 6px;border-radius:4px">KE913 ICN 09:55 MAD</code>'
-    +'</div>'
-    +'<textarea id="manualFlightInput" rows="8" style="width:100%;padding:10px;border:1.5px solid var(--bdr);border-radius:9px;font-family:Share Tech Mono,monospace;font-size:12px;background:var(--bg);color:var(--tx);resize:vertical;outline:none;line-height:1.8" placeholder="KE913 ICN 09:55 MAD&#10;KE914 MAD 20:00 ICN&#10;KE041 ICN 16:40 SEA"></textarea>'
-    +'<div style="margin-bottom:8px"><label style="font-size:11px;color:var(--tx2);font-weight:600">Month &amp; Year</label>'
-    +'<input type="month" id="manualMonth" style="width:100%;margin-top:4px;padding:9px 10px;border:1.5px solid var(--bdr);border-radius:9px;background:var(--bg);color:var(--tx);font-size:13px;outline:none;color-scheme:light dark"></div>'
-    +'<button onclick="parseManualEntry()" style="width:100%;padding:12px;background:var(--blue);border:none;border-radius:10px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Parse Flights</button>'
-    +'</div>';
-}
-
-function parseManualEntry(){
-  var raw=document.getElementById('manualFlightInput').value||'';
-  var mo=document.getElementById('manualMonth').value||'';
-  var yr,mIdx;
-  if(mo){var mp=mo.split('-');yr=+mp[0];mIdx=+mp[1]-1;}
-  else{var n=new Date();yr=n.getFullYear();mIdx=n.getMonth();}
-
-  var MONTHS={jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
-  var flights=[];var seen={};
-  raw.split('\n').forEach(function(line){
-    line=line.trim();if(!line)return;
-    // Pattern: [DATE] FNUM DEP HH:MM ARR
-    // e.g. "KE913 ICN 09:55 MAD" or "03 KE913 ICN 09:55 MAD"
-    var datePrefix=line.match(/^(\d{1,2})\s+/);
-    var dayNum=datePrefix?parseInt(datePrefix[1]):null;
-    var rest=datePrefix?line.slice(datePrefix[0].length):line;
-    var m=rest.match(/([A-Z]{1,3}\s?\d{2,4})\s+([A-Z]{3})\s+(\d{1,2}:\d{2})(?:\s+([A-Z]{3}))?/i);
-    if(!m)return;
-    var fnum=m[1].replace(/\s/,'').toUpperCase();
-    var dep=m[2].toUpperCase();
-    var time=m[3];
-    var arr=(m[4]||'???').toUpperCase();
-    var d=dayNum||1;
-    var dateStr=yr+'-'+p2(mIdx+1)+'-'+p2(d);
-    var key=dateStr+fnum+dep+time;
-    if(seen[key])return;seen[key]=true;
-    flights.push({date:dateStr,flight:fnum,depApt:dep,depTime:time,arrApt:arr,type:dep===baseApt?'base':'intl'});
-  });
-
-  if(!flights.length){toast('No valid flights found in input','er');return;}
-  detectedFlights=flights;
-  initFlightToggles();renderHomeFlightList();renderSheetFalWrap();renderCal();renderDaySchedule(calSelDate);
-  closeUploadSheet();
-  toast(flights.length+' flights added','ok');
-}
-
-
-/* ═══ OFFLINE TEXT PARSER (Airline Schedule Specialized) ═══ */
-function parseScheduleText(rawText){
-  var text=rawText;
-  var flights=[];
-  var today=new Date();
-  var curYear=today.getFullYear();
-
-  // ── Step 1: Detect month/year from header (e.g. "May 2026") ──
-  var MONTHS={jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
-  var curMo=today.getMonth();
-  var moMatch=text.match(/(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{4})/i);
-  if(!moMatch) moMatch=text.match(/(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\w*\s+(\d{4})/i);
-  if(moMatch){
-    var moKey=moMatch[1].toLowerCase().slice(0,3);
-    curMo=MONTHS[moKey]!==undefined?MONTHS[moKey]:curMo;
-    curYear=parseInt(moMatch[2]);
-  }
-
-  // ── Step 2: Build position → date map from calendar grid ──
-  // Find "May 01", "May 02"... or just "01","02"... patterns with context
-  var dateMap={};  // charIndex → {y,m,d}
-  // Full "MON DD" pattern
-  var fullDateRe=/(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\w*\s+(\d{1,2})/gi;
-  var fdm;
-  while((fdm=fullDateRe.exec(text))!==null){
-    var d=parseInt(fdm[1]);
-    var mk=fdm[0].trim().toLowerCase().slice(0,3);
-    var mo=MONTHS[mk]!==undefined?MONTHS[mk]:curMo;
-    var yr=curYear;
-    if(mo<curMo-1) yr++;  // handle year wrap
-    dateMap[fdm.index]={y:yr,m:mo,d:d};
-  }
-  // Standalone day numbers (less reliable, use as fallback)
-  var dayOnlyRe=new RegExp('(?:^|\\n)\\s*(\\d{1,2})\\s*(?:\\n|$)','gm');
-  var dom;
-  while((dom=dayOnlyRe.exec(text))!==null){
-    if(!dateMap[dom.index]){
-      var dv=parseInt(dom[1]);
-      if(dv>=1&&dv<=31) dateMap[dom.index]={y:curYear,m:curMo,d:dv};
-    }
-  }
-
-  // ── Step 3: Sort date positions ──
-  var datePosArr=Object.keys(dateMap).map(Number).sort(function(a,b){return a-b;});
-
-  // ── Step 4: Find date for a given text position ──
-  function dateForPos(pos){
-    // Find latest datePos <= pos
-    var best=null;
-    for(var i=0;i<datePosArr.length;i++){
-      if(datePosArr[i]<=pos) best=dateMap[datePosArr[i]];
-      else break;
-    }
-    if(!best) best={y:curYear,m:curMo,d:1};
-    return best.y+'-'+p2(best.m+1)+'-'+p2(best.d);
-  }
-
-  // ── Step 5: Flight leg patterns ──
-  // Pattern A: "KE 913 ICN 09:55 - MAD 18:00"  (full leg with dep+arr)
-  // Pattern B: "KE913 ICN 09:55"                (dep only)
-  // Pattern C: "KE 041 ICN 16:40 - SEA"         (dep + arr airport, no arr time)
-  var seenKeys={};
-
-  // Pattern A & C: flight with dep airport + dep time + optional arr
-  var reA=/([A-Z]{1,3}\s?\d{2,4})\s+([A-Z]{3})\s+(\d{1,2}:\d{2})\s*[-–]?\s*([A-Z]{3})?/g;
-  var mA;
-  while((mA=reA.exec(text))!==null){
-    var fnum=mA[1].replace(/\s/,'');
-    var depApt=mA[2];
-    var depTime=mA[3];
-    // Normalize time
-    var tParts=depTime.split(':');
-    var hh=parseInt(tParts[0]),mm=parseInt(tParts[1]);
-    if(hh>23||mm>59) continue;
-    depTime=p2(hh)+':'+p2(mm);
-    var arrApt=mA[4]||'';
-    var dateStr=dateForPos(mA.index);
-    var type=depApt===baseApt?'base':'intl';
-    var key=dateStr+'-'+fnum+'-'+depApt+'-'+depTime;
-    if(seenKeys[key]) continue;
-    seenKeys[key]=true;
-    flights.push({date:dateStr,flight:fnum,depApt:depApt,depTime:depTime,arrApt:arrApt,type:type});
-  }
-
-  // Deduplicate and sort
-  flights.sort(function(a,b){
-    if(a.date!==b.date) return a.date<b.date?-1:1;
-    return a.depTime<b.depTime?-1:1;
-  });
-  return flights;
-}
-
 /* ═══ ICS PARSER ═══ */
 function handleICS(e){
   var f=e.target.files[0];if(!f)return;
-
-  // Update UI to show file name
-  var upT=document.getElementById('icsUpT');
-  var upS=document.getElementById('icsUpS');
-  var ico=document.getElementById('icsIco');
-  if(upT)upT.textContent=f.name;
-  if(upS)upS.textContent='Parsing...';
-  if(ico)ico.style.color='var(--blue)';
 
   var rw=document.getElementById('icsResultWrap');
   if(rw)rw.innerHTML='<div style="text-align:center;padding:12px;font-size:12px;color:var(--tx2)">Reading file...</div>';
@@ -1462,40 +1127,30 @@ function handleICS(e){
       var flights=parseICS(ev.target.result);
 
       if(!flights.length){
-        if(rw)rw.innerHTML='<div class="empty-state">No flight events found.<br>Check that the file contains flight legs with departure times.</div>';
-        if(upS)upS.textContent='No flights found — try another file';
+        if(rw)rw.innerHTML='<div class="empty-state">No flight events found.<br>Check that the file contains flight legs.</div>';
         return;
       }
 
-      // Success
-      if(upS)upS.textContent=flights.length+' flights found';
       detectedFlights=flights;
       initFlightToggles();
-      // Auto-register alarms for ALL upcoming flights
       var autoAdded=autoRegisterAll();
       saveFlights();
-      renderICSResult(flights);
+      
       renderHomeFlightList();
       renderCal();
       renderDaySchedule(calSelDate);
       toast(flights.length+' flights, '+autoAdded+' alarms set','ok');
 
-      // Auto-close sheet and go home
       setTimeout(function(){
         closeUploadSheet();
         switchTab('calendar',null);
-      },900);
+      },600);
 
     }catch(err){
       if(rw)rw.innerHTML='<div class="empty-state" style="color:var(--red)">Parse error: '+escQ(err.message)+'</div>';
-      if(upS)upS.textContent='Failed to read file';
       toast('ICS parse error','er');
       console.error('[ICS]',err);
     }
-  };
-  r.onerror=function(){
-    if(upS)upS.textContent='Failed to read file';
-    toast('Could not read file','er');
   };
   r.readAsText(f,'UTF-8');
 }
@@ -1503,7 +1158,6 @@ function handleICS(e){
 function parseICS(text){
   var events=[];var cur=null;
   var lines=text.replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n');
-  // Unfold lines
   var unfolded=[];
   lines.forEach(function(l){
     if(l.startsWith(' ')||l.startsWith('\t')){if(unfolded.length)unfolded[unfolded.length-1]+=l.trim();}
@@ -1519,60 +1173,42 @@ function parseICS(text){
       cur.raw[key]=val;
     }
   });
-  // RESERVE / standby keywords to skip
-  // Keywords to exclude — non-flight events
+
   var SKIP_KEYWORDS=[
-    'RESERVE','RESERV','RES',
-    'DO','DAYS OFF','DAY OFF',
-    'OFF','OFF DUTY',
-    'STANDBY','STBY','SBY',
-    'LAYOVER','LO',
-    'REST','ATDO',
-    'REPORT','REP','REPORT TIME',
-    'CHECK IN','CHECK-IN','CHECKIN',
-    'BRIEFING','DEBRIEF',
-    'GROUND','GRD',
-    'TRAINING','TRN',
-    'SICK','SIM'
+    'RESERVE','RESERV','RES','DO','DAYS OFF','DAY OFF','OFF','OFF DUTY',
+    'STANDBY','STBY','SBY','LAYOVER','LO','REST','ATDO','REPORT','REP',
+    'CHECK IN','CHECK-IN','CHECKIN','BRIEFING','DEBRIEF','GROUND','GRD',
+    'TRAINING','TRN','SICK','SIM'
   ];
 
-  // Parse into flight-like objects
   var flights=[];
   events.forEach(function(ev){
     var r=ev.raw;
     var summary=(r['SUMMARY']||'').trim();
     var dtstart=r['DTSTART']||r['DTSTART;TZID']||'';
-    var dtend=r['DTEND']||r['DTEND;TZID']||'';
     var location=r['LOCATION']||'';
-    var desc=r['DESCRIPTION']||'';
 
-    // Skip RESERVE and non-flight events
     var sumUpper=summary.toUpperCase();
     var isReserve=SKIP_KEYWORDS.some(function(kw){
       var kw2=kw.trim();
-      return sumUpper===kw2
-        ||sumUpper.startsWith(kw2+' ')
-        ||sumUpper.startsWith(kw2+'\t')
-        ||(sumUpper===kw2);
+      return sumUpper===kw2 || sumUpper.startsWith(kw2+' ') || sumUpper.startsWith(kw2+'\t');
     });
     if(isReserve)return;
-    // Also skip if no flight number pattern at all (pure status events)
     var hasFlight=/[A-Z]{1,3}\s?\d{2,4}/.test(summary);
     var hasTime=/\d{1,2}:\d{2}/.test(summary+dtstart);
     if(!hasFlight&&!hasTime)return;
 
-    // Parse datetime
     var dt=parseICSDate(dtstart);if(!dt)return;
     var dateStr=dt.getFullYear()+'-'+p2(dt.getMonth()+1)+'-'+p2(dt.getDate());
     var depTime=p2(dt.getHours())+':'+p2(dt.getMinutes());
-    // Try to extract flight info from summary
-    // Patterns: "KE081 ICN-JFK", "KE 081 ICN→JFK", "Flight KE081"
+    
     var fnum='',depApt='',arrApt='';
     var fm=summary.match(/\b([A-Z]{2}\s?\d{2,4})\b/);if(fm)fnum=fm[1].replace(/\s/,'');
     var rm=summary.match(/\b([A-Z]{3})\s*[-→>]\s*([A-Z]{3})\b/);
     if(rm){depApt=rm[1];arrApt=rm[2];}
     if(!depApt&&location){var lm=location.match(/\b([A-Z]{3})\b/g);if(lm&&lm.length>=1)depApt=lm[0];if(lm&&lm.length>=2)arrApt=lm[lm.length-1];}
     if(!depApt){depApt=summary.slice(0,3).toUpperCase().replace(/[^A-Z]/g,'');}
+    
     var type=depApt===baseApt?'base':(depApt?'intl':'ics');
     flights.push({date:dateStr,flight:fnum||summary.slice(0,10),depApt:depApt||'???',depTime:depTime,arrApt:arrApt||'???',type:type,summary:summary});
   });
@@ -1580,17 +1216,19 @@ function parseICS(text){
   return flights;
 }
 
+/* ── FIX 1: ICS 시간 파싱 시 UTC(Z) 오동작 수정 ── */
 function parseICSDate(s){
   if(!s)return null;
   s=s.replace(/;[^:]*:/,':').replace(/.*:/,'');
-  // Handle TZID in value part
   if(s.includes('T')){
-    // 20260503T093000Z or 20260503T093000
     var m=s.match(/(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})(Z?)/);
     if(m){
-      var d=new Date(+m[1],+m[2]-1,+m[3],+m[4],+m[5],+m[6]);
-      if(m[7]==='Z')d=new Date(d.getTime()+d.getTimezoneOffset()*60000);
-      return d;
+      // Z가 있으면 Date.UTC를 통해 정확히 협정세계시로 인식시킴
+      if(m[7] === 'Z') {
+         return new Date(Date.UTC(+m[1], +m[2]-1, +m[3], +m[4], +m[5], +m[6]));
+      } else {
+         return new Date(+m[1], +m[2]-1, +m[3], +m[4], +m[5], +m[6]);
+      }
     }
   }else{
     var m2=s.match(/(\d{4})(\d{2})(\d{2})/);
@@ -1599,33 +1237,15 @@ function parseICSDate(s){
   return null;
 }
 
-function renderICSResult(flights){
-  var wrap=document.getElementById('icsResultWrap');
-  if(!wrap)return;
-  if(!flights.length){wrap.innerHTML='';return;}
-  var now=new Date();
-  var upcoming=flights.filter(function(f){return parseFlightDate(f)>=now;});
-  var past=flights.filter(function(f){return parseFlightDate(f)<now;});
-  var html='<div style="display:flex;align-items:center;gap:8px;padding:4px 0 8px">'
-    +'<div style="width:8px;height:8px;border-radius:50%;background:var(--grn)"></div>'
-    +'<div style="font-size:12px;font-weight:700;color:var(--tx)">'
-    +flights.length+' flights imported'
-    +'<span style="font-weight:400;color:var(--tx2);font-size:11px"> &nbsp;('+upcoming.length+' upcoming)</span>'
-    +'</div></div>';
-  wrap.innerHTML=html;
-}
-
 /* ═══ FLIGHT TOGGLES ═══ */
 function initFlightToggles(){
   detectedFlights.forEach(function(f,idx){
     if(!flightToggles[idx])flightToggles[idx]={};
     var offs=f.type==='intl'?intlOffs:baseOffs;
-    // Auto-enable ALL preset alarms on import
     offs.forEach(function(o){flightToggles[idx][o.id]=true;});
   });
 }
 
-/* ═══ FLIGHT LIST RENDER ═══ */
 function renderSheetFalWrap(){
   var wrap=document.getElementById('sheetFalWrap');if(!wrap)return;
   if(!detectedFlights.length){wrap.innerHTML='';return;}
@@ -1635,7 +1255,6 @@ function renderSheetFalWrap(){
   detectedFlights.forEach(function(f,idx){if(parseFlightDate(f)<now)past.push({f:f,idx:idx});else up.push({f:f,idx:idx});});
   var html='<div style="margin-top:14px"><div style="font-size:11px;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Detected Flights</div>';
   html+='<div class="fal-list">'+up.map(function(x){return renderFalItem(x.f,x.idx);}).join('')+'</div>';
-  if(past.length){html+='<div class="past-bar"><button class="past-toggle-btn" id="pastBtn" onclick="togglePast(this)">▸ &nbsp;'+past.length+' past flights</button></div><div id="pastSection" style="display:none"><div class="fal-list" style="margin-top:6px">'+past.map(function(x){return renderFalItemPast(x.f,x.idx);}).join('')+'</div></div>';}
   html+='</div>';
   wrap.innerHTML=html;
 }
@@ -1661,24 +1280,17 @@ function renderFalItem(f,idx,extraCls){
   var tc=f.type==='base'?'base':(f.type==='intl'?'intl':'ics');
   var offs=f.type==='intl'?intlOffs:baseOffs;
   var isOpen=!!openFlights[idx];
-  var regDone=!!registeredFlights[idx];
 
-  // Alarm master toggle state: on if any offset is toggled on
   var anyOn=offs.some(function(o){return !!(flightToggles[idx]&&flightToggles[idx][o.id]);});
-  var mastTogCls='fal-alarm-tog'+(anyOn?(f.type==='intl'?' on-intl':' on'):'');
-
-  // Badge
   var badge='';
   if(isTod) badge='<span class="fal-badge today-badge">TODAY</span>';
   else if(isNext) badge='<span class="fal-badge next-badge">NEXT</span>';
 
-  // Dropdown alarm rows
   var togsHtml=offs.map(function(o){
     var on=!!(flightToggles[idx]&&flightToggles[idx][o.id]);
     var at=new Date(fdt.getTime()-(o.h*60+o.m)*60000);
     var ac=on?(f.type==='intl'?' on-intl':' on-base'):'';
     var togCls='tog'+(on?(f.type==='intl'?' on-amb':' on'):'');
-    // Offset label: "2h 30m before" or "40m before"
     var offTxt='';
     if(o.h>0&&o.m>0) offTxt='('+o.h+'h '+o.m+'m before)';
     else if(o.h>0)   offTxt='('+o.h+'h before)';
@@ -1693,24 +1305,19 @@ function renderFalItem(f,idx,extraCls){
       +'</div>';
   }).join('');
 
-  var regBtn='';
-
   var dropBtn='<button class="fal-drop-btn" onclick="event.stopPropagation();toggleFlight('+idx+')">'
     +'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>'
     +'</button>';
 
   return '<div class="'+cls+(isOpen?' open':'')+'" id="fali-'+idx+'">'
-    // Header
     +'<div class="fal-header" onclick="toggleFlight('+idx+')">'
     +'<div class="fal-accent"></div>'
     +'<div class="fal-info">'
-    // Date row
     +'<div class="fal-date-row">'
     +'<span class="fal-dow">'+dow+'</span>'
     +'<span class="fal-date">'+dateStr+'</span>'
     +badge
     +'</div>'
-    // Route row
     +'<div class="fal-route-row">'
     +'<span class="fal-fnum">'+escQ(f.flight||'')+'</span>'
     +'<span class="fal-route">'
@@ -1721,15 +1328,12 @@ function renderFalItem(f,idx,extraCls){
     +'<span class="fal-type '+tc+'">'+tl+'</span>'
     +'</div>'
     +'</div>'
-    // Right: time + controls
     +'<div class="fal-right">'
     +'<div class="fal-deptime">'+f.depTime+'</div>'
     +'<div class="fal-controls">'
-    +(isPast?'':regBtn)
     +dropBtn
     +'</div></div>'
     +'</div>'
-    // Alarm dropdown
     +'<div class="fal-alarms">'
     +'<div class="fal-alarms-hdr">Preset Alarms</div>'
     +togsHtml
@@ -1745,7 +1349,15 @@ function renderFalItemPast(f,idx){
 }
 
 function toggleFlight(idx){openFlights[idx]=!openFlights[idx];rerenderFlight(idx);}
-function togFA(idx,offId){if(!flightToggles[idx])flightToggles[idx]={};flightToggles[idx][offId]=!flightToggles[idx][offId];rerenderFlight(idx);}
+function togFA(idx,offId){
+    if(!flightToggles[idx])flightToggles[idx]={};
+    flightToggles[idx][offId]=!flightToggles[idx][offId];
+    rerenderFlight(idx);
+    
+    // 알람 설정 즉각 업데이트
+    autoRegisterAll(); 
+}
+
 function rerenderFlight(idx){
   var f=detectedFlights[idx];if(!f)return;
   var el=document.getElementById('fali-'+idx);if(!el)return;
@@ -1759,60 +1371,32 @@ function rerenderFlight(idx){
   var tmp=document.createElement('div');tmp.innerHTML=renderFalItem(f,idx,extraCls);
   el.parentNode.replaceChild(tmp.firstChild,el);
 }
-function toggleMasterAlarm(idx){
-  if(!flightToggles[idx])flightToggles[idx]={};
-  var f=detectedFlights[idx];if(!f)return;
-  var offs=f.type==='intl'?intlOffs:baseOffs;
-  var anyOn=offs.some(function(o){return !!flightToggles[idx][o.id];});
-  // if any on → turn all off; if all off → turn all on
-  offs.forEach(function(o){flightToggles[idx][o.id]=!anyOn;});
-  rerenderFlight(idx);
-}
-
-function togglePast(btn){var sec=document.getElementById('pastSection');if(!sec)return;var open=sec.style.display==='block';sec.style.display=open?'none':'block';btn.textContent=open?'▸ \u00a0past flights':'▴ \u00a0hide past flights';}
 
 /* 전체 편 자동 알람 등록 */
 function autoRegisterAll(){
   syncAllPresets();
   var now=new Date();var added=0;
+  
+  // 기존 비행 관련 자동 생성된 알람들을 모두 삭제 후 재등록
+  alms = alms.filter(function(a){ return a.type === 'direct'; });
+  
   detectedFlights.forEach(function(f,idx){
     var depDt=parseFlightDate(f);
-    if(depDt<now)return;  // skip past
+    if(depDt<now)return;
     var offs=f.type==='intl'?intlOffs:baseOffs;
     offs.forEach(function(o){
       if(!flightToggles[idx]||!flightToggles[idx][o.id])return;
       var at=new Date(depDt.getTime()-(o.h*60+o.m)*60000);
       if(at<=now)return;
       if(alms.find(function(a){return !a.dism&&Math.abs(a.time-at)<2000;}))return;
-      alms.push({id:uid(),time:at,dep:new Date(depDt),lbl:o.lbl+' ('+f.flight+')',type:f.type,armed:true,ring:false,dism:false});
+      alms.push({id:uid(),time:at,dep:new Date(depDt),lbl:o.lbl,type:f.type,armed:true,ring:false,dism:false, fnum:f.flight, depApt:f.depApt, arrApt:f.arrApt});
       added++;
     });
     registeredFlights[idx]=true;
   });
-  if(added>0){alms.sort(function(a,b){return a.time-b.time;});saveAlarms();scheduleNotificationsViaSW();acquireWakeLock();}
-  return added;
-}
-
-function registerFlight(idx){
-  syncAllPresets();var f=detectedFlights[idx];if(!f)return;
-  var depDt=parseFlightDate(f);var now=new Date();
-  var offs=f.type==='base'?baseOffs:intlOffs;
-  if(!flightToggles[idx])flightToggles[idx]={};
-  offs.forEach(function(o){flightToggles[idx][o.id]=true;});
-  var added=0;
-  offs.forEach(function(o){
-    var at=new Date(depDt.getTime()-(o.h*60+o.m)*60000);
-    if(at<=now)return;
-    if(alms.find(function(a){return !a.dism&&Math.abs(a.time-at)<2000;}))return;
-    alms.push({id:uid(),time:at,dep:new Date(depDt),lbl:o.lbl+' ('+f.flight+')',type:f.type,armed:true,ring:false,dism:false});
-    added++;
-  });
-  registeredFlights[idx]=true;rerenderFlight(idx);
-  if(!added){toast(f.flight+' — expired or duplicate','er');return;}
   alms.sort(function(a,b){return a.time-b.time;});
   saveAlarms();scheduleNotificationsViaSW();acquireWakeLock();
-  renderCal();renderDaySchedule(calSelDate);renderHomeFlightList();
-  toast(f.flight+' — '+added+' alarms set','ok');
+  return added;
 }
 
 /* ═══ DIRECT ALARM ═══ */
@@ -1829,7 +1413,6 @@ function addDirectAlarm(){
   renderDirectAlarms();renderCal();renderDaySchedule(calSelDate);
   toast('"'+lbl+'" '+p2(h)+':'+p2(m),'ok');
   document.getElementById('dLabel').value='';
-  // Scroll down to show alarm list
   setTimeout(function(){
     var wrap=document.getElementById('dalCardWrap');
     if(wrap) wrap.scrollIntoView({behavior:'smooth',block:'nearest'});
@@ -1838,7 +1421,8 @@ function addDirectAlarm(){
 
 function renderDirectAlarms(){
   var wrap=document.getElementById('dalCardWrap');if(!wrap)return;
-  var directs=alms.filter(function(a){return a.type==='direct'&&!a.dism;});
+  // 변경: 직접 등록한 알람 외에 자동 등록된 스케줄 알람(flight)도 리스트에 모두 표시
+  var directs=alms.filter(function(a){return !a.dism;});
   if(!directs.length){wrap.innerHTML='';return;}
   var D=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   var now=new Date();var todayMid=new Date();todayMid.setHours(0,0,0,0);
@@ -1852,9 +1436,16 @@ function renderDirectAlarms(){
     else if(diff>0){var s2=Math.floor(diff/1000);var hh=Math.floor(s2/3600),mm=Math.floor((s2%3600)/60),ss=s2%60;cdTxt='T-'+(hh?hh+'H ':'')+mm+'M '+ss+'S';}
     else cdTxt='PASSED';
     var act=isRing?'<button class="dal-dis" onclick="dismissDirectAlarm(\''+a.id+'\')">DISMISS</button>':'<button class="dal-del" onclick="delDirectAlarm(\''+a.id+'\')">✕</button>';
+    
+    // 비행 편명과 출도착 정보 HTML
+    var fInfo = '';
+    if(a.fnum && a.depApt) {
+        fInfo = '<span style="font-family:\'Share Tech Mono\',monospace; font-size:10px; color:var(--blue); margin-left:6px; padding-left:6px; border-left:1.5px solid var(--bdr)">'+a.fnum+' '+a.depApt+'&#8594;'+(a.arrApt||'---')+'</span>';
+    }
+
     return '<div class="dal-item'+(isRing?' ring-now':'')+'" id="dal-'+a.id+'">'
       +'<div class="dal-dot"></div><div class="dal-info">'
-      +'<div class="dal-date-row"><span class="dal-dow">'+dow+'</span><span class="dal-date">'+dateStr+'</span>'+(isTod?'<span class="dal-today">TODAY</span>':'')+'</div>'
+      +'<div class="dal-date-row"><span class="dal-dow">'+dow+'</span><span class="dal-date">'+dateStr+'</span>'+fInfo+(isTod?'<span class="dal-today" style="margin-left:4px">TODAY</span>':'')+'</div>'
       +'<div class="dal-lbl">'+escQ(a.lbl)+'</div>'
       +'<div class="dal-cd" id="dcd-'+a.id+'">'+cdTxt+'</div></div>'
       +'<div class="dal-time">'+timeStr+'</div>'+act+'</div>';
@@ -1866,7 +1457,7 @@ function dismissDirectAlarm(id){var a=alms.find(function(x){return x.id===id;});
 
 function updateDirectCDs(){
   var now=new Date();
-  alms.filter(function(a){return a.type==='direct'&&!a.dism;}).forEach(function(a){
+  alms.filter(function(a){return !a.dism;}).forEach(function(a){
     var el=document.getElementById('dcd-'+a.id);if(!el)return;
     if(a.ring){el.textContent='▶ RINGING';return;}
     var diff=a.time-now;if(diff<=0){el.textContent='PASSED';return;}
@@ -1881,18 +1472,21 @@ function tickClock(){
   var badge=document.getElementById('bellBadge');
   if(badge)badge.classList.toggle('show',alms.some(function(a){return a.ring;}));
 }
+
+/* ── FIX 2: 백그라운드 유예 시간 변경 (60초 -> 5분) ── */
 function checkAlarms(){
   var now=new Date(),needRender=false;
   alms.forEach(function(a){
-    // Ensure time is a Date object (may be string after localStorage restore)
     if(!(a.time instanceof Date)) a.time=new Date(a.time);
     if(a.dep&&!(a.dep instanceof Date)) a.dep=new Date(a.dep);
     if(a.dism||a.ring)return;
     var diff=now-a.time;
-    if(diff>=0&&diff<60000){a.ring=true;needRender=true;trigAlarm(a);}
+    // 기기가 잠들어 있다가 깨어났을 때를 대비해 감지 유예 시간을 5분(300000ms)으로 넓게 잡음
+    if(diff>=0&&diff<300000){a.ring=true;needRender=true;trigAlarm(a);}
   });
   alms.forEach(function(a){
-    if(a.ring&&(now-a.time)>=60000){
+    // 5분 이상 울리면 자동 취소
+    if(a.ring&&(now-a.time)>=300000){
       a.ring=false;a.dism=true;needRender=true;
       if(!alms.some(function(x){return x.ring;})){
         stopSnd();document.getElementById('ro').classList.remove('show');
@@ -1904,14 +1498,14 @@ function checkAlarms(){
   alms=alms.filter(function(a){return !a.dism||(now-a.time<300000);});
   if(alms.length!==bl){saveAlarms();renderDirectAlarms();}
 }
+
 function trigAlarm(a){
   if(!(a.time instanceof Date)) a.time=new Date(a.time);
   if(a.dep&&!(a.dep instanceof Date)) a.dep=new Date(a.dep);
-  document.getElementById('rtt').textContent=a.lbl;
-  document.getElementById('rdt').textContent=fmt(a.time)+(a.dep?' · DEP '+fmt(a.dep):'');
+  document.getElementById('rtt').textContent=a.lbl + (a.fnum ? ' ('+a.fnum+')' : '');
+  document.getElementById('rdt').textContent=fmt(a.time)+(a.dep?' · DEP '+fmt(a.dep):'') + (a.fnum ? ' ['+a.depApt+'→'+(a.arrApt||'')+']' : '');
   document.getElementById('ro').classList.add('show');
 
-  // Resume AudioContext (required on iOS after bg/lock)
   var ctx=getACtx();
   if(ctx&&ctx.state==='suspended'){
     ctx.resume().then(function(){playSnd();});
@@ -1919,17 +1513,12 @@ function trigAlarm(a){
     playSnd();
   }
 
-  // Strong vibration pattern
-  if(navigator.vibrate){
-    navigator.vibrate([700,200,700,200,700,200,700,200,700]);
-  }
+  if(navigator.vibrate) navigator.vibrate([700,200,700,200,700,200,700,200,700]);
 
-  // System notification (works even when screen off on supported devices)
   showNotificationIfGranted(a);
   acquireWakeLock();
 }
 function dismissOv(){alms.forEach(function(a){if(a.ring){a.dism=true;a.ring=false;}});saveAlarms();stopSnd();document.getElementById('ro').classList.remove('show');renderDirectAlarms();}
-function dismissA(id){var a=alms.find(function(x){return x.id===id;});if(a){a.dism=true;a.ring=false;}if(!alms.some(function(x){return x.ring;})){stopSnd();document.getElementById('ro').classList.remove('show');}renderDirectAlarms();}
 
 /* ═══ SETTINGS ═══ */
 function clearAllData(){
@@ -1954,20 +1543,9 @@ function saveSettingsUI(){
   baseApt=v;
   saveSettings();
 
-  // ── 프리셋 변경 시 홈 화면 알람 목록 갱신 ──
   if(detectedFlights.length){
-    // 1. 토글 상태 초기화 (새 프리셋 반영)
     initFlightToggles();
-
-    // 2. 기존 등록된 알람(flight 계열) 제거 후 재등록
-    var now=new Date();
-    alms=alms.filter(function(a){ return a.type==='direct'; }); // 직접 설정 알람은 유지
-    registeredFlights={};
-
-    // 3. 전체 자동 재등록
     var added=autoRegisterAll();
-
-    // 4. 홈 화면 + 달력 갱신
     renderHomeFlightList();
     renderCal();
     renderDaySchedule(calSelDate);
@@ -2069,19 +1647,16 @@ function playSnd(){
     if(ctx.state==='suspended') ctx.resume();
     stopSnd();
 
-    // Alarm pattern: urgent double-beep repeating
-    // Frequencies chosen to cut through ambient noise
     function beep(freq, startT, dur, vol){
       var osc=ctx.createOscillator();
       var gain=ctx.createGain();
-      // Compressor to maximize perceived loudness
       var comp=ctx.createDynamicsCompressor();
       comp.threshold.value=-6;
       comp.ratio.value=20;
       osc.connect(gain);
       gain.connect(comp);
       comp.connect(ctx.destination);
-      osc.type='square'; // harsh/cutting tone
+      osc.type='square'; 
       osc.frequency.value=freq;
       var t0=ctx.currentTime+startT;
       gain.gain.setValueAtTime(0,t0);
@@ -2093,15 +1668,12 @@ function playSnd(){
       oscs.push(osc);
     }
 
-    // Pattern: beep-beep ... pause ... beep-beep (like alarm clock)
-    // Each cycle = 1.2 seconds, repeat 50 times (~60 seconds)
     for(var i=0;i<50;i++){
       var base=i*1.2;
-      beep(1047,base+0.0, 0.12, 0.9); // C6
-      beep(1319,base+0.0, 0.12, 0.8); // E6 (harmony)
+      beep(1047,base+0.0, 0.12, 0.9); 
+      beep(1319,base+0.0, 0.12, 0.8); 
       beep(1047,base+0.18,0.12, 0.9);
       beep(1319,base+0.18,0.12, 0.8);
-      // silent 0.86s gap
     }
   }catch(e){console.warn('[playSnd]',e);}
 }
